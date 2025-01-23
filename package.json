@@ -1,6 +1,6 @@
 {
     "name": "cleaker",
-    "version": "2.6.61",
+    "version": "2.6.62",
     "description": "Connecting all dots within a fixed distance.",
     "main": "index.js",
     "type": "module",
@@ -16,17 +16,17 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/suiGn/Cleaker.git"
+        "url": "https://github.com/neurons-me/Cleaker.git"
     },
     "bugs": {
-        "url": "https://github.com/suiGn/Cleaker/issues"
+        "url": "https://github.com/neurons-me/Cleaker/issues"
     },
     "dependencies": {
         "axios": "^1.7.7",
         "js-sha3": "^0.9.3"
     },
     "homepage": "https://www.npmjs.com/package/cleaker",
-    "docs": "https://suign.github.io/cleaker",
+    "docs": "https://docs.neurons.me/cleaker/index.html",
     "author": "Sui Gn",
     "license": "MIT License",
     "repoType": "NPM Package",
