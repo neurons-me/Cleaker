@@ -1,6 +1,6 @@
 # Node modules
 node_modules/
-
+docs/
 # Logs
 logs/
 *.log
