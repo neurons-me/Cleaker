@@ -30,14 +30,14 @@ Each of these classes provides a specific set of methods and functionalities, al
 
 # Getting Started:
 ##### **Install `cleaker`:**
-Open your terminal and run the following command to install the `this.DOM` package:
+Open your terminal and run the following command to install the `cleaker` package:
 
 ```bash
 npm i cleaker
 ```
 
 ##### **Import `this.DOM` in Your Project:**
-In the JavaScript file where you want to use `this.DOM`, import the `thisDOM` class.
+In the JavaScript file where you want to use `cleaker`:
 
 ```js
 import cleaker from 'cleaker';

@@ -3,8 +3,8 @@
     "include": ["./src", "./index.js", "./src/methods/"]
   },
   "opts": {
-    "destination": "./docs",
-    "template": "../suign.github.io/Sandbox/better-docs/",
+    "destination": "/mnt/neuroverse/https-neurons/subDomains/docs/public/Cleaker",
+    "template": "/mnt/neuroverse/suign.github.io/Sandbox/better-docs/",
     "readme": "./README.md"
   },
   "templates": {

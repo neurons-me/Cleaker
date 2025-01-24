@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import pkg from 'js-sha3/index.js';
+import pkg from 'js-sha3';
 import me from './methods/me.js'; 
 import salt from './methods/salt.js';
 import generatePassword from './methods/generatePassword.js'; 
