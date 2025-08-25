@@ -3,7 +3,7 @@ import axios from 'axios';
 
 /**
  * .me: Handles identity logging and context establishment for space, user, and event requests.
- * Logs the identity in the ledger on the provided port and v.path URL.
+ * Logs the identity in the ledger on the provided port.
  *
  * @param {Object} options - Configuration options
  * @param {string} options.ledger - The ledger API endpoint (v.path URL)
