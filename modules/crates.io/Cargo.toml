@@ -1,0 +1,26 @@
+[package]
+name = "cleaker"
+version = "0.1.0"
+edition = "2021"
+authors = ["suiGn <admin@gneurons.me>"]
+description = "Cleaker identity and signature daemon written in Rust."
+license = "MIT"
+repository = "https://github.com/neurons-me/cleaker"
+readme = "README.md"
+keywords = ["identity", "crypto", "cleaker", "signature", "daemon"]
+categories = ["command-line-utilities", "cryptography", "authentication"]
+
+[[bin]]
+name = "cleaker"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "blocking"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dotenv = "0.15"
+thiserror = "1"
+env_logger = "0.11"
+log = "0.4"

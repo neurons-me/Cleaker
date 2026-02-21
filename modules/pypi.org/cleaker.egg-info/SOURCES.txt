@@ -1,0 +1,7 @@
+README.md
+setup.py
+cleaker/__init__.py
+cleaker.egg-info/PKG-INFO
+cleaker.egg-info/SOURCES.txt
+cleaker.egg-info/dependency_links.txt
+cleaker.egg-info/top_level.txt
