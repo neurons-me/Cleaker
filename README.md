@@ -1,4 +1,4 @@
-<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629070/pixelnaut_wf6eo2.png" alt="SVG Image" width="244" height="203">
+<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629049/cleaker_lkyyso.png" alt="SVG Image" width="244" height="203">
 
 # CLEAKER
 > ##### Cleaked (connected and recognized).
