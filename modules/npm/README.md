@@ -1,81 +1,324 @@
-<img src="https://www.cleaker.me/icons/_CLEAKER_.png" alt="SVG Image" width="244" height="244">
+<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760758662/this.me-removebg-preview_fvyeda.png" alt="CLEAKER" width="188" height="188">
 
 # CLEAKER
-> ##### Cleaked (connected and recognized).
-**Cleaker** represents a **person**, **place**, or **thing** in digital space and time, connecting all points **within a fixed distance.**
+> *Resolutio ante directionem; nomen ante locum.*
+> שם קודם למקום
 
-# Getting Cleaked
-As a **Digital Identifier (DID) Creator**, cleaker accepts objects (like a **.me** profile) and **returns a unique DID**, establishing a reliable digital identity.
+`cleaker` is the namespace-first network layer for `.me`.
+𝕌 = the set of all possible namespaces.  
+∴ the name is resolved before the place is selected.
 
-#### What kind of objects can be accepted by Cleaker?
-Cleaker, as a Digital Identifier Creator, can accept instances of these classes and generate unique digital identifiers for them.
+If `.me` is the local semantic kernel, `cleaker` is the layer that lets semantic branches travel across the network without collapsing into host-first routing.
 
+Let **N** be a namespace region.
 
-<div style="display: flex; flex-wrap: wrap; justify-content: center;"> <img src="https://docs.neurons.me/media/all-this/webP/this.me.webp" width="100"> <img src="https://docs.neurons.me/media/all-this/webP/this.wallet.webp" width="100"> <img src="https://docs.neurons.me/media/all-this/webP/this.text.webp" width="100"> <img src="https://docs.neurons.me/media/all-this/webP/this.audio.webp" width="100"> <img src="https://docs.neurons.me/media/all-this/webP/this.dir.webp" width="100"> </div>
-
-
-
-**[this.me](https://docs.neurons.me/this.me/index.html)  - [this.wallet](https://docs.neurons.me/this.wallet/index.html) - [this.audio](https://docs.neurons.me/this.audio/index.html) - [this.text](https://docs.neurons.me/this.text/index.html)  - [this.img](https://docs.neurons.me/this.img/index.html) - [this.pixel](https://docs.neurons.me/this.pixel/index.html) - [this.DOM](https://docs.neurons.me/this.DOM/index.html) - [this.env](https://docs.neurons.me/this.env/index.html) - [this.GUI](https://docs.neurons.me/this.GUI/index.html) - [this.be](https://docs.neurons.me/this.be/index.html) - [this.video](https://docs.neurons.me/this.video/index.html) - [this.dictionaries](https://docs.neurons.me/this.dictionaries/index.html)** 
-
-[What is all this?](https://docs.neurons.me/all.this)
-
-Each of these classes provides a specific set of methods and functionalities, allowing users and developers to work with various data structures and formats within the `All.This` framework. 
-
-# **username.cleaker.me**
-> cleaking .me
-
- **[cleaker.me](https://cleaker.me)** functions as a **channel** for network-wide functionalities and **Digital Identity (DID) management**.
-
-**Subdomains** provide a **unique URL** for each user. **Cleaker** identifies the user and connect their **.me instance** with the ecosystem.
-
-# Getting Started:
-##### **Install `cleaker`:**
-Open your terminal and run the following command to install the `cleaker` package:
-
-```bash
-npm i cleaker
+```txt
+N = { domain, subdomain?, port?, path?, bind? }
 ```
 
-##### **Import `this.DOM` in Your Project:**
-In the JavaScript file where you want to use `cleaker`:
+If **B** adds coordinates to **A**, then:
 
-```js
+```txt
+B ⊑ A
+B ⊆ A
+```
+
+In `cleaker`, routing is a consequence of refinement over **𝕌**, not the starting point of resolution.
+
+## ∴ Core Idea
+Three forms now define the stack:
+
+```ts
+cleaker("ana.cleaker:read/profile")
+me.friends.ana["->"](cleaker("ana.cleaker:read/profile"))
+nrp://ana.cleaker:read/profile
+```
+
+- `.me` resolves what **is** in the local tree.
+- `cleaker(...)` resolves what **is remote**.
+- `NRP` is the transport grammar that makes remote semantic branches addressable.
+
+## ⟁ Install
+```bash
+npm install cleaker
+```
+
+## ⟐ Import
+```ts
 import cleaker from 'cleaker';
 ```
 
-------
+## ⊑ Resolve with cleaker
+```ts
+import cleaker from 'cleaker';
 
-### **Connecting the .me Instance**
-When a user’s `.me` instance is identified, it becomes the central point for connecting data, profiles, and relationships within the **Cleaker ecosystem**:
+const me = 'ana.cleaker:read/profile';
+const expression = 'vault.cleaker:secret/wallet.balance';
 
-- **Dynamic Identity Linking:** The `.me instance` links to other identifiers, such as wallet addresses, digital assets, or external services.
-- **Data Relationships:** The `.me instance` acts as a hub, organizing and linking various datasets, whether from Cleaker itself or third-party integrations.
-- **Network Interactions:** The `.me instance` enables seamless interaction with other Cleaked nodes or public network entities, fostering decentralized data flows.
+const a = cleaker(me);
+const b = cleaker(expression);
+```
 
-------
+Result shape:
 
-### **Why It Matters**
-By leveraging the **cleaked** `.me instance`, Cleaker provides:
+```ts
+{
+  __ptr: {
+    kind: 'remote',
+    identity: {
+      prefix: 'ana',
+      constant: 'cleaker'
+    },
+    intent: {
+      selector: 'read',
+      path: 'profile',
+      mode: 'reactive'
+    },
+    resolution: {
+      status: 'unresolved',
+      namespaceRecordVerified: false,
+      sessionToken: null,
+      lastError: null
+    },
+    operationalState: {
+      latencyMs: null,
+      lastSync: null,
+      cacheTtl: 300,
+      stale: false
+    },
+    transport: {
+      preferred: ['quic', 'https'],
+      protocol: null,
+      resolvedEndpoint: null
+    }
+  }
+}
+```
 
-- A **personalized gateway** for each user within the network.
-- A **scalable framework** for connecting identities to resources and functionalities.
-- A **decentralized structure** that enables dynamic relationships and integrations between users, assets, and systems.
+## ⟶ Low-level parser (optional)
+```ts
+import { parseTarget } from 'cleaker';
+const target = parseTarget('ana.cleaker:read/profile');
+```
 
-This approach ensures a unified, scalable way to manage identities and relationships across the digital landscape.
+Use `parseTarget(...)` only when you need raw grammar parsing for tooling or validation.
+For normal usage, call `cleaker(...)`.
 
-----------
-# About All.This
-###### Modular Data Structures
-**[this.me](https://suign.github.io/this.me)  - [this.audio](https://suign.github.io/this.audio) - [this.text](https://suign.github.io/this.text) - [this.wallet](https://suign.github.io/this.wallet) - [this.img](https://suign.github.io/this.img) - [this.pixel](https://suign.github.io/Pixels) - [be.this](https://suign.github.io/be.this) - [this.DOM](https://suign.github.io/this.DOM) - [this.env](https://suign.github.io/this.env/) - [this.GUI](https://suign.github.io/this.GUI) - [this.be](https://suign.github.io/this.be) - [this.video](https://suign.github.io/this.video) - [this.atom](https://suign.github.io/this.atom) - [this.dictionaries](https://suign.github.io/this.dictionaries/)**
+Parsed target shape:
+```ts
+{
+  scheme: 'nrp',
+  namespace: {
+    prefix: 'ana',
+    constant: 'cleaker',
+    fqdn: 'ana.cleaker'
+  },
+  intent: {
+    selector: 'read',
+    path: 'profile',
+    mode: 'reactive'
+  }
+}
+```
 
-These classes encapsulate the functionalities to **domain-specific data.**
+## ⟐ Inject into `.me`
+`cleaker` is not a hidden side effect inside `.me`.
+It is an explicit network decision.
+
+```ts
+me.friends.ana["->"](cleaker("ana.cleaker:read/profile"));
+```
+
+That keeps the boundary clean:
+- `.me` stays deterministic and local-first
+- `cleaker` owns remote resolution
+- network semantics are explicit in syntax
+
+## 𝔊 Grammar
+Canonical target grammar:
+```txt
+[prefix.]constant:selector/path
+```
+
+Examples:
+```txt
+ana.cleaker:read/profile
+vault.cleaker:secret/wallet.balance
+social.neurons:query/posts[author == 'ana']
+dev.neurons:api/v1.users.get
+```
+
+Layer meaning:
+- `[prefix.]constant` -> namespace identity
+- `:selector` -> capability / semantic port
+- `/path` -> branch or executable semantic expression
+
+Canonical URI form:
+```txt
+nrp://ana.cleaker:read/profile
+```
+
+## ⊂ Current Package Scope
+Implemented now:
+- NRP target grammar
+- target parser
+- remote pointer contract
+- explicit pointer states
+- namespace resolver contracts
+- transport contracts for HTTP / WS
+- ESM / CJS / TS build coverage
+
+Not implemented yet:
+- namespace discovery bootstrap
+- signed namespace records
+- real NRP handshake
+- WebSocket propagation
+- `.me` runtime hydration from remote branches
+- sync / replay / watch semantics
+
+## Claim and Verify
+
+The current claim/open flow lives in the cleaker server and provides the trust anchor for replay hydration.
+
+### How it works
+
+1. Claim a namespace
+- Endpoint: POST /claims
+- Input: namespace, secret, optional publicKey
+- Output: identityHash bound to that namespace, and encrypted noise stored server-side
+
+2. Write memory entries
+- Endpoint: POST /
+- If namespace is claimed, writes are accepted only when they match claim identity or pass signature verification.
+- Accepted payloads are appended to blocks and also persisted as memories in chronological order.
+
+3. Open and recover state
+- Endpoint: POST /claims/open
+- Input: namespace + secret
+- Server verifies derived identityHash against claim record
+- On success, response includes:
+  - noise
+  - memories[] ordered by timestamp ASC
+  - openedAt
+
+This gives a boot sequence with deterministic recovery:
+- noise restores derivation context
+- memories restore semantic history
+
+### Request examples
+
+Claim:
+
+```bash
+curl -s -X POST http://localhost:8161/claims \
+  -H "content-type: application/json" \
+  -d '{
+    "namespace": "ana.cleaker",
+    "secret": "luna",
+    "publicKey": "-----BEGIN PUBLIC KEY-----...-----END PUBLIC KEY-----"
+  }'
+```
+
+Write a memory event:
+
+```bash
+curl -s -X POST http://localhost:8161/ \
+  -H "host: ana.cleaker" \
+  -H "content-type: application/json" \
+  -d '{
+    "identityHash": "<claim-identity-hash>",
+    "expression": "set(profile.displayName, \"Ana\")",
+    "payload": {"profile": {"displayName": "Ana"}}
+  }'
+```
+
+Open with replay hydration:
+
+```bash
+curl -s -X POST http://localhost:8161/claims/open \
+  -H "content-type: application/json" \
+  -d '{
+    "namespace": "ana.cleaker",
+    "secret": "luna"
+  }'
+```
+
+Expected shape:
+
+```json
+{
+  "ok": true,
+  "namespace": "ana.cleaker",
+  "identityHash": "...",
+  "noise": "...",
+  "memories": [
+    { "payload": {"expression": "..."}, "identityHash": "...", "timestamp": 1773175390500 },
+    { "payload": {"expression": "..."}, "identityHash": "...", "timestamp": 1773175390601 }
+  ],
+  "openedAt": 1773175390601
+}
+```
+
+### Verification behavior
+
+- Wrong secret in open -> CLAIM_VERIFICATION_FAILED
+- Unknown namespace in open -> CLAIM_NOT_FOUND
+- Write into claimed namespace without valid association/signature -> NAMESPACE_WRITE_FORBIDDEN
+
+## Test Examples and Results
+
+Reference test file:
+- core/cleaker/server/tests/claim_test_verification.ts
+
+What the test covers:
+- verified path: claim + open with correct secret returns original noise
+- rejected path: claim + open with wrong secret returns CLAIM_VERIFICATION_FAILED
+
+Run:
+
+```bash
+cd core/cleaker/server
+npm run build
+npm test
+```
+
+Observed result:
+
+```txt
+PASS claim_test_verification.verified
+PASS claim_test_verification.failed
+All claim verification tests passed.
+```
+
+## ∴ Tests
+
+The package currently ships with:
+- semantic axioms
+- algebra / subset laws
+- browser namespace discrimination
+- build compatibility checks
+- NRP contract checks
+
+Run:
+
+```bash
+npm run build
+npm run test
+npm run docs:api
+npm run docs:dev
+```
+
+## 𝕌 Mental Model
+- `.me` thinks
+- `cleaker` propagates
+- `NRP` gives the propagation a formal grammar
+
+Or more concretely:
+- `.me` generates the branch delta
+- `cleaker` resolves and transports it
+- remote pointers let another tree consume it without pretending the network is local magic
 
 ## By Neurons.me
-#### License & Policies
-- **License**: MIT License.
-- **Learn more** at **https://docs.neurons.me**
-
-  [Terms](https://docs.neurons.me/terms-and-conditions) | [Privacy](https://docs.neurons.me/privacy-policy)
-
-  <img src="https://suign.github.io/assets/imgs/neurons_me_logo.png" alt="neurons.me logo" width="89">
-
+License: MIT
+- https://cleaker.me
+- https://neurons.me

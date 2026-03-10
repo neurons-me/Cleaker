@@ -1,19 +1,20 @@
 ## **The Algebra of** **.Me**
 Let us define the universe of the system:
-**𝕌** = the set of all possible namespaces.
-A **namespace** is a composite structure (by definition):
-**N = (domain, port, path, …)**
-Each component may be present or absent.
-------
+
+> **𝕌 =** the set of all possible namespaces.
+> **A** **namespace** is a composite structure (by definition):
+> **N = (domain, port)**
+
+###### Each component may be present or absent.
 
 ## **Base Rule: “More specific ⇒ Subset”**
 When additional components are introduced (subdomain, port, path), the covered region becomes smaller.
 Examples:
 
-- cleaker.me contains cleaker.me:8161
-- cleaker.me contains jabellae.cleaker.me
-- jabellae.cleaker.me contains jabellae.cleaker.me/board
-- localhost contains localhost:8161
+- **cleaker.me** contains **cleaker.me:8161**
+- **cleaker.me** contains **jabellae.cleaker.me**
+- **jabellae.cleaker.me** contains **jabellae.cleaker.me/board**
+- **localhost** contains **localhost:8161**
 
 Formally:
 
@@ -31,11 +32,11 @@ If **B** adds coordinates to **A**, then:
 
 ---
 
-Key confirmations:
-	•	cleaker.me/ as non-relational existence layer ✔
-	•	/? as observer binding operator ✔
-	•	username.cleaker.me/ as public namespace root ✔
-	•	username.cleaker.me/? as relation(viewer → target) ✔
+**Key confirmations:**
+	•	**cleaker.me/** as non-relational existence layer ✔
+	•	**/?** as observer binding operator ✔
+	•	**username.cleaker.me/** as public namespace root ✔
+	•	**username.cleaker.me/?** as relation(viewer → target) ✔
 	•	Namespace algebra (⊆, ⊑) matches how DNS, ports, and paths actually work ✔
 	•	No circular dependency between identity and existence ✔
 
@@ -52,13 +53,14 @@ A relation **R_B** refines another relation **R_A** if for all viewer namespaces
 If **R_A(N_viewer) = N_target_A** and **R_B(N_viewer) = N_target_B**, then:
 **N_target_B ⊑ N_target_A**
 Examples:
-- The relation defined by jabellae.cleaker.me/board refines the relation defined by jabellae.cleaker.me/
-- The relation defined by jabellae.cleaker.me/?ref=1234 refines the relation defined by jabellae.cleaker.me/
+- The relation defined by **jabellae.cleaker.me/board** refines the relation defined by jabellae.cleaker.me/
+- The relation defined by j**abellae.cleaker.me/?ref=1234** refines the relation defined by **jabellae.cleaker.me/**
 ------
 ## **A3 — Relation Composition**
 Given two relations **R_A : N_viewer → N_intermediate** and **R_B : N_intermediate → N_target**, their composition **R_C = R_B ∘ R_A** is defined as:
 **R_C(N_viewer) = R_B(R_A(N_viewer))**
 Examples:
+
 - If **R_A** is defined by jabellae.cleaker.me/? and **R_B** is defined by cleaker.me/board, then **R_C** maps viewer namespaces to jabellae.cleaker.me/board
 ------
 ## **A4 — Identity Relation**
@@ -74,5 +76,5 @@ Examples:
 - The relation defined by jabellae.cleaker.me/ maps any viewer namespace to jabellae.cleaker.me/
 ------
 ## **Conclusion**
-This algebraic framework provides a structured way to understand and manipulate namespaces and relations within the .Me system. By defining namespaces as regions and relations as functions, we can reason about their interactions and refinements systematically.
+This algebraic framework provides a structured way to understand and manipulate namespaces and relations within the **.Me** system. By defining namespaces as regions and relations as functions, we can reason about their interactions and refinements systematically.
 

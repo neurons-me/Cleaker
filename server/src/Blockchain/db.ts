@@ -1,6 +1,6 @@
 // www/api/src/Blockchain/db.ts
 // -------------------------------------------------------------
-// SQLite connection — one blockchain per host
+// SQLite connection — one semantic ledger per host
 // -------------------------------------------------------------
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -15,10 +15,7 @@ const DB_PATH = path.join(process.cwd(), BLOCKCHAIN_FILENAME);
 // ASEGURAR QUE EL ARCHIVO EXISTE
 // -------------------------------------------------------------
 if (!fs.existsSync(DB_PATH)) {
-  console.log("🆕 Creating new Blockchain SQLite file:", DB_PATH);
   fs.writeFileSync(DB_PATH, "");
-} else {
-  console.log("🗄️  Using existing Blockchain SQLite file:", DB_PATH);
 }
 
 // -------------------------------------------------------------
@@ -32,8 +29,6 @@ try {
   // WAL gives better concurrency; foreign_keys is good hygiene.
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
-
-  console.log("🔌 SQLite Blockchain connection established");
 
   // -------------------------------------------------------------
   // SCHEMA INIT (idempotent)
@@ -76,10 +71,8 @@ try {
     CREATE INDEX IF NOT EXISTS idx_faces_identityHash ON faces(identityHash);
     CREATE INDEX IF NOT EXISTS idx_faces_templateHash ON faces(templateHash);
   `);
-
-  console.log("📐 Blockchain schema initialized");
 } catch (err: any) {
-  console.error("❌ SQLite Blockchain initialization failed:", err.message);
+  console.error("❌ SQLite ledger initialization failed:", err.message);
   throw err;
 }
 

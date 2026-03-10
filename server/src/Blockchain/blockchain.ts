@@ -1,6 +1,6 @@
 // www/api/src/Blockchain/blockchain.ts
 // -----------------------------------------------------------------------------
-// Blockchain Blocks Table (uses the shared SQLite instance from db.ts)
+// Ledger blocks table (uses the shared SQLite instance from db.ts)
 // -----------------------------------------------------------------------------
 import { db } from "./db";
 // -----------------------------------------------------------------------------
@@ -24,6 +24,15 @@ CREATE TABLE IF NOT EXISTS users (
   publicKey TEXT NOT NULL,
   commitment TEXT,
   identityNoise TEXT,
+  createdAt INTEGER NOT NULL,
+  updatedAt INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS claims (
+  namespace TEXT PRIMARY KEY,
+  identityHash TEXT NOT NULL,
+  encryptedNoise TEXT NOT NULL,
+  publicKey TEXT,
   createdAt INTEGER NOT NULL,
   updatedAt INTEGER NOT NULL
 );
@@ -53,9 +62,9 @@ CREATE INDEX IF NOT EXISTS idx_blocks_namespace ON blocks(namespace);
 CREATE INDEX IF NOT EXISTS idx_blocks_ts ON blocks(timestamp);
 CREATE INDEX IF NOT EXISTS idx_users_identity ON users(identityHash);
 CREATE INDEX IF NOT EXISTS idx_users_commitment ON users(commitment);
+CREATE INDEX IF NOT EXISTS idx_claims_identity ON claims(identityHash);
 `);
 
-console.log("📐 Blockchain schema initialized");
 // -----------------------------------------------------------------------------
 // Insert Block
 // -----------------------------------------------------------------------------
