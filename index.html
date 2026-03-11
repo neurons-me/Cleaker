@@ -9,8 +9,6 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
 <script>
   window.process = {
     env: {
@@ -18,7 +16,7 @@
     }
   };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.umd.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.bootstrap.umd.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/this.me@3.4.5/dist/me.umd.js" crossorigin="anonymous"></script>
 <script>
   (async function () {
@@ -37,6 +35,19 @@
         script.onerror = function () { reject(new Error('Failed to load ' + src)); };
         document.head.appendChild(script);
       });
+    }
+
+    try {
+      if (!window.GUI || typeof window.GUI.bootstrap !== 'function') {
+        rootEl.innerHTML =
+          '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.bootstrap is missing. Failed to load this.gui bootstrap.</div>';
+        return;
+      }
+      await window.GUI.bootstrap();
+    } catch (error) {
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">this.GUI bootstrap failed: ' + (error && error.message ? error.message : String(error)) + '</div>';
+      return;
     }
 
     try {
@@ -349,14 +360,14 @@
                     props: { sx: { minWidth: 0 } },
                     children: [
                       {
-                        type: 'CodeBlock',
-                        props: {
-                          title: 'bootstrap.html',
-                          language: 'html',
-                          variant: 'dark',
-                          showLineNumbers: true,
-                          wrapLongLines: true,
-                          code: String.raw`<!DOCTYPE html>
+                            type: 'CodeBlock',
+                            props: {
+                              title: 'bootstrap.html',
+                              language: 'html',
+                              variant: 'dark',
+                              showLineNumbers: true,
+                              wrapLongLines: true,
+                              code: String.raw`<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -366,9 +377,7 @@
   </head>
   <body>
     <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"><\/script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"><\/script>
-    <script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.umd.js"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.bootstrap.umd.js"><\/script>
     <script src="https://cdn.jsdelivr.net/npm/this.me@3.4.5/dist/me.umd.js"><\/script>
     <script src="./npm/dist/cleaker.umd.js"><\/script>
   </body>
