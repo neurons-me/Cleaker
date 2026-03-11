@@ -27,6 +27,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
+    "docs:publish": "npm run docs:build && touch docs/.vitepress/dist/.nojekyll",
     "test": "npm run test:quickstart && npm run test:demo && npm run test:axioms && npm run test:algebra && npm run test:browser && npm run test:bind && npm run test:integration:real && npm run test:sovereign-loop && npm run test:builds && npm run test:contracts",
     "test:quickstart": "tsx tests/quickstart.test.ts",
     "test:demo": "tsx tests/demo.test.ts",

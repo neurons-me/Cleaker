@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cleaker</title>
+  <style>
+    :root {
+      --bg: #f4eee4;
+      --panel: #fff9ef;
+      --ink: #1f1a17;
+      --muted: #6d6258;
+      --line: #d9cab8;
+      --accent: #a2462f;
+      --accent-2: #2d5a6d;
+      --shadow: 0 20px 60px rgba(31, 26, 23, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(162, 70, 47, 0.12), transparent 26%),
+        radial-gradient(circle at top right, rgba(45, 90, 109, 0.10), transparent 24%),
+        linear-gradient(180deg, #fbf7ef 0%, var(--bg) 100%);
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 56px 24px 84px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      line-height: 0.95;
+      font-weight: 700;
+    }
+
+    .lead {
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 1.18rem;
+      line-height: 1.6;
+    }
+
+    .quote {
+      margin: 0;
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+    }
+
+    .card p {
+      margin: 0 0 14px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    a {
+      color: var(--accent-2);
+      text-decoration: none;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .section {
+      margin-top: 42px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .links {
+      display: grid;
+      gap: 10px;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 0.95em;
+      background: rgba(31, 26, 23, 0.06);
+      padding: 0.12em 0.38em;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">semantic bridge</div>
+      <h1>cleaker</h1>
+      <p class="quote">Resolutio ante directionem; nomen ante locum.</p>
+      <p class="lead">
+        Cleaker is the bridge between <code>.me</code> and remote namespace resolution:
+        pointers, claims, replay hydration, browser-facing namespace surfaces, and the
+        package docs that define the protocol around them.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>npm Package</h2>
+        <p>The active package surface for the client runtime, tests, builds, and docs tooling.</p>
+        <a href="./npm/README.md">Open npm README</a>
+      </article>
+
+      <article class="card">
+        <h2>Docs</h2>
+        <p>Concept docs, protocol notes, browser bridge, algebra, and package documentation.</p>
+        <a href="./npm/docs/">Open docs folder</a>
+      </article>
+
+      <article class="card">
+        <h2>API Docs</h2>
+        <p>Generated API documentation for the package surface exposed by the npm module.</p>
+        <a href="./npm/docs/api/README.md">Open API docs</a>
+      </article>
+
+      <article class="card">
+        <h2>Server</h2>
+        <p>The current daemon/runtime package being extracted away from cleaker into monad.ai.</p>
+        <a href="./server/README.md">Open server README</a>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2>Build Docs</h2>
+      <div class="links">
+        <div><code>cd npm && npm run docs:api</code></div>
+        <div><code>cd npm && npm run docs:build</code></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Navigation</h2>
+      <div class="links">
+        <a href="./README.md">Root README</a>
+        <a href="./The%20Algebra%20of%20Me.md">The Algebra of Me</a>
+        <a href="./npm/docs/Concepts.md">Concepts</a>
+        <a href="./npm/docs/Protocol.md">Protocol</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
