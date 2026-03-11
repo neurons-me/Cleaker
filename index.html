@@ -20,12 +20,37 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.umd.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/this.me@3.4.5/dist/me.umd.js" crossorigin="anonymous"></script>
-<script src="./npm/dist/cleaker.umd.js"></script>
 <script>
-  (function () {
+  (async function () {
     const THIS_GUI_CDN_VERSION = '1.4.2';
     const THIS_ME_CDN_VERSION = '3.4.5';
     const CLEAKER_LOCAL_VERSION = '3.0.0-alpha.0';
+    const rootEl = document.getElementById('root');
+    if (!rootEl) return;
+
+    function loadScript(src, options) {
+      return new Promise(function (resolve, reject) {
+        const script = document.createElement('script');
+        script.src = src;
+        if (options && options.crossorigin) script.crossOrigin = options.crossorigin;
+        script.onload = function () { resolve(src); };
+        script.onerror = function () { reject(new Error('Failed to load ' + src)); };
+        document.head.appendChild(script);
+      });
+    }
+
+    try {
+      await loadScript('./npm/dist/cleaker.umd.js');
+    } catch (_) {
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/cleaker@3.0.0-alpha.0/dist/cleaker.umd.js', { crossorigin: 'anonymous' });
+      } catch (error) {
+        rootEl.innerHTML =
+          '<div style="font-family:ui-sans-serif,system-ui;padding:24px">Failed to load cleaker from local UMD and npm CDN.</div>';
+        return;
+      }
+    }
+
     const GUI = window.GUI;
     const Me = window.Me;
     const CleakerModule = window.Cleaker || window.cleaker;
@@ -35,8 +60,6 @@
         : typeof CleakerModule?.default === 'function'
           ? CleakerModule.default
           : null;
-    const rootEl = document.getElementById('root');
-    if (!rootEl) return;
 
     if (!GUI || typeof GUI.mount !== 'function') {
       rootEl.innerHTML =
