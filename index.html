@@ -5,9 +5,244 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>cleaker</title>
 <link rel="icon" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/styles.css" crossorigin="anonymous" />
+<style>
+  :root {
+    --external-topbar-height: 0px;
+  }
+
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0b0f10;
+    color: #e8eded;
+  }
+
+  #external-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1601;
+    isolation: isolate;
+  }
+
+  #runtime-controls {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(12, 18, 20, 0.92);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  #runtime-controls .runtime-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  #runtime-controls .runtime-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  #runtime-controls .runtime-control-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  #runtime-controls label {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9db0ae;
+    white-space: nowrap;
+  }
+
+  #runtime-controls select,
+  #runtime-controls button {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9px;
+    background: #12191b;
+    color: #f5f8f8;
+    padding: 6px 9px;
+    font: inherit;
+    min-height: 34px;
+  }
+
+  #runtime-controls button {
+    cursor: pointer;
+    background: #0f6a78;
+    border-color: #0f6a78;
+    font-weight: 600;
+    min-width: 92px;
+  }
+
+  #runtime-controls .runtime-hint {
+    font-size: 10px;
+    color: #89a09d;
+    padding-bottom: 0;
+    align-self: center;
+    max-width: 340px;
+    line-height: 1.25;
+  }
+
+  .runtime-status-label {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #89a09d;
+    font-weight: 700;
+  }
+
+  .runtime-status-source {
+    font-size: 11px;
+    font-weight: 700;
+    color: #e7f1ef;
+    line-height: 1.2;
+  }
+
+  .runtime-status-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+
+  .runtime-status-state::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+  }
+
+  .runtime-status-state.pending {
+    color: #d0a85c;
+  }
+
+  .runtime-status-state.on {
+    color: #49b675;
+  }
+
+  .runtime-status-state.off {
+    color: #e06b6b;
+  }
+
+  .runtime-status-url {
+    font-size: 10px;
+    color: #b7c5c3;
+    line-height: 1.25;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #root {
+    min-height: calc(100vh - var(--external-topbar-height));
+  }
+
+  #layout-root {
+    min-height: calc(100vh - var(--external-topbar-height));
+  }
+
+  .MuiAppBar-root {
+    top: var(--external-topbar-height) !important;
+  }
+
+  .LeftSidebar,
+  .RightSidebar {
+    top: var(--external-topbar-height) !important;
+    height: calc(100vh - var(--external-topbar-height)) !important;
+  }
+
+  #root > div[style*="position: fixed"] {
+    top: calc(var(--external-topbar-height) + 12px) !important;
+  }
+
+  #runtime-controls .runtime-action {
+    align-self: center;
+  }
+
+  @media (max-width: 720px) {
+    #runtime-controls {
+      align-items: stretch;
+    }
+
+    #runtime-controls .runtime-action,
+    #runtime-controls .runtime-hint {
+      align-self: stretch;
+    }
+
+    #runtime-controls .runtime-group {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+
+    #runtime-controls button,
+    #runtime-controls select {
+      width: auto;
+    }
+  }
+</style>
 </head>
 <body>
+<div id="external-topbar">
+<div id="runtime-controls">
+  <div class="runtime-group runtime-control">
+    <div class="runtime-control-row">
+      <label for="gui-source">GUI</label>
+      <select id="gui-source">
+        <option value="local">Local</option>
+        <option value="cdn">CDN</option>
+      </select>
+      <div id="runtime-status-gui-state" class="runtime-status-state pending" title="-">pending</div>
+    </div>
+    <div id="runtime-status-gui-url" class="runtime-status-url">-</div>
+  </div>
+  <div class="runtime-group runtime-control">
+    <div class="runtime-control-row">
+      <label for="cleaker-source">cleaker</label>
+      <select id="cleaker-source">
+        <option value="local">Local</option>
+        <option value="cdn">CDN</option>
+      </select>
+      <div id="runtime-status-cleaker-state" class="runtime-status-state pending" title="-">pending</div>
+    </div>
+    <div id="runtime-status-cleaker-url" class="runtime-status-url">-</div>
+  </div>
+  <div class="runtime-group runtime-control">
+    <div class="runtime-control-row">
+      <label for="me-source">.me</label>
+      <select id="me-source">
+        <option value="local">Local</option>
+        <option value="cdn">CDN</option>
+      </select>
+      <div id="runtime-status-me-state" class="runtime-status-state pending" title="-">pending</div>
+    </div>
+    <div id="runtime-status-me-url" class="runtime-status-url">-</div>
+  </div>
+</div>
+</div>
 <div id="root"></div>
 <script>
   window.process = {
@@ -16,20 +251,192 @@
     }
   };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.bootstrap.umd.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/this.me@3.4.5/dist/me.umd.js" crossorigin="anonymous"></script>
 <script>
   (async function () {
-    const THIS_GUI_CDN_VERSION = '1.4.2';
-    const THIS_ME_CDN_VERSION = '3.4.5';
-    const CLEAKER_LOCAL_VERSION = '3.0.1';
+    const SOURCE_STORAGE_KEY = 'cleaker.runtime.sources.v1';
+    const NAMESPACE_STORAGE_KEY = 'cleaker.namespace.v1';
+    const THIS_GUI_CDN_VERSION = 'latest';
+    const THIS_ME_CDN_VERSION = 'latest';
+    const CLEAKER_LOCAL_VERSION = 'latest';
+    const DAEMON_ORIGIN = 'http://localhost:8161';
+    const DEFAULT_NAMESPACE = 'cleaker';
+    const REMOTE_PATH = 'profile/name';
     const rootEl = document.getElementById('root');
     if (!rootEl) return;
+    let localHostNamespace = (function () {
+      try {
+        return new URL(DAEMON_ORIGIN).host;
+      } catch (_) {
+        return 'localhost:8161';
+      }
+    })();
+    function getNamespacePresets() {
+      return ['cleaker', localHostNamespace];
+    }
+    const LOCAL_GUI_CSS = '../../this/GUI/npm/dist/styles.css';
+    const LOCAL_GUI_BOOTSTRAP = '../../this/GUI/npm/dist/this.gui.bootstrap.umd.js';
+    const LOCAL_ME_UMD = '../../this/.me/npm/dist/me.umd.js';
+    const LOCAL_CLEAKER_UMD = './npm/dist/cleaker.umd.js';
+    const CDN_GUI_CSS = 'https://cdn.jsdelivr.net/npm/this.gui@latest/dist/styles.css';
+    const CDN_GUI_BOOTSTRAP = 'https://cdn.jsdelivr.net/npm/this.gui@latest/dist/this.gui.bootstrap.umd.js';
+    const CDN_ME_UMD = 'https://cdn.jsdelivr.net/npm/this.me@latest/dist/me.umd.js';
+    const CDN_CLEAKER_UMD = 'https://cdn.jsdelivr.net/npm/cleaker@latest/dist/cleaker.umd.js';
+    const IS_LOCAL_RUNTIME =
+      window.location.protocol === 'file:' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+    const defaultSource = IS_LOCAL_RUNTIME ? 'local' : 'cdn';
+    const controls = {
+      panel: document.getElementById('external-topbar'),
+      gui: document.getElementById('gui-source'),
+      cleaker: document.getElementById('cleaker-source'),
+      me: document.getElementById('me-source')
+    };
+    const statusEls = {
+      guiState: document.getElementById('runtime-status-gui-state'),
+      guiUrl: document.getElementById('runtime-status-gui-url'),
+      cleakerState: document.getElementById('runtime-status-cleaker-state'),
+      cleakerUrl: document.getElementById('runtime-status-cleaker-url'),
+      meState: document.getElementById('runtime-status-me-state'),
+      meUrl: document.getElementById('runtime-status-me-url'),
+    };
+
+    function syncRuntimeInset() {
+      const panel = controls.panel;
+      if (!panel) return;
+      const height = panel.offsetHeight || 0;
+      document.documentElement.style.setProperty('--external-topbar-height', height + 'px');
+    }
+
+    syncRuntimeInset();
+    if (typeof ResizeObserver !== 'undefined' && controls.panel) {
+      const observer = new ResizeObserver(syncRuntimeInset);
+      observer.observe(controls.panel);
+    } else {
+      window.addEventListener('resize', syncRuntimeInset);
+    }
+
+    function readSavedSources() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(SOURCE_STORAGE_KEY) || '{}');
+        return {
+          gui: parsed.gui === 'cdn' ? 'cdn' : defaultSource,
+          cleaker: parsed.cleaker === 'cdn' ? 'cdn' : defaultSource,
+          me: parsed.me === 'cdn' ? 'cdn' : defaultSource
+        };
+      } catch (_) {
+        return {
+          gui: defaultSource,
+          cleaker: defaultSource,
+          me: defaultSource
+        };
+      }
+    }
+
+    function writeSavedSources(sources) {
+      localStorage.setItem(SOURCE_STORAGE_KEY, JSON.stringify(sources));
+    }
+
+    async function hydrateLocalHostNamespace() {
+      try {
+        const response = await fetch(DAEMON_ORIGIN + '/__bootstrap');
+        if (!response.ok) return;
+        const payload = await response.json();
+        const displayName = sanitizeNamespace(payload?.resolverDisplayName || payload?.resolverHostName || '');
+        if (displayName) {
+          localHostNamespace = displayName;
+        }
+      } catch (_) {}
+    }
+
+    function sanitizeNamespace(value) {
+      return String(value || '').trim().replace(/^me:\/\//, '').replace(/\/+$/, '');
+    }
+
+    function readSavedNamespace() {
+      try {
+        const rawSaved = sanitizeNamespace(localStorage.getItem(NAMESPACE_STORAGE_KEY) || '');
+        const saved = rawSaved === 'localhost' ? localHostNamespace : rawSaved;
+        return saved || DEFAULT_NAMESPACE;
+      } catch (_) {
+        return DEFAULT_NAMESPACE;
+      }
+    }
+
+    function writeSavedNamespace(namespace) {
+      localStorage.setItem(NAMESPACE_STORAGE_KEY, sanitizeNamespace(namespace));
+    }
+
+    function formatRuntimeDetail(version, url) {
+      const shortUrl = String(url || '').replace(window.location.origin, '');
+      return version ? ('v' + version + ' · ' + shortUrl) : shortUrl;
+    }
+
+    function setRuntimeStatus(name, source, url, state, version) {
+      const stateEl = statusEls[name + 'State'];
+      const urlEl = statusEls[name + 'Url'];
+      if (stateEl) {
+        const normalizedState = state || 'pending';
+        stateEl.textContent = normalizedState + ' ' + String(source || '').toUpperCase();
+        stateEl.className = 'runtime-status-state ' + normalizedState;
+        stateEl.title = url;
+      }
+      if (urlEl) {
+        urlEl.textContent = formatRuntimeDetail(version, url);
+        urlEl.title = url;
+      }
+    }
+
+    function resolveAssetUrl(source, localSrc, cdnSrc) {
+      const target = source === 'cdn' ? cdnSrc : localSrc;
+      try {
+        return new URL(target, window.location.href).href;
+      } catch (_) {
+        return target;
+      }
+    }
+
+    const selectedSources = readSavedSources();
+    setRuntimeStatus('gui', selectedSources.gui, resolveAssetUrl(selectedSources.gui, LOCAL_GUI_BOOTSTRAP, CDN_GUI_BOOTSTRAP), 'pending');
+    setRuntimeStatus('cleaker', selectedSources.cleaker, resolveAssetUrl(selectedSources.cleaker, LOCAL_CLEAKER_UMD, CDN_CLEAKER_UMD), 'pending');
+    setRuntimeStatus('me', selectedSources.me, resolveAssetUrl(selectedSources.me, LOCAL_ME_UMD, CDN_ME_UMD), 'pending');
+
+    if (controls.gui) controls.gui.value = selectedSources.gui;
+    if (controls.cleaker) controls.cleaker.value = selectedSources.cleaker;
+    if (controls.me) controls.me.value = selectedSources.me;
+
+    function reloadWithSelectedSources() {
+      const nextSources = {
+        gui: controls.gui && controls.gui.value === 'cdn' ? 'cdn' : 'local',
+        cleaker: controls.cleaker && controls.cleaker.value === 'cdn' ? 'cdn' : 'local',
+        me: controls.me && controls.me.value === 'cdn' ? 'cdn' : 'local'
+      };
+      writeSavedSources(nextSources);
+      window.location.reload();
+    }
+
+    [controls.gui, controls.cleaker, controls.me].forEach(function (control) {
+      if (!control) return;
+      control.addEventListener('change', reloadWithSelectedSources);
+    });
+
+    function loadStyle(href, options) {
+      return new Promise(function (resolve, reject) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        if (options && options.crossorigin) link.crossOrigin = options.crossorigin;
+        link.onload = function () { resolve(href); };
+        link.onerror = function () { reject(new Error('Failed to load ' + href)); };
+        document.head.appendChild(link);
+      });
+    }
 
     function loadScript(src, options) {
       return new Promise(function (resolve, reject) {
         const script = document.createElement('script');
         script.src = src;
+        script.async = false;
         if (options && options.crossorigin) script.crossOrigin = options.crossorigin;
         script.onload = function () { resolve(src); };
         script.onerror = function () { reject(new Error('Failed to load ' + src)); };
@@ -37,33 +444,109 @@
       });
     }
 
+    function toDotPath(value) {
+      return String(value || '').replace(/\//g, '.').replace(/^\.+/, '');
+    }
+
+    function pretty(value) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    await hydrateLocalHostNamespace();
+    let activeNamespace = readSavedNamespace();
+
+    function getRemoteExpr() {
+      return 'remote/' + activeNamespace + '/' + REMOTE_PATH;
+    }
+
+    function getRemoteMeKey() {
+      return 'me://' + activeNamespace + ':read/' + REMOTE_PATH;
+    }
+
+    async function loadSelectedAsset(source, localSrc, cdnSrc, kind) {
+      const isCdn = source === 'cdn';
+      const target = isCdn ? cdnSrc : localSrc;
+      return kind === 'style'
+        ? await loadStyle(target, isCdn ? { crossorigin: 'anonymous' } : undefined)
+        : await loadScript(target, isCdn ? { crossorigin: 'anonymous' } : undefined);
+    }
+
+    function normalizeRemoteExpr(expr) {
+      const match = String(expr || '').match(/^remote\/([^/]+)\/(.+)$/);
+      if (!match) return null;
+      return {
+        key: 'me://' + match[1] + ':read/' + match[2],
+        namespace: match[1],
+        path: match[2]
+      };
+    }
+
+    function extractSemanticValue(payload) {
+      if (!payload || typeof payload !== 'object') return payload;
+      const result = payload.result;
+      const data = result && typeof result === 'object' ? result.data : null;
+      if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'value')) {
+        return data.value;
+      }
+      if (payload && Object.prototype.hasOwnProperty.call(payload, 'value')) {
+        return payload.value;
+      }
+      return payload;
+    }
+
+    function getRemoteDebugSnapshot() {
+      const remoteExpr = getRemoteExpr();
+      const normalized = normalizeRemoteExpr(remoteExpr);
+      const cacheKey = normalized ? normalized.key : null;
+      return {
+        remoteExpr: remoteExpr,
+        normalized: normalized,
+        cacheKeys: Array.from(remoteCache.keys()),
+        cacheValue: cacheKey ? remoteCache.get(cacheKey) : null
+      };
+    }
+
     try {
+      await loadSelectedAsset(selectedSources.gui, LOCAL_GUI_CSS, CDN_GUI_CSS, 'style');
+      await loadSelectedAsset(selectedSources.gui, LOCAL_GUI_BOOTSTRAP, CDN_GUI_BOOTSTRAP, 'script');
+      setRuntimeStatus('gui', selectedSources.gui, resolveAssetUrl(selectedSources.gui, LOCAL_GUI_BOOTSTRAP, CDN_GUI_BOOTSTRAP), 'on');
       if (!window.GUI || typeof window.GUI.bootstrap !== 'function') {
+        setRuntimeStatus('gui', selectedSources.gui, resolveAssetUrl(selectedSources.gui, LOCAL_GUI_BOOTSTRAP, CDN_GUI_BOOTSTRAP), 'off');
         rootEl.innerHTML =
           '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.bootstrap is missing. Failed to load this.gui bootstrap.</div>';
         return;
       }
       await window.GUI.bootstrap();
+      await loadSelectedAsset(selectedSources.me, LOCAL_ME_UMD, CDN_ME_UMD, 'script');
+      setRuntimeStatus('me', selectedSources.me, resolveAssetUrl(selectedSources.me, LOCAL_ME_UMD, CDN_ME_UMD), 'on');
     } catch (error) {
+      const guiUrl = resolveAssetUrl(selectedSources.gui, LOCAL_GUI_BOOTSTRAP, CDN_GUI_BOOTSTRAP);
+      const meUrl = resolveAssetUrl(selectedSources.me, LOCAL_ME_UMD, CDN_ME_UMD);
+      if (!window.GUI) {
+        setRuntimeStatus('gui', selectedSources.gui, guiUrl, 'off');
+      }
+      if (!window.Me) {
+        setRuntimeStatus('me', selectedSources.me, meUrl, 'off');
+      }
       rootEl.innerHTML =
-        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">this.GUI bootstrap failed: ' + (error && error.message ? error.message : String(error)) + '</div>';
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">this.GUI/.me bootstrap failed: ' + (error && error.message ? error.message : String(error)) + '</div>';
       return;
     }
 
     try {
-      await loadScript('./npm/dist/cleaker.umd.js');
-    } catch (_) {
-      try {
-        await loadScript('https://cdn.jsdelivr.net/npm/cleaker@3.0.1/dist/cleaker.umd.js', { crossorigin: 'anonymous' });
-      } catch (error) {
-        rootEl.innerHTML =
-          '<div style="font-family:ui-sans-serif,system-ui;padding:24px">Failed to load cleaker from local UMD and npm CDN.</div>';
-        return;
-      }
+      await loadSelectedAsset(selectedSources.cleaker, LOCAL_CLEAKER_UMD, CDN_CLEAKER_UMD, 'script');
+      setRuntimeStatus('cleaker', selectedSources.cleaker, resolveAssetUrl(selectedSources.cleaker, LOCAL_CLEAKER_UMD, CDN_CLEAKER_UMD), 'on');
+    } catch (error) {
+      setRuntimeStatus('cleaker', selectedSources.cleaker, resolveAssetUrl(selectedSources.cleaker, LOCAL_CLEAKER_UMD, CDN_CLEAKER_UMD), 'off');
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">Failed to load cleaker from local UMD and npm CDN.</div>';
+      return;
     }
 
     const GUI = window.GUI;
     const Me = window.Me;
+    const AppRouter = GUI?.Router;
+    const RunMe = GUI?.RunMe;
     const CleakerModule = window.Cleaker || window.cleaker;
     const Cleaker =
       typeof CleakerModule === 'function'
@@ -73,18 +556,31 @@
           : null;
 
     if (!GUI || typeof GUI.mount !== 'function') {
+      setRuntimeStatus('gui', selectedSources.gui, resolveAssetUrl(selectedSources.gui, LOCAL_GUI_BOOTSTRAP, CDN_GUI_BOOTSTRAP), 'off');
       rootEl.innerHTML =
-        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.mount is missing. Failed to load this.gui from npm CDN.</div>';
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.mount is missing.</div>';
       return;
     }
     if (!Me) {
+      setRuntimeStatus('me', selectedSources.me, resolveAssetUrl(selectedSources.me, LOCAL_ME_UMD, CDN_ME_UMD), 'off');
       rootEl.innerHTML =
-        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Me is missing. Failed to load this.me from npm CDN.</div>';
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Me is missing.</div>';
+      return;
+    }
+    if (typeof AppRouter !== 'function') {
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.Router is missing.</div>';
+      return;
+    }
+    if (typeof RunMe !== 'function') {
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.RunMe is missing.</div>';
       return;
     }
     if (typeof Cleaker !== 'function') {
+      setRuntimeStatus('cleaker', selectedSources.cleaker, resolveAssetUrl(selectedSources.cleaker, LOCAL_CLEAKER_UMD, CDN_CLEAKER_UMD), 'off');
       rootEl.innerHTML =
-        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Cleaker.default is missing. Build cleaker locally first.</div>';
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Cleaker.default is missing.</div>';
       return;
     }
 
@@ -113,59 +609,209 @@
       CleakerModule?.__VERSION__ ||
       CLEAKER_LOCAL_VERSION;
 
+    setRuntimeStatus('gui', selectedSources.gui, resolveAssetUrl(selectedSources.gui, LOCAL_GUI_BOOTSTRAP, CDN_GUI_BOOTSTRAP), 'on', GUI_VERSION);
+    setRuntimeStatus('cleaker', selectedSources.cleaker, resolveAssetUrl(selectedSources.cleaker, LOCAL_CLEAKER_UMD, CDN_CLEAKER_UMD), 'on', CLEAKER_VERSION);
+    setRuntimeStatus('me', selectedSources.me, resolveAssetUrl(selectedSources.me, LOCAL_ME_UMD, CDN_ME_UMD), 'on', ME_VERSION);
+
     const me = new Me();
     const node = Cleaker(me);
+    const baseRuntime = RunMe(me);
+    const remoteCache = new Map();
+    const remotePending = new Set();
+    let daemonStatus = { state: 'checking', origin: DAEMON_ORIGIN, namespace: activeNamespace };
     let currentPath = '/runtime';
     let currentCtx = {};
 
-    function seedKernel() {
-      me['@']('jabellae');
-      me.profile.name('Abella.e');
-      me.profile.status('idle');
-      me.profile.bio('Designing semantic interfaces.');
-      me.users.ana.name('Ana');
-      me.users.ana.age(22);
-      me.users.ana.bio('Designing semantic interfaces.');
-      me.users.pablo.name('Pablo');
-      me.users.pablo.age(17);
-      me.friends.ana['->']('users.ana');
-      me.friends.pablo['->']('users.pablo');
+    function refreshNamespace() {
+      daemonStatus = { state: 'checking', origin: DAEMON_ORIGIN, namespace: activeNamespace };
+      detectDaemon().then(function () {
+        scheduleRemote(getRemoteExpr());
+        rerender();
+      }).catch(function () {
+        rerender();
+      });
     }
 
-    seedKernel();
+    function setActiveNamespace(nextNamespace) {
+      const normalized = sanitizeNamespace(nextNamespace);
+      if (!normalized) return;
+      activeNamespace = normalized;
+      writeSavedNamespace(activeNamespace);
+      refreshNamespace();
+      rerender();
+    }
+
+    function seedKernel() {
+      me['@']('jabellae');
+      me.public.profile.name('Abella.e');
+      me.public.profile.status('idle');
+      me.public.profile.bio('Designing semantic interfaces.');
+      me.public.users.ana.name('Ana');
+      me.public.users.ana.age(22);
+      me.public.users.ana.bio('Designing semantic interfaces.');
+      me.public.users.pablo.name('Pablo');
+      me.public.users.pablo.age(17);
+      me.public.friends.ana['->']('users.ana');
+      me.public.friends.pablo['->']('users.pablo');
+    }
 
     function inspectState() {
       return {
         profile: {
-          name: node('profile.name'),
-          status: node('profile.status'),
-          bio: node('profile.bio')
+          name: node('public.profile.name'),
+          status: node('public.profile.status'),
+          bio: node('public.profile.bio')
         },
         friends: {
-          ana: node('friends.ana.name'),
-          pablo: node('friends.pablo.name'),
-          adults: node('friends[age > 18].name')
+          ana: node('public.friends.ana.name'),
+          pablo: node('public.friends.pablo.name'),
+          adults: node('public.friends[age > 18].name')
         }
       };
     }
 
-    async function resolvePointer(expression) {
+    async function resolvePointer(expression, options) {
       const ptr = node.pointer(expression);
-      const result = await ptr.resolve();
+      const result = await ptr.resolve(options || {});
       return {
-        expression,
+        expression: expression,
         pointer: ptr.__ptr,
-        result
+        result: result
       };
+    }
+
+    async function detectDaemon() {
+      const startedAt = Date.now();
+      try {
+        const response = await fetch(DAEMON_ORIGIN + '/', {
+          method: 'GET',
+          headers: {
+            'x-forwarded-host': activeNamespace
+          }
+        });
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (_) {
+          data = null;
+        }
+        daemonStatus = {
+          ok: response.ok,
+          state: response.ok ? 'online' : 'offline',
+          reachable: true,
+          origin: DAEMON_ORIGIN,
+          namespace: activeNamespace,
+          status: response.status,
+          elapsedMs: Date.now() - startedAt,
+          data: data
+        };
+      } catch (error) {
+        daemonStatus = {
+          ok: false,
+          state: 'offline',
+          reachable: false,
+          origin: DAEMON_ORIGIN,
+          namespace: activeNamespace,
+          elapsedMs: Date.now() - startedAt,
+          error: error && error.message ? error.message : String(error)
+        };
+      }
+      return daemonStatus;
     }
 
     function rerender() {
       router.navigate(currentPath, { push: false, ctx: currentCtx });
     }
 
-    function code(value) {
-      return JSON.stringify(value, null, 2);
+    function openHref(href) {
+      try {
+        window.location.href = href;
+      } catch (_) {}
     }
+
+    function scheduleRemote(expr) {
+      if (remotePending.has(expr)) return;
+      remotePending.add(expr);
+      const normalized = normalizeRemoteExpr(expr);
+      if (!normalized) {
+        remoteCache.set(expr, { error: 'Invalid remote expression' });
+        remotePending.delete(expr);
+        rerender();
+        return;
+      }
+      resolvePointer(normalized.key, {
+        origin: DAEMON_ORIGIN,
+        headers: {
+          'x-forwarded-host': normalized.namespace
+        }
+      }).then(function (payload) {
+        remoteCache.set(normalized.key, {
+          expression: normalized.key,
+          value: extractSemanticValue(payload),
+          payload: payload
+        });
+      }).catch(function (error) {
+        remoteCache.set(normalized.key, { expression: normalized.key, error: error && error.message ? error.message : String(error) });
+      }).finally(function () {
+        remotePending.delete(expr);
+        rerender();
+      });
+    }
+
+    const runtime = {
+      ...baseRuntime,
+      resolve(expr, ctx, meta) {
+        if (typeof expr === 'string' && expr.startsWith('remote/')) {
+          const normalized = normalizeRemoteExpr(expr);
+          const cacheKey = normalized ? normalized.key : expr;
+          const cached = remoteCache.get(cacheKey);
+          if (!cached) {
+            scheduleRemote(expr);
+            return '[loading remote]';
+          }
+          if (cached && Object.prototype.hasOwnProperty.call(cached, 'value')) {
+            return cached.value;
+          }
+          if (cached && Object.prototype.hasOwnProperty.call(cached, 'error')) {
+            return '[remote error]';
+          }
+          return pretty(cached);
+        }
+        if (typeof expr === 'string' && expr.startsWith('me/')) {
+          const dotPath = toDotPath(expr.slice(3));
+          if (typeof node === 'function') return node(dotPath);
+          if (typeof me === 'function') return me(dotPath);
+          if (typeof me.get === 'function') return me.get(dotPath);
+          if (typeof me.readPath === 'function') return me.readPath(dotPath.split('.'));
+        }
+        return baseRuntime.resolve ? baseRuntime.resolve(expr, ctx, meta) : expr;
+      },
+      action(expression, ctx, meta) {
+        const expr = String(expression || '').trim();
+        const baseFn = baseRuntime.action ? baseRuntime.action(expr, ctx, meta) : function () {};
+        function isEventLike(value) {
+          return !!(
+            value &&
+            typeof value === 'object' &&
+            (
+              typeof value.preventDefault === 'function' ||
+              typeof value.stopPropagation === 'function' ||
+              value.nativeEvent ||
+              value.target ||
+              value.currentTarget
+            )
+          );
+        }
+        return function () {
+          const args = Array.prototype.slice.call(arguments).filter(function (value) {
+            return !isEventLike(value);
+          });
+          const result = baseFn.apply(null, args);
+          rerender();
+          return result;
+        };
+      }
+    };
 
     const leftSidebarConfig = {
       initialView: 'rail',
@@ -179,21 +825,26 @@
       ]
     };
 
-    const router = new GUI.Router();
+    const router = new AppRouter({ runtime: runtime });
 
-    router.set('/runtime', async function () {
-      const state = inspectState();
-      const localRead = await resolvePointer('me://local:read/profile.status');
-      const selfRead = await resolvePointer('me://self:read/profile.name');
-      const spec = {
+    seedKernel();
+    detectDaemon().then(function () {
+      if (daemonStatus.ok) {
+        scheduleRemote(getRemoteExpr());
+      }
+      rerender();
+    }).catch(function () {});
+
+    router.set('/runtime', function () {
+      return {
         type: 'Layout',
-        props: { leftSidebarConfig },
+        props: { leftSidebarConfig: leftSidebarConfig },
         children: [
           {
             type: 'Page',
             props: {
               title: 'cleaker',
-              subtitle: 'Local bootstrap with this.GUI + .me + cleaker'
+              subtitle: 'GUI.RunMe(me) + cleaker runtime adapter'
             },
             children: [
               {
@@ -214,43 +865,370 @@
                     children: [
                       {
                         type: 'Paper',
-                        props: { sx: { p: 2, borderRadius: 2, minWidth: 0 } },
+                        props: {
+                          sx: {
+                            p: { xs: 2, md: 2.5 },
+                            borderRadius: 2.5,
+                            minWidth: 0,
+                            position: 'relative',
+                            overflow: 'hidden',
+                            background:
+                              'linear-gradient(180deg, rgba(248,249,250,0.98) 0%, rgba(244,246,247,0.98) 100%)',
+                            border: '1px solid',
+                            borderColor: 'rgba(15, 23, 42, 0.07)',
+                            boxShadow: '0 10px 30px rgba(15, 23, 42, 0.035)'
+                          }
+                        },
                         children: [
                           {
                             type: 'Box',
-                            props: { sx: { display: 'flex', justifyContent: 'center', mb: 1 } },
+                            props: {
+                              sx: {
+                                position: 'absolute',
+                                top: -72,
+                                right: -72,
+                                width: 220,
+                                height: 220,
+                                borderRadius: '50%',
+                                background:
+                                  'radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.045), rgba(15, 23, 42, 0.012) 46%, rgba(15, 23, 42, 0) 72%)',
+                                pointerEvents: 'none'
+                              }
+                            }
+                          },
+                          {
+                            type: 'Box',
+                            props: {
+                              sx: {
+                                position: 'absolute',
+                                bottom: -90,
+                                left: -90,
+                                width: 220,
+                                height: 220,
+                                borderRadius: '50%',
+                                background:
+                                  'radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.03), rgba(15, 23, 42, 0.008) 44%, rgba(15, 23, 42, 0) 72%)',
+                                pointerEvents: 'none'
+                              }
+                            }
+                          },
+                          {
+                            type: 'Box',
+                            props: {
+                              sx: {
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 2.5,
+                                mb: 1.75,
+                                position: 'relative',
+                                zIndex: 1,
+                                flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                              }
+                            },
                             children: [
                               {
                                 type: 'Box',
                                 props: {
-                                  component: 'img',
-                                  src: 'https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png',
-                                  alt: 'cleaker',
-                                  sx: { width: 180, maxWidth: '70vw', height: 'auto', display: 'block' }
-                                }
+                                  sx: {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.75,
+                                    minWidth: 0
+                                  }
+                                },
+                                children: [
+                                  {
+                                    type: 'Box',
+                                    props: {
+                                      sx: {
+                                        width: 128,
+                                        minWidth: 128,
+                                        height: 128,
+                                        borderRadius: 999,
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                        position: 'relative',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        boxShadow: 'none'
+                                      }
+                                    },
+                                    children: [
+                                      {
+                                        type: 'Box',
+                                        props: {
+                                          sx: {
+                                            position: 'absolute',
+                                            inset: 12,
+                                            borderRadius: 999,
+                                            background: 'transparent',
+                                            border: '1px solid rgba(15, 23, 42, 0.08)'
+                                          }
+                                        }
+                                      },
+                                      {
+                                        type: 'Box',
+                                        props: {
+                                          component: 'img',
+                                          src: 'https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png',
+                                          alt: 'cleaker',
+                                          sx: {
+                                            width: 84,
+                                            height: 84,
+                                            objectFit: 'contain',
+                                            display: 'block',
+                                            position: 'relative',
+                                            zIndex: 1,
+                                            imageRendering: 'pixelated',
+                                            filter: 'grayscale(0.02) contrast(1.04) drop-shadow(0 8px 14px rgba(15, 23, 42, 0.18))'
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    type: 'Box',
+                                    props: { sx: { minWidth: 0 } },
+                                    children: [
+                                      {
+                                        type: 'Typography',
+                                        props: {
+                                          variant: 'overline',
+                                          sx: {
+                                            display: 'block',
+                                            color: '#6b7280',
+                                            letterSpacing: '0.18em',
+                                            fontWeight: 700,
+                                            lineHeight: 1.1,
+                                            fontSize: '0.72rem'
+                                          }
+                                        },
+                                        children: ['cleaker']
+                                      },
+                                      {
+                                        type: 'Typography',
+                                        props: {
+                                          variant: 'h4',
+                                          sx: {
+                                            mt: 0.35,
+                                            fontWeight: 700,
+                                            letterSpacing: '-0.035em',
+                                            lineHeight: 1,
+                                            fontSize: { xs: '2rem', md: '2.35rem' }
+                                          }
+                                        },
+                                        children: ['Bootstrapping cleaker in HTML']
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                            ]
+                          },
+                          {
+                            type: 'Typography',
+                            props: {
+                              variant: 'body1',
+                              sx: {
+                                mt: 0.1,
+                                maxWidth: 700,
+                                color: '#4b5563',
+                                position: 'relative',
+                                zIndex: 1,
+                                lineHeight: 1.65
+                              }
+                            },
+                            children: ['This page uses this.GUI bootstrap, this.me from npm, and a cleaker-aware runtime adapter.']
+                          },
+                          {
+                            type: 'Box',
+                            props: {
+                              sx: {
+                                mt: 2,
+                                display: 'grid',
+                                gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.7fr) minmax(0, 0.7fr)' },
+                                gap: 1,
+                                position: 'relative',
+                                zIndex: 1
+                              }
+                            },
+                            children: [
+                              {
+                                type: 'Paper',
+                                props: {
+                                  variant: 'outlined',
+                                  sx: {
+                                    p: 1.15,
+                                    borderRadius: 2,
+                                    background: 'rgba(255,255,255,0.56)',
+                                    borderColor: 'rgba(15, 23, 42, 0.07)',
+                                    boxShadow: 'none'
+                                  }
+                                },
+                                children: [
+                                  {
+                                    type: 'Typography',
+                                    props: {
+                                      variant: 'caption',
+                                      sx: {
+                                        display: 'block',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.12em',
+                                        fontWeight: 700,
+                                        color: '#6b7280',
+                                        fontFamily: '"SFMono-Regular", "Menlo", "Monaco", monospace'
+                                      }
+                                    },
+                                    children: ['Here']
+                                  },
+                                  {
+                                    type: 'Box',
+                                    props: {
+                                      sx: {
+                                        mt: 0.75,
+                                        display: 'flex',
+                                        gap: 0.65,
+                                        flexWrap: 'wrap',
+                                        alignItems: 'center'
+                                      }
+                                    },
+                                    children: getNamespacePresets().map(function (namespaceItem) {
+                                      const isActive = namespaceItem === activeNamespace;
+                                      return {
+                                        type: 'Button',
+                                        props: {
+                                          variant: isActive ? 'contained' : 'text',
+                                          label: namespaceItem,
+                                          onClick: function () { setActiveNamespace(namespaceItem); },
+                                          sx: {
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            px: 1.1,
+                                            py: 0.5,
+                                            borderRadius: 999,
+                                            border: '1px solid',
+                                            borderColor: isActive ? 'rgba(15, 23, 42, 0.16)' : 'rgba(15, 23, 42, 0.08)',
+                                            bgcolor: isActive ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255,255,255,0.72)',
+                                            color: isActive ? '#f8fafc' : '#111827',
+                                            fontFamily: '"SFMono-Regular", "Menlo", "Monaco", monospace',
+                                            fontSize: '0.82rem',
+                                            fontWeight: isActive ? 700 : 500,
+                                            textTransform: 'none',
+                                            boxShadow: 'none',
+                                            '&:hover': {
+                                              boxShadow: 'none',
+                                              bgcolor: isActive ? 'rgba(15, 23, 42, 0.88)' : 'rgba(15, 23, 42, 0.04)'
+                                            }
+                                          }
+                                        }
+                                      };
+                                    })
+                                  },
+                                  {
+                                    type: 'Typography',
+                                    props: {
+                                      variant: 'body2',
+                                      sx: {
+                                        display: 'block',
+                                        mt: 0.8,
+                                        color: '#4b5563',
+                                        lineHeight: 1.55
+                                      }
+                                    },
+                                    children: ['me · cleaker extends this branch so you can reach other semantic branches from here.']
+                                  }
+                                ]
+                              },
+                              {
+                                type: 'Paper',
+                                props: {
+                                  variant: 'outlined',
+                                  sx: {
+                                    p: 1.15,
+                                    borderRadius: 2,
+                                    background: 'rgba(255,255,255,0.56)',
+                                    borderColor: 'rgba(15, 23, 42, 0.07)',
+                                    boxShadow: 'none'
+                                  }
+                                },
+                                children: [
+                                  {
+                                    type: 'Typography',
+                                    props: {
+                                      variant: 'caption',
+                                      sx: {
+                                        display: 'block',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.12em',
+                                        fontWeight: 700,
+                                        color: '#6b7280',
+                                        fontFamily: '"SFMono-Regular", "Menlo", "Monaco", monospace'
+                                      }
+                                    },
+                                    children: ['Status']
+                                  },
+                                  {
+                                    type: 'Box',
+                                    props: {
+                                      sx: {
+                                        mt: 0.6,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.6,
+                                        color:
+                                          daemonStatus.state === 'checking'
+                                            ? '#d97706'
+                                            : daemonStatus.ok
+                                              ? '#15803d'
+                                              : '#b91c1c',
+                                        fontFamily: '"SFMono-Regular", "Menlo", "Monaco", monospace',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 700,
+                                        letterSpacing: '0.08em',
+                                        textTransform: 'uppercase'
+                                      }
+                                    },
+                                    children: [
+                                      {
+                                        type: 'Box',
+                                        props: {
+                                          sx: {
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: 999,
+                                            bgcolor: 'currentColor',
+                                            flexShrink: 0
+                                          }
+                                        }
+                                      },
+                                      daemonStatus.state === 'checking'
+                                        ? 'checking'
+                                        : daemonStatus.ok
+                                          ? 'online'
+                                          : 'offline'
+                                    ]
+                                  },
+                                  {
+                                    type: 'Typography',
+                                    props: {
+                                      variant: 'caption',
+                                      sx: {
+                                        display: 'block',
+                                        mt: 0.65,
+                                        color: '#6b7280',
+                                        lineHeight: 1.45
+                                      }
+                                    },
+                                    children: ['This tells you whether the current namespace is reachable right now.']
+                                  }
+                                ]
                               }
                             ]
                           },
                           {
-                            type: 'Typography',
-                            props: { variant: 'h4', sx: { fontWeight: 900, letterSpacing: '-0.4px' } },
-                            children: ['Bootstrapping cleaker in HTML']
-                          },
-                          {
-                            type: 'Typography',
-                            props: { variant: 'body2', sx: { mt: 1, opacity: 0.85 } },
-                            children: [
-                            'This page uses published npm runtimes for this.GUI and this.me, plus the local cleaker UMD from this repo.'
-                            ]
-                          },
-                          {
-                            type: 'Typography',
-                            props: { variant: 'body2', sx: { mt: 1, opacity: 0.9 } },
-                            children: ['Runtime: this.GUI v' + GUI_VERSION + ' | this.me v' + ME_VERSION + ' | cleaker v' + CLEAKER_VERSION + ' | me://local and me://self resolve in-process.']
-                          },
-                          {
                             type: 'Box',
-                            props: { sx: { mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' } },
+                            props: { sx: { mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap', position: 'relative', zIndex: 1 } },
                             children: [
                               {
                                 type: 'Button',
@@ -258,10 +1236,7 @@
                                   variant: 'contained',
                                   color: 'success',
                                   label: 'Set active',
-                                  onClick: function () {
-                                    me.profile.status('active');
-                                    rerender();
-                                  }
+                                  onClick: { $action: "me/public/profile/status = 'active'" }
                                 }
                               },
                               {
@@ -270,10 +1245,7 @@
                                   variant: 'outlined',
                                   color: 'warning',
                                   label: 'Set idle',
-                                  onClick: function () {
-                                    me.profile.status('idle');
-                                    rerender();
-                                  }
+                                  onClick: { $action: "me/public/profile/status = 'idle'" }
                                 }
                               },
                               {
@@ -306,10 +1278,10 @@
                             props: {
                               title: 'state.json',
                               language: 'json',
-                              variant: 'dark',
+                              variant: 'light',
                               showLineNumbers: true,
                               wrapLongLines: true,
-                              code: code(state)
+                              code: pretty(inspectState())
                             }
                           }
                         ]
@@ -328,10 +1300,13 @@
                             props: {
                               title: 'me://local',
                               language: 'json',
-                              variant: 'dark',
+                              variant: 'light',
                               showLineNumbers: true,
                               wrapLongLines: true,
-                              code: code(localRead)
+                              code: pretty({
+                                expression: 'me://local:read/profile.status',
+                                value: runtime.resolve('me/public/profile/status')
+                              })
                             }
                           },
                           {
@@ -343,10 +1318,67 @@
                                 props: {
                                   title: 'me://self',
                                   language: 'json',
-                                  variant: 'dark',
+                                  variant: 'light',
                                   showLineNumbers: true,
                                   wrapLongLines: true,
-                                  code: code(selfRead)
+                                  code: pretty({
+                                    expression: 'me://self:read/profile.name',
+                                    value: runtime.resolve('me/public/profile/name')
+                                  })
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            type: 'Box',
+                            props: { sx: { mt: 2 } },
+                            children: [
+                              {
+                                type: 'CodeBlock',
+                                props: {
+                                  title: 'daemon status',
+                                  language: 'json',
+                                  variant: 'light',
+                                  showLineNumbers: true,
+                                  wrapLongLines: true,
+                                  code: pretty(daemonStatus)
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            type: 'Box',
+                            props: { sx: { mt: 2 } },
+                            children: [
+                              {
+                                type: 'CodeBlock',
+                                props: {
+                                  title: 'me://remote',
+                                  language: 'json',
+                                  variant: 'light',
+                                  showLineNumbers: true,
+                                  wrapLongLines: true,
+                                  code: pretty(remoteCache.get(getRemoteMeKey()) || {
+                                    expression: getRemoteMeKey(),
+                                    note: daemonStatus.ok ? 'Waiting for remote resolution.' : 'Daemon unavailable or blocked.'
+                                  })
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            type: 'Box',
+                            props: { sx: { mt: 2 } },
+                            children: [
+                              {
+                                type: 'CodeBlock',
+                                props: {
+                                  title: 'remote debug',
+                                  language: 'json',
+                                  variant: 'light',
+                                  showLineNumbers: true,
+                                  wrapLongLines: true,
+                                  code: pretty(getRemoteDebugSnapshot())
                                 }
                               }
                             ]
@@ -360,28 +1392,18 @@
                     props: { sx: { minWidth: 0 } },
                     children: [
                       {
-                            type: 'CodeBlock',
-                            props: {
-                              title: 'bootstrap.html',
-                              language: 'html',
-                              variant: 'dark',
-                              showLineNumbers: true,
-                              wrapLongLines: true,
-                              code: String.raw`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/styles.css" />
-    <title>cleaker</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.bootstrap.umd.js"><\/script>
-    <script src="https://cdn.jsdelivr.net/npm/this.me@3.4.5/dist/me.umd.js"><\/script>
-    <script src="./npm/dist/cleaker.umd.js"><\/script>
-  </body>
-</html>`
+                        type: 'CodeBlock',
+                        props: {
+                          title: 'runtime spec',
+                          language: 'json',
+                          variant: 'light',
+                          showLineNumbers: true,
+                          wrapLongLines: true,
+                          code: pretty({
+                            localStatus: { $expr: 'me/public/profile/status' },
+                            localName: { $expr: 'me/public/profile/name' },
+                            remoteName: { $expr: getRemoteExpr() }
+                          })
                         }
                       },
                       {
@@ -394,13 +1416,23 @@
                             children: ['Docs']
                           },
                           {
-                            type: 'List',
+                            type: 'Box',
+                            props: { sx: { mt: 1, display: 'grid', gap: 1 } },
                             children: [
-                              { type: 'link', props: { label: 'npm/docs', href: './npm/docs/' } },
-                              { type: 'link', props: { label: 'npm/docs/api', href: './npm/docs/api/' } },
-                              { type: 'link', props: { label: 'npm README', href: './npm/README.md' } },
-                              { type: 'link', props: { label: 'The Algebra of Me', href: './The%20Algebra%20of%20Me.md' } }
+                              { type: 'Button', props: { variant: 'contained', label: 'npm/docs', onClick: function () { openHref('./npm/docs/'); } } },
+
+                              { type: 'Button', props: { variant: 'contained', label: 'The Algebra of Me', onClick: function () { openHref('./The%20Algebra%20of%20Me.md'); } } }
                             ]
+                          },
+                          {
+                            type: 'Typography',
+                            props: { variant: 'body2', sx: { mt: 2 } },
+                            children: ['Remote value']
+                          },
+                          {
+                            type: 'Typography',
+                            props: { variant: 'h5', sx: { mt: 0.5, fontWeight: 800 } },
+                            children: [{ $expr: getRemoteExpr() }]
                           }
                         ]
                       }
@@ -412,23 +1444,24 @@
           }
         ]
       };
-      return spec;
     });
 
-    async function mountRoute(path) {
-      currentPath = path;
-      currentCtx = {};
-      try {
-        const spec = await router.resolve(path, { ctx: currentCtx });
-        GUI.mount(spec, '#root');
-      } catch (error) {
-        const msg = error && error.message ? error.message : String(error);
-        rootEl.innerHTML =
-          '<div style="font-family:ui-sans-serif,system-ui;padding:24px">mount failed: ' + msg + '</div>';
-      }
-    }
+    const unlisten = router.onChange(function (spec, meta) {
+      currentPath = meta.path;
+      currentCtx = meta.ctx || {};
+      GUI.mount(spec, rootEl, { runtime: runtime, ctx: meta.ctx, showUnknown: true, inspectorEnabled: true });
+    });
 
-    mountRoute('/runtime');
+    router.navigate('/runtime', { push: false }).catch(function (error) {
+      const msg = error && error.message ? error.message : String(error);
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">mount failed: ' + msg + '</div>';
+    });
+
+    window.addEventListener('beforeunload', function () {
+      try { unlisten(); } catch (_) {}
+      try { router.destroy && router.destroy(); } catch (_) {}
+    });
   })();
 </script>
 </body>
