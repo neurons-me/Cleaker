@@ -1,16 +1,22 @@
 import { defineConfig } from 'vite';
 
+const outputFiles = {
+  es: 'cleaker.es.js',
+  cjs: 'cleaker.cjs',
+  umd: 'cleaker.umd.js',
+};
+
+const outputFormats = ['es', 'cjs', 'umd'];
+
 export default defineConfig({
   build: {
     lib: {
       entry: 'index.ts',
       name: 'Cleaker',
-      fileName: (format) =>
-        format === 'es' ? 'cleaker.es.js'
-        : format === 'cjs' ? 'cleaker.cjs'
-        : 'cleaker.umd.js',
-      formats: ['es', 'cjs', 'umd'],
+      fileName: (format) => outputFiles[format] || outputFiles.umd,
+      formats: outputFormats,
     },
+    emptyOutDir: true,
     sourcemap: true,
     target: 'es2022',
     rollupOptions: {

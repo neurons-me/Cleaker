@@ -22,7 +22,7 @@
   (async function () {
     const THIS_GUI_CDN_VERSION = '1.4.2';
     const THIS_ME_CDN_VERSION = '3.4.5';
-    const CLEAKER_LOCAL_VERSION = '3.0.0-alpha.0';
+    const CLEAKER_LOCAL_VERSION = '3.0.1';
     const rootEl = document.getElementById('root');
     if (!rootEl) return;
 
@@ -54,7 +54,7 @@
       await loadScript('./npm/dist/cleaker.umd.js');
     } catch (_) {
       try {
-        await loadScript('https://cdn.jsdelivr.net/npm/cleaker@3.0.0-alpha.0/dist/cleaker.umd.js', { crossorigin: 'anonymous' });
+        await loadScript('https://cdn.jsdelivr.net/npm/cleaker@3.0.1/dist/cleaker.umd.js', { crossorigin: 'anonymous' });
       } catch (error) {
         rootEl.innerHTML =
           '<div style="font-family:ui-sans-serif,system-ui;padding:24px">Failed to load cleaker from local UMD and npm CDN.</div>';

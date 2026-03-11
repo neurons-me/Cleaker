@@ -1,11 +1,13 @@
 {
   "name": "cleaker",
-  "version": "3.0.0-alpha.0",
+  "version": "3.0.3",
   "description": "Namespace-first semantic pointer and NRP client foundation.",
   "type": "module",
   "main": "dist/cleaker.cjs",
   "module": "dist/cleaker.es.js",
   "browser": "dist/cleaker.umd.js",
+  "unpkg": "dist/cleaker.umd.js",
+  "jsdelivr": "dist/cleaker.umd.js",
   "types": "dist-types/index.d.ts",
   "exports": {
     ".": {
