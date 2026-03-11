@@ -5,24 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>cleaker</title>
 <link rel="icon" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png" />
-<link rel="stylesheet" href="../../this/GUI/npm/dist/styles.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/styles.css" crossorigin="anonymous" />
 </head>
 <body>
 <div id="root"></div>
-<script src="../../this/GUI/npm/node_modules/react/umd/react.development.js"></script>
-<script src="../../this/GUI/npm/node_modules/react-dom/umd/react-dom.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
 <script>
   window.process = {
     env: {
-      NODE_ENV: "development"
+      NODE_ENV: "production"
     }
   };
 </script>
-<script src="../../this/GUI/npm/dist/this.gui.umd.js"></script>
-<script src="../../this/.me/npm/dist/me.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.umd.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/this.me@3.4.5/dist/me.umd.js" crossorigin="anonymous"></script>
 <script src="./npm/dist/cleaker.umd.js"></script>
 <script>
   (function () {
+    const THIS_GUI_CDN_VERSION = '1.4.2';
+    const THIS_ME_CDN_VERSION = '3.4.5';
+    const CLEAKER_LOCAL_VERSION = '3.0.0-alpha.0';
     const GUI = window.GUI;
     const Me = window.Me;
     const CleakerModule = window.Cleaker || window.cleaker;
@@ -37,17 +40,17 @@
 
     if (!GUI || typeof GUI.mount !== 'function') {
       rootEl.innerHTML =
-        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.mount is missing. Build this.GUI first.</div>';
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.mount is missing. Failed to load this.gui from npm CDN.</div>';
       return;
     }
     if (!Me) {
       rootEl.innerHTML =
-        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Me is missing. Build this.me first.</div>';
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Me is missing. Failed to load this.me from npm CDN.</div>';
       return;
     }
     if (typeof Cleaker !== 'function') {
       rootEl.innerHTML =
-        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Cleaker.default is missing. Build cleaker first.</div>';
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Cleaker.default is missing. Build cleaker locally first.</div>';
       return;
     }
 
@@ -58,7 +61,23 @@
       GUI?.__VERSION__ ||
       GUI?.default?.version ||
       GUI?.default?.VERSION ||
-      'local';
+      THIS_GUI_CDN_VERSION;
+    const ME_VERSION =
+      Me?.version ||
+      Me?.VERSION ||
+      Me?.__version ||
+      Me?.__VERSION__ ||
+      THIS_ME_CDN_VERSION;
+    const CLEAKER_VERSION =
+      Cleaker?.version ||
+      Cleaker?.VERSION ||
+      Cleaker?.__version ||
+      Cleaker?.__VERSION__ ||
+      CleakerModule?.version ||
+      CleakerModule?.VERSION ||
+      CleakerModule?.__version ||
+      CleakerModule?.__VERSION__ ||
+      CLEAKER_LOCAL_VERSION;
 
     const me = new Me();
     const node = Cleaker(me);
@@ -187,13 +206,13 @@
                             type: 'Typography',
                             props: { variant: 'body2', sx: { mt: 1, opacity: 0.85 } },
                             children: [
-                              'This page uses the real this.GUI runtime, a local .me kernel, and the cleaker UMD bundle.'
+                            'This page uses published npm runtimes for this.GUI and this.me, plus the local cleaker UMD from this repo.'
                             ]
                           },
                           {
                             type: 'Typography',
                             props: { variant: 'body2', sx: { mt: 1, opacity: 0.9 } },
-                            children: ['Runtime: this.GUI v' + GUI_VERSION + ' | me://local and me://self resolve in-process.']
+                            children: ['Runtime: this.GUI v' + GUI_VERSION + ' | this.me v' + ME_VERSION + ' | cleaker v' + CLEAKER_VERSION + ' | me://local and me://self resolve in-process.']
                           },
                           {
                             type: 'Box',
@@ -319,15 +338,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../../this/GUI/npm/dist/styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/styles.css" />
     <title>cleaker</title>
   </head>
   <body>
     <div id="root"></div>
-    <script src="../../this/GUI/npm/node_modules/react/umd/react.development.js"><\/script>
-    <script src="../../this/GUI/npm/node_modules/react-dom/umd/react-dom.development.js"><\/script>
-    <script src="../../this/GUI/npm/dist/this.gui.umd.js"><\/script>
-    <script src="../../this/.me/npm/dist/me.umd.js"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/this.gui@1.4.2/dist/this.gui.umd.js"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/this.me@3.4.5/dist/me.umd.js"><\/script>
     <script src="./npm/dist/cleaker.umd.js"><\/script>
   </body>
 </html>`
