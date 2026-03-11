@@ -1,4 +1,4 @@
-<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629049/cleaker_lkyyso.png" alt="SVG Image" width="244" height="203">
+<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png" alt="SVG Image" width="244" height="203">
 
 # CLEAKER
 > *Resolutio ante directionem; nomen ante locum.*
