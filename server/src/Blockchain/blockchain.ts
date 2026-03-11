@@ -74,13 +74,14 @@ const insertStmt = db.prepare(`
 `);
 
 export function appendBlock(block: any) {
+  const payload = block?.json ?? block;
   insertStmt.run({
     blockId: block.blockId,
     timestamp: block.timestamp,
     namespace: block.namespace,
     identityHash: block.identityHash,
     expression: block.expression,
-    json: JSON.stringify(block),
+    json: JSON.stringify(payload),
   });
   return { ok: true, blockId: block.blockId };
 }

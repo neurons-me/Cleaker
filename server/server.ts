@@ -11,6 +11,8 @@ import {
   resolveLens,
   resolveNamespace,
 } from "./src/http/namespace";
+import { normalizeHttpRequestToMeTarget } from "./src/http/meTarget";
+import { createEnvelope, createErrorEnvelope } from "./src/http/envelope";
 import { createPathResolverHandler } from "./src/http/pathResolver";
 import { createClaimsRouter } from "./src/http/claims";
 import { createLegacyRouter } from "./src/http/legacy";
@@ -30,7 +32,8 @@ app.get("/__bootstrap", (req, res) => {
   const namespace = resolveNamespace(req);
   const host = resolveHostNamespace(req);
   const origin = `${req.protocol}://${host}`;
-  return res.json({ ok: true, host, namespace, apiOrigin: origin });
+  const target = normalizeHttpRequestToMeTarget(req);
+  return res.json(createEnvelope(target, { host, namespace, apiOrigin: origin }));
 });
 
 // HTML shell for root and any deep route when Accept: text/html
@@ -44,8 +47,9 @@ app.use((req, _res, next) => {
   const ns = resolveNamespace(req);
   const host = resolveHostNamespace(req);
   const lens = resolveLens(req);
+  const target = normalizeHttpRequestToMeTarget(req);
   console.log(
-    `→ ${req.method} ${req.url} host=${host || "unknown"} ns=${ns} lens=${lens}`
+    `→ ${req.method} ${req.url} host=${host || "unknown"} ns=${ns} lens=${lens} op=${target.operation} me=${target.meTarget}`
   );
   next();
 });
@@ -54,11 +58,11 @@ app.use((req, _res, next) => {
 // Accept ANY ME block (or arbitrary JSON) and append me to the ledger.
 app.post("/", async (req: express.Request, res: express.Response) => {
   const body = req.body;
+  const target = normalizeHttpRequestToMeTarget(req);
   if (!body || typeof body !== "object") {
-    return res.status(400).json({
-      ok: false,
-      error: "Expected JSON block in request body"
-    });
+    return res.status(400).json(createErrorEnvelope(target, {
+      error: "Expected JSON block in request body",
+    }));
   }
 
   const blockId = crypto.randomUUID();
@@ -74,10 +78,9 @@ app.post("/", async (req: express.Request, res: express.Response) => {
     });
 
     if (!authorized) {
-      return res.status(403).json({
-        ok: false,
+      return res.status(403).json(createErrorEnvelope(target, {
         error: "NAMESPACE_WRITE_FORBIDDEN",
-      });
+      }));
     }
   }
 
@@ -91,7 +94,7 @@ app.post("/", async (req: express.Request, res: express.Response) => {
     namespace,
     identityHash: blockIdentityHash,
     expression: body.expression || "",
-    json: JSON.stringify(body)
+    json: body,
   });
 
   recordMemory({
@@ -103,13 +106,17 @@ app.post("/", async (req: express.Request, res: express.Response) => {
 
   console.log("🧱 New Ledger Block:");
   console.log(JSON.stringify(entry, null, 2));
-  return res.json({ ok: true, blockId, timestamp });
+  return res.json(createEnvelope(target, {
+    blockId,
+    timestamp,
+  }));
 });
 
 // --- Universal Ledger Read Surface ----------------------
 app.get("/", async (req: express.Request, res: express.Response) => {
   const chainNs = resolveNamespace(req);
   const lens = resolveLens(req);
+  const target = normalizeHttpRequestToMeTarget(req);
   const limit = Math.max(1, Math.min(5000, Number((req.query as any)?.limit ?? 5000)));
   const identityHash = String((req.query as any)?.identityHash || "").trim();
 
@@ -127,14 +134,13 @@ app.get("/", async (req: express.Request, res: express.Response) => {
     .sort((a: any, b: any) => Number(b?.timestamp || 0) - Number(a?.timestamp || 0))
     .slice(0, limit);
 
-  return res.json({
-    ok: true,
+  return res.json(createEnvelope(target, {
     namespace: chainNs,
     lens,
     users,
     blocks,
     count: blocks.length,
-  });
+  }));
 });
 
 // Explicit blocks endpoint (same semantics as GET /, but clearer name)
@@ -143,6 +149,7 @@ app.get("/blocks", async (req: express.Request, res: express.Response) => {
   // (Keep implementation simple by copying the same logic.)
   const ns = resolveNamespace(req);
   const lens = resolveLens(req);
+  const target = normalizeHttpRequestToMeTarget(req);
   const limit = Math.max(1, Math.min(5000, Number((req.query as any)?.limit ?? 5000)));
   const identityHash = String((req.query as any)?.identityHash || "").trim();
 
@@ -157,7 +164,12 @@ app.get("/blocks", async (req: express.Request, res: express.Response) => {
     .sort((a: any, b: any) => Number(b?.timestamp || 0) - Number(a?.timestamp || 0))
     .slice(0, limit);
 
-  return res.json({ ok: true, namespace: ns, lens, blocks, count: blocks.length });
+  return res.json(createEnvelope(target, {
+    namespace: ns,
+    lens,
+    blocks,
+    count: blocks.length,
+  }));
 });
 
 // --- Convenience: allow GET /@... to behave like GET / but with path-based namespace addressing.
@@ -165,6 +177,7 @@ app.get("/blocks", async (req: express.Request, res: express.Response) => {
 app.get("/@*", async (req: express.Request, res: express.Response) => {
   const chainNs = resolveNamespace(req);
   const lens = resolveLens(req);
+  const target = normalizeHttpRequestToMeTarget(req);
   const limit = Math.max(1, Math.min(5000, Number((req.query as any)?.limit ?? 5000)));
   const identityHash = String((req.query as any)?.identityHash || "").trim();
 
@@ -180,13 +193,12 @@ app.get("/@*", async (req: express.Request, res: express.Response) => {
     .sort((a: any, b: any) => Number(b?.timestamp || 0) - Number(a?.timestamp || 0))
     .slice(0, limit);
 
-  return res.json({
-    ok: true,
+  return res.json(createEnvelope(target, {
     namespace: chainNs,
     lens,
     blocks,
     count: blocks.length,
-  });
+  }));
 });
 
 // Legacy extensions: username claims and biometric matching remain available,

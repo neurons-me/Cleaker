@@ -1,6 +1,8 @@
 import type express from "express";
 import { getAllBlocks } from "../Blockchain/blockchain";
 import { resolveNamespace } from "./namespace";
+import { normalizeHttpRequestToMeTarget } from "./meTarget";
+import { createEnvelope, createErrorEnvelope } from "./envelope";
 
 type LedgerBlockLike = {
   namespace?: string;
@@ -10,12 +12,36 @@ type LedgerBlockLike = {
   json?: unknown;
 };
 
+function decodeBlockPayload(block: LedgerBlockLike): Record<string, unknown> | null {
+  const rawJson = block?.json;
+  const outer =
+    typeof rawJson === "string"
+      ? JSON.parse(rawJson)
+      : (rawJson as Record<string, unknown> | null);
+
+  if (!outer || typeof outer !== "object") return null;
+
+  const embedded = outer.json;
+  if (typeof embedded === "string") {
+    try {
+      const inner = JSON.parse(embedded);
+      if (inner && typeof inner === "object") {
+        return inner as Record<string, unknown>;
+      }
+    } catch {
+    }
+  }
+
+  return outer as Record<string, unknown>;
+}
+
 export function createPathResolverHandler() {
   return async (req: express.Request, res: express.Response) => {
     const rawPath = String(req.path || "");
     const trimmed = rawPath.replace(/^\/+/, "").replace(/\/+$/, "");
+    const target = normalizeHttpRequestToMeTarget(req);
     if (!trimmed) {
-      return res.status(404).json({ ok: false, error: "NOT_FOUND" });
+      return res.status(404).json(createErrorEnvelope(target, { error: "NOT_FOUND" }));
     }
 
     const namespace = resolveNamespace(req);
@@ -31,7 +57,7 @@ export function createPathResolverHandler() {
 
     const dotPath = segments.join(".");
     if (!dotPath) {
-      return res.status(404).json({ ok: false, error: "NOT_FOUND" });
+      return res.status(404).json(createErrorEnvelope(target, { error: "NOT_FOUND" }));
     }
 
     const all = await getAllBlocks();
@@ -44,15 +70,12 @@ export function createPathResolverHandler() {
     for (const bRaw of blocks) {
       const b = bRaw as LedgerBlockLike;
       try {
-        const rawJson = b?.json;
-        const payload =
-          typeof rawJson === "string"
-            ? JSON.parse(rawJson)
-            : (rawJson as any);
-        const expr = String((payload as any)?.expression || b?.expression || "").trim();
+        const payload = decodeBlockPayload(b);
+        if (!payload) continue;
+        const expr = String(payload.expression || b?.expression || "").trim();
         if (!expr) continue;
         const value = Object.prototype.hasOwnProperty.call(payload ?? {}, "value")
-          ? (payload as any).value
+          ? payload.value
           : payload;
         if (!(expr in state)) state[expr] = value;
       } catch {
@@ -70,12 +93,11 @@ export function createPathResolverHandler() {
     };
 
     if (dotPath in state) {
-      return res.json({
-        ok: true,
+      return res.json(createEnvelope(target, {
         namespace,
         path: dotPath,
         value: state[dotPath],
-      });
+      }));
     }
 
     const tree: Record<string, any> = {};
@@ -102,9 +124,17 @@ export function createPathResolverHandler() {
 
     const resolved = getByPath(tree, dotPath);
     if (typeof resolved === "undefined") {
-      return res.status(404).json({ ok: false, namespace, path: dotPath, error: "PATH_NOT_FOUND" });
+      return res.status(404).json(createErrorEnvelope(target, {
+        namespace,
+        path: dotPath,
+        error: "PATH_NOT_FOUND",
+      }));
     }
 
-    return res.json({ ok: true, namespace, path: dotPath, value: resolved });
+    return res.json(createEnvelope(target, {
+      namespace,
+      path: dotPath,
+      value: resolved,
+    }));
   };
 }

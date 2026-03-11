@@ -114,6 +114,13 @@ This SDK will:
 - Reflect namespaces dynamically
 - Allow inspection (`.tree()`, `.ls()`, `.blocks()`)
 
+## Routing Spec
+
+The current routing direction for `.me`, `nrp`, and the HTTP server is documented here:
+
+- [docs/nrp-routing-spec.md](/Users/suign/Desktop/Neuroverse/neurons.me/core/cleaker/server/docs/nrp-routing-spec.md)
+- [docs/nrp-remote-exchange-spec.md](/Users/suign/Desktop/Neuroverse/neurons.me/core/cleaker/server/docs/nrp-remote-exchange-spec.md)
+
 ---
 
 ## Guiding Principles
