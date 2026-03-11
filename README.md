@@ -32,11 +32,11 @@ And precisely because of that:
 > **Your presence is not demanded.**
 > **It is chosen.**
 
----
-
-###### License & Policies
+###### 
 <img src="https://suign.github.io/assets/imgs/neurons_me_logo.png" alt="neurons.me logo" width="89">
 
-[neurons.me](https://neurons.me)
+###### [neurons.me](https://neurons.me)
 
-**License**: MIT License.
+**MIT License.**
+
+###### suiGn
