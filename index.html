@@ -1,181 +1,384 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>cleaker</title>
-  <style>
-    :root {
-      --bg: #f4eee4;
-      --panel: #fff9ef;
-      --ink: #1f1a17;
-      --muted: #6d6258;
-      --line: #d9cab8;
-      --accent: #a2462f;
-      --accent-2: #2d5a6d;
-      --shadow: 0 20px 60px rgba(31, 26, 23, 0.08);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at top left, rgba(162, 70, 47, 0.12), transparent 26%),
-        radial-gradient(circle at top right, rgba(45, 90, 109, 0.10), transparent 24%),
-        linear-gradient(180deg, #fbf7ef 0%, var(--bg) 100%);
-    }
-
-    main {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 56px 24px 84px;
-    }
-
-    .hero {
-      display: grid;
-      gap: 18px;
-      margin-bottom: 30px;
-    }
-
-    .eyebrow {
-      color: var(--accent);
-      font-size: 0.82rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2.8rem, 7vw, 5rem);
-      line-height: 0.95;
-      font-weight: 700;
-    }
-
-    .lead {
-      max-width: 780px;
-      color: var(--muted);
-      font-size: 1.18rem;
-      line-height: 1.6;
-    }
-
-    .quote {
-      margin: 0;
-      font-style: italic;
-      color: var(--muted);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 18px;
-      margin-top: 28px;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 22px;
-      box-shadow: var(--shadow);
-    }
-
-    .card h2 {
-      margin: 0 0 10px;
-      font-size: 1.1rem;
-    }
-
-    .card p {
-      margin: 0 0 14px;
-      line-height: 1.5;
-      color: var(--muted);
-    }
-
-    a {
-      color: var(--accent-2);
-      text-decoration: none;
-    }
-
-    a:hover { text-decoration: underline; }
-
-    .section {
-      margin-top: 42px;
-      padding-top: 22px;
-      border-top: 1px solid var(--line);
-    }
-
-    .links {
-      display: grid;
-      gap: 10px;
-    }
-
-    code {
-      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
-      font-size: 0.95em;
-      background: rgba(31, 26, 23, 0.06);
-      padding: 0.12em 0.38em;
-      border-radius: 6px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>cleaker</title>
+<link rel="icon" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png" />
+<link rel="stylesheet" href="../../this/GUI/npm/dist/styles.css" />
 </head>
 <body>
-  <main>
-    <section class="hero">
-      <div class="eyebrow">semantic bridge</div>
-      <h1>cleaker</h1>
-      <p class="quote">Resolutio ante directionem; nomen ante locum.</p>
-      <p class="lead">
-        Cleaker is the bridge between <code>.me</code> and remote namespace resolution:
-        pointers, claims, replay hydration, browser-facing namespace surfaces, and the
-        package docs that define the protocol around them.
-      </p>
-    </section>
+<div id="root"></div>
+<script src="../../this/GUI/npm/node_modules/react/umd/react.development.js"></script>
+<script src="../../this/GUI/npm/node_modules/react-dom/umd/react-dom.development.js"></script>
+<script>
+  window.process = {
+    env: {
+      NODE_ENV: "development"
+    }
+  };
+</script>
+<script src="../../this/GUI/npm/dist/this.gui.umd.js"></script>
+<script src="../../this/.me/npm/dist/me.umd.js"></script>
+<script src="./npm/dist/cleaker.umd.js"></script>
+<script>
+  (function () {
+    const GUI = window.GUI;
+    const Me = window.Me;
+    const CleakerModule = window.Cleaker || window.cleaker;
+    const Cleaker =
+      typeof CleakerModule === 'function'
+        ? CleakerModule
+        : typeof CleakerModule?.default === 'function'
+          ? CleakerModule.default
+          : null;
+    const rootEl = document.getElementById('root');
+    if (!rootEl) return;
 
-    <section class="grid">
-      <article class="card">
-        <h2>npm Package</h2>
-        <p>The active package surface for the client runtime, tests, builds, and docs tooling.</p>
-        <a href="./npm/README.md">Open npm README</a>
-      </article>
+    if (!GUI || typeof GUI.mount !== 'function') {
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.GUI.mount is missing. Build this.GUI first.</div>';
+      return;
+    }
+    if (!Me) {
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Me is missing. Build this.me first.</div>';
+      return;
+    }
+    if (typeof Cleaker !== 'function') {
+      rootEl.innerHTML =
+        '<div style="font-family:ui-sans-serif,system-ui;padding:24px">window.Cleaker.default is missing. Build cleaker first.</div>';
+      return;
+    }
 
-      <article class="card">
-        <h2>Docs</h2>
-        <p>Concept docs, protocol notes, browser bridge, algebra, and package documentation.</p>
-        <a href="./npm/docs/">Open docs folder</a>
-      </article>
+    const GUI_VERSION =
+      GUI?.version ||
+      GUI?.VERSION ||
+      GUI?.__version ||
+      GUI?.__VERSION__ ||
+      GUI?.default?.version ||
+      GUI?.default?.VERSION ||
+      'local';
 
-      <article class="card">
-        <h2>API Docs</h2>
-        <p>Generated API documentation for the package surface exposed by the npm module.</p>
-        <a href="./npm/docs/api/README.md">Open API docs</a>
-      </article>
+    const me = new Me();
+    const node = Cleaker(me);
+    let currentPath = '/runtime';
+    let currentCtx = {};
 
-      <article class="card">
-        <h2>Server</h2>
-        <p>The current daemon/runtime package being extracted away from cleaker into monad.ai.</p>
-        <a href="./server/README.md">Open server README</a>
-      </article>
-    </section>
+    function seedKernel() {
+      me['@']('jabellae');
+      me.profile.name('Abella.e');
+      me.profile.status('idle');
+      me.profile.bio('Designing semantic interfaces.');
+      me.users.ana.name('Ana');
+      me.users.ana.age(22);
+      me.users.ana.bio('Designing semantic interfaces.');
+      me.users.pablo.name('Pablo');
+      me.users.pablo.age(17);
+      me.friends.ana['->']('users.ana');
+      me.friends.pablo['->']('users.pablo');
+    }
 
-    <section class="section">
-      <h2>Build Docs</h2>
-      <div class="links">
-        <div><code>cd npm && npm run docs:api</code></div>
-        <div><code>cd npm && npm run docs:build</code></div>
-      </div>
-    </section>
+    seedKernel();
 
-    <section class="section">
-      <h2>Navigation</h2>
-      <div class="links">
-        <a href="./README.md">Root README</a>
-        <a href="./The%20Algebra%20of%20Me.md">The Algebra of Me</a>
-        <a href="./npm/docs/Concepts.md">Concepts</a>
-        <a href="./npm/docs/Protocol.md">Protocol</a>
-      </div>
-    </section>
-  </main>
+    function inspectState() {
+      return {
+        profile: {
+          name: node('profile.name'),
+          status: node('profile.status'),
+          bio: node('profile.bio')
+        },
+        friends: {
+          ana: node('friends.ana.name'),
+          pablo: node('friends.pablo.name'),
+          adults: node('friends[age > 18].name')
+        }
+      };
+    }
+
+    async function resolvePointer(expression) {
+      const ptr = node.pointer(expression);
+      const result = await ptr.resolve();
+      return {
+        expression,
+        pointer: ptr.__ptr,
+        result
+      };
+    }
+
+    function rerender() {
+      router.navigate(currentPath, { push: false, ctx: currentCtx });
+    }
+
+    function code(value) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    const leftSidebarConfig = {
+      initialView: 'rail',
+      elements: [
+        { type: 'link', props: { label: 'Home', icon: 'home', href: './index.html' } },
+        { type: 'link', props: { label: 'Runtime', icon: 'memory', href: './index.html#/runtime' } },
+        { type: 'link', props: { label: 'Docs', icon: 'description', href: './npm/docs/' } },
+        { type: 'link', props: { label: 'API', icon: 'code', href: './npm/docs/api/' } },
+        { type: 'link', props: { label: 'README', icon: 'article', href: './README.md' } },
+        { type: 'link', props: { label: 'GitHub', icon: 'code', href: 'https://github.com/neurons-me/cleaker' } }
+      ]
+    };
+
+    const router = new GUI.Router();
+
+    router.set('/runtime', async function () {
+      const state = inspectState();
+      const localRead = await resolvePointer('me://local:read/profile.status');
+      const selfRead = await resolvePointer('me://self:read/profile.name');
+      const spec = {
+        type: 'Layout',
+        props: { leftSidebarConfig },
+        children: [
+          {
+            type: 'Page',
+            props: {
+              title: 'cleaker',
+              subtitle: 'Local bootstrap with this.GUI + .me + cleaker'
+            },
+            children: [
+              {
+                type: 'Box',
+                props: {
+                  sx: {
+                    mt: 2,
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.1fr) minmax(0, 0.9fr)' },
+                    gap: 2,
+                    alignItems: 'start'
+                  }
+                },
+                children: [
+                  {
+                    type: 'Box',
+                    props: { sx: { minWidth: 0 } },
+                    children: [
+                      {
+                        type: 'Paper',
+                        props: { sx: { p: 2, borderRadius: 2, minWidth: 0 } },
+                        children: [
+                          {
+                            type: 'Box',
+                            props: { sx: { display: 'flex', justifyContent: 'center', mb: 1 } },
+                            children: [
+                              {
+                                type: 'Box',
+                                props: {
+                                  component: 'img',
+                                  src: 'https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png',
+                                  alt: 'cleaker',
+                                  sx: { width: 180, maxWidth: '70vw', height: 'auto', display: 'block' }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            type: 'Typography',
+                            props: { variant: 'h4', sx: { fontWeight: 900, letterSpacing: '-0.4px' } },
+                            children: ['Bootstrapping cleaker in HTML']
+                          },
+                          {
+                            type: 'Typography',
+                            props: { variant: 'body2', sx: { mt: 1, opacity: 0.85 } },
+                            children: [
+                              'This page uses the real this.GUI runtime, a local .me kernel, and the cleaker UMD bundle.'
+                            ]
+                          },
+                          {
+                            type: 'Typography',
+                            props: { variant: 'body2', sx: { mt: 1, opacity: 0.9 } },
+                            children: ['Runtime: this.GUI v' + GUI_VERSION + ' | me://local and me://self resolve in-process.']
+                          },
+                          {
+                            type: 'Box',
+                            props: { sx: { mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' } },
+                            children: [
+                              {
+                                type: 'Button',
+                                props: {
+                                  variant: 'contained',
+                                  color: 'success',
+                                  label: 'Set active',
+                                  onClick: function () {
+                                    me.profile.status('active');
+                                    rerender();
+                                  }
+                                }
+                              },
+                              {
+                                type: 'Button',
+                                props: {
+                                  variant: 'outlined',
+                                  color: 'warning',
+                                  label: 'Set idle',
+                                  onClick: function () {
+                                    me.profile.status('idle');
+                                    rerender();
+                                  }
+                                }
+                              },
+                              {
+                                type: 'Button',
+                                props: {
+                                  variant: 'text',
+                                  color: 'info',
+                                  label: 'Re-seed',
+                                  onClick: function () {
+                                    seedKernel();
+                                    rerender();
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        type: 'Paper',
+                        props: { sx: { p: 2, borderRadius: 2, mt: 2 } },
+                        children: [
+                          {
+                            type: 'Typography',
+                            props: { variant: 'body1', sx: { fontWeight: 800, mb: 1 } },
+                            children: ['Collapsed State']
+                          },
+                          {
+                            type: 'CodeBlock',
+                            props: {
+                              title: 'state.json',
+                              language: 'json',
+                              variant: 'dark',
+                              showLineNumbers: true,
+                              wrapLongLines: true,
+                              code: code(state)
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        type: 'Paper',
+                        props: { sx: { p: 2, borderRadius: 2, mt: 2 } },
+                        children: [
+                          {
+                            type: 'Typography',
+                            props: { variant: 'body1', sx: { fontWeight: 800, mb: 1 } },
+                            children: ['Pointer Resolution']
+                          },
+                          {
+                            type: 'CodeBlock',
+                            props: {
+                              title: 'me://local',
+                              language: 'json',
+                              variant: 'dark',
+                              showLineNumbers: true,
+                              wrapLongLines: true,
+                              code: code(localRead)
+                            }
+                          },
+                          {
+                            type: 'Box',
+                            props: { sx: { mt: 2 } },
+                            children: [
+                              {
+                                type: 'CodeBlock',
+                                props: {
+                                  title: 'me://self',
+                                  language: 'json',
+                                  variant: 'dark',
+                                  showLineNumbers: true,
+                                  wrapLongLines: true,
+                                  code: code(selfRead)
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    type: 'Box',
+                    props: { sx: { minWidth: 0 } },
+                    children: [
+                      {
+                        type: 'CodeBlock',
+                        props: {
+                          title: 'bootstrap.html',
+                          language: 'html',
+                          variant: 'dark',
+                          showLineNumbers: true,
+                          wrapLongLines: true,
+                          code: String.raw`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../../this/GUI/npm/dist/styles.css" />
+    <title>cleaker</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="../../this/GUI/npm/node_modules/react/umd/react.development.js"><\/script>
+    <script src="../../this/GUI/npm/node_modules/react-dom/umd/react-dom.development.js"><\/script>
+    <script src="../../this/GUI/npm/dist/this.gui.umd.js"><\/script>
+    <script src="../../this/.me/npm/dist/me.umd.js"><\/script>
+    <script src="./npm/dist/cleaker.umd.js"><\/script>
+  </body>
+</html>`
+                        }
+                      },
+                      {
+                        type: 'Paper',
+                        props: { sx: { p: 2, borderRadius: 2, mt: 2 } },
+                        children: [
+                          {
+                            type: 'Typography',
+                            props: { variant: 'body1', sx: { fontWeight: 800 } },
+                            children: ['Docs']
+                          },
+                          {
+                            type: 'List',
+                            children: [
+                              { type: 'link', props: { label: 'npm/docs', href: './npm/docs/' } },
+                              { type: 'link', props: { label: 'npm/docs/api', href: './npm/docs/api/' } },
+                              { type: 'link', props: { label: 'npm README', href: './npm/README.md' } },
+                              { type: 'link', props: { label: 'The Algebra of Me', href: './The%20Algebra%20of%20Me.md' } }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+      return spec;
+    });
+
+    async function mountRoute(path) {
+      currentPath = path;
+      currentCtx = {};
+      try {
+        const spec = await router.resolve(path, { ctx: currentCtx });
+        GUI.mount(spec, '#root');
+      } catch (error) {
+        const msg = error && error.message ? error.message : String(error);
+        rootEl.innerHTML =
+          '<div style="font-family:ui-sans-serif,system-ui;padding:24px">mount failed: ' + msg + '</div>';
+      }
+    }
+
+    mountRoute('/runtime');
+  })();
+</script>
 </body>
 </html>
