@@ -1,7 +1,10 @@
 <img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629049/cleaker_lkyyso.png" alt="SVG Image" width="244" height="203">
 
 # CLEAKER
-> ##### Resolver es más fundamental que enrutar.
+> *Resolutio ante directionem; nomen ante locum.*
+
+> שם קודם למקום
+
 - **cleaker.me/** → **global/common ground** root
 - **cleaker.me/?** → **who am I here** (self on this host)
 - **username.cleaker.me/** → **username’s public tree** on this host
