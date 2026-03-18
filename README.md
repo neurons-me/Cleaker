@@ -26,8 +26,8 @@ Reality must exist **without me** — or the system collapses.
 > **Your existence is not required for reality to be valid.**
 A system that exists without you can **welcome you without needing you**.
 That’s the difference between:
-*“You matter because you are useful”*
 
+*“You matter because you are useful”*
 *“You matter because you are here”*
 
 **Yes** — reality continues without you.
@@ -37,7 +37,6 @@ And precisely because of that:
 > **It is chosen.**
 
 ## Entry Points
-
 - `npm/` — package source and build surface
 - `npm/docs/` — package documentation
 - `npm/docs/api/` — generated API docs

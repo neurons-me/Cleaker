@@ -4,6 +4,7 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
     namespace?: string;
     secret?: string;
     origin?: string;
+    bootstrap?: string[];
     fetcher?: typeof fetch;
 }
 export declare function bindKernel(me: MeKernel, options?: BindKernelOptions): CleakerNode;

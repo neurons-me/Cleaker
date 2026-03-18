@@ -75,6 +75,22 @@ An existence relation **E** maps any viewer namespace to a base existence namesp
 Examples:
 - The relation defined by jabellae.cleaker.me/ maps any viewer namespace to jabellae.cleaker.me/
 ------
+## **A6 — Semantic-to-Routing Resolver**
+The **.me** language expresses **semantic paths**; Cleaker resolves them into **routing targets**.
+Formally, define a resolver **S → R** that maps a semantic path to a concrete network route.
+
+Example:
+- **Semantic (.me):** `cleaker.me/@username/device/suiGNMacBookAir/PORT/profile`
+- **Routing (Cleaker):** `username.cleaker.me:suiGNMacBookAir:8161/profile`
+
+Interpretation:
+- **.me** defines the meaning (device, PORT, namespace, identity).
+- **Cleaker** performs the resolution (semantics → routing).
+- **Monad** persists the resulting ledger state.
+
+This preserves a clean separation:
+**language (meaning)** → **dictionary (resolver)** → **storage (ledger)**.
+
+------
 ## **Conclusion**
 This algebraic framework provides a structured way to understand and manipulate namespaces and relations within the **.Me** system. By defining namespaces as regions and relations as functions, we can reason about their interactions and refinements systematically.
-

@@ -67,6 +67,7 @@
   "repoType": "NPM Package",
   "category": "utils",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.13",
     "this.me": "^3.4.5",
     "tsx": "^4.20.6",

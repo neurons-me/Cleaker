@@ -8,7 +8,21 @@ import type { CleakerNode, MeKernel } from './types/kernel';
 
 export interface CleakerOptions
   extends CreateRemotePointerOptions,
-    Pick<BindKernelOptions, 'namespace' | 'secret' | 'origin' | 'fetcher'> {}
+    Pick<
+      BindKernelOptions,
+      | 'namespace'
+      | 'secret'
+      | 'origin'
+      | 'bootstrap'
+      | 'fetcher'
+      | 'semanticResolver'
+      | 'semanticDefaults'
+      | 'semanticNamespaceRoot'
+      | 'semanticSources'
+      | 'semanticSelector'
+      | 'semanticNetwork'
+      | 'semanticTransportAllowlist'
+    > {}
 
 export function cleaker(target: string, options?: CleakerOptions): RemotePointerDefinition;
 export function cleaker(kernel: MeKernel, options?: CleakerOptions): CleakerNode;

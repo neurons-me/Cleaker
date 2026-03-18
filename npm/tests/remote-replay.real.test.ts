@@ -54,13 +54,13 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
     ok?: boolean;
     error?: string;
     identityHash?: string;
-    target?: { meTarget?: string };
+    target?: { nrp?: string };
   };
   if (!openBody0.ok || !openBody0.identityHash) {
     throw new Error(`OPEN_FAILED: ${String(openBody0.error || opened0.response.status)}`);
   }
 
-  assert.equal(openBody0.target?.meTarget, `me://${namespace}:open/_`);
+  assert.equal(openBody0.target?.nrp, `me://${namespace}:open/_`);
 
   const thoughts = [
     { expression: 'profile.name', value: 'Ana' },
@@ -86,12 +86,12 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
       `write:${thought.expression}`,
     );
 
-    const writeBody = write.data as { ok?: boolean; error?: string; target?: { meTarget?: string } };
+    const writeBody = write.data as { ok?: boolean; error?: string; target?: { nrp?: string } };
     if (!writeBody.ok) {
       throw new Error(`WRITE_FAILED(${thought.expression}): ${String(writeBody.error || write.response.status)}`);
     }
 
-    assert.equal(writeBody.target?.meTarget, `me://${namespace}:write/_`);
+    assert.equal(writeBody.target?.nrp, `me://${namespace}:write/_`);
   }
 
   console.log('[Remote Replay] seed thoughts written to remote ledger');
@@ -118,21 +118,19 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
 
   const nameData = resolvedName.data as {
     ok?: boolean;
-    value?: string;
-    target?: { meTarget?: string };
+    target?: { nrp?: string; value?: string };
   };
   const ageData = resolvedAge.data as {
     ok?: boolean;
-    value?: number;
-    target?: { meTarget?: string };
+    target?: { nrp?: string; value?: number };
   };
 
   assert.equal(resolvedName.ok, true);
   assert.equal(resolvedAge.ok, true);
-  assert.equal(nameData.value, 'Anita');
-  assert.equal(ageData.value, 25);
-  assert.equal(nameData.target?.meTarget, `me://${namespace}:read/profile.name`);
-  assert.equal(ageData.target?.meTarget, `me://${namespace}:read/profile.age`);
+  assert.equal(nameData.target?.value, 'Anita');
+  assert.equal(ageData.target?.value, 25);
+  assert.equal(nameData.target?.nrp, `me://${namespace}:read/profile.name`);
+  assert.equal(ageData.target?.nrp, `me://${namespace}:read/profile.age`);
 
   console.log('[Remote Replay] collapsed state -> profile.name =', self('profile.name'));
   console.log('[Remote Replay] collapsed state -> profile.age =', self('profile.age'));
