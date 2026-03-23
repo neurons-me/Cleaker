@@ -24,6 +24,7 @@ import type {
   SemanticResolverDefaults,
   SemanticResolverSource,
 } from './resolver/semanticResolver';
+import { loadPersistentClaimRecord } from './resolver/persistentClaimSource';
 
 type OpenResponse = {
   ok: boolean;
@@ -40,6 +41,9 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
   secret?: string;
   origin?: string;
   bootstrap?: string[];
+  claimDir?: string;
+  claimDirs?: string[];
+  claimOrigin?: string;
   fetcher?: typeof fetch;
   semanticResolver?: SemanticResolver;
   semanticDefaults?: SemanticResolverDefaults;
@@ -308,6 +312,17 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const bootstrapOrigins = Array.isArray(options.bootstrap)
     ? options.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
     : [];
+  const explicitClaimDirs = Array.isArray(options.claimDirs)
+    ? options.claimDirs.map((dir) => String(dir || '').trim()).filter(Boolean)
+    : [];
+  const claimDir = String(options.claimDir || '').trim();
+  const claimDirs = claimDir ? [claimDir, ...explicitClaimDirs] : explicitClaimDirs;
+  const envClaimOrigin = typeof process !== 'undefined'
+    ? String(process.env.CLEAKER_CLAIM_ORIGIN || '')
+    : '';
+  const claimOrigin = normalizeOrigin(
+    String(options.claimOrigin || options.origin || envClaimOrigin || 'http://localhost:8161'),
+  );
 
   let currentState: CleakerState = 'idle';
   let currentCycleId = 0;
@@ -495,6 +510,29 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     writeKernelPath(me, [...base, 'error'], host.error || '');
   }
 
+  function discoverClaimHost(namespace: string): CleakerHostRecord | null {
+    const loaded = loadPersistentClaimRecord(namespace, {
+      claimDirs,
+    });
+    if (!loaded) return null;
+
+    return toHostRecord({
+      origin: claimOrigin,
+      alias: 'persistent-claim',
+      capabilities: {
+        canClaim: true,
+        canOpen: true,
+        canRelay: false,
+      },
+      status: {
+        transport: 'unknown',
+        triad: 'unverified',
+        latencyMs: 0,
+        lastSeen: 0,
+      },
+    }, loaded.claim.namespace);
+  }
+
   function discoverHosts(input: { namespace?: string; bootstrap?: string[] } = {}): CleakerHostRecord[] {
     const namespace = String(input.namespace || defaultNamespace || '').trim();
     if (!namespace) return [];
@@ -511,6 +549,14 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         }, namespace);
         if (parsed) hostMap.set(parsed.id, parsed);
       });
+    }
+
+    if (hostMap.size === 0) {
+      const claimedHost = discoverClaimHost(namespace);
+      if (claimedHost) {
+        hostMap.set(claimedHost.id, claimedHost);
+        persistHostRecord(namespace, claimedHost);
+      }
     }
 
     if (hostMap.size === 0) {
@@ -877,6 +923,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       openedAt: Number(data.openedAt || Date.now()),
       memoriesCount: memories.length,
     };
+  }
+
+  if (options.namespace) {
+    discoverHosts({ namespace: options.namespace });
   }
 
   // Triad: auto-open if namespace + secret were provided at bind time

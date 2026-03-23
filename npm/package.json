@@ -1,6 +1,6 @@
 {
   "name": "cleaker",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Namespace-first semantic pointer and NRP client foundation.",
   "type": "module",
   "main": "dist/cleaker.cjs",

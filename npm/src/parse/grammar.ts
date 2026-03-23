@@ -1,4 +1,7 @@
 export const ME_SCHEME = 'me://';
 export const LEGACY_NRP_SCHEME = 'nrp://';
-export const TARGET_RE =
-  /^(?:(?:me|nrp):\/\/)?(?<ns>[a-z0-9_-]+(?:\.[a-z0-9_-]+)*):(?<selector>[a-z0-9_-]+)\/(?<path>.+)$/i;
+export const CONTEXT_OPEN = '[';
+export const CONTEXT_CLOSE = ']';
+export const CONTEXT_BRANCH_SEPARATOR = '|';
+export const CONTEXT_AND_SEPARATOR = ';';
+export const CONTEXT_VALUE_SEPARATOR = ',';

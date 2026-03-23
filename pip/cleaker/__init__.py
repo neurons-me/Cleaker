@@ -1,2 +1,2 @@
 def greet():
-    return "Hello from cleaker"
+    return "Hello from cleaker!"

@@ -14,10 +14,13 @@ export class CleakerResolver {
   constructor(private readonly source: NamespaceRecordSource) {}
 
   async resolve(target: ParsedTarget): Promise<ResolveResult> {
-    const record = await this.source.get(target.namespace.constant);
+    const record = await this.source.get(target.namespace.constant, {
+      fqdn: target.namespace.fqdn,
+      prefix: target.namespace.prefix,
+    });
     if (!record) {
       throw new CleakerResolverError('Namespace record not found', {
-        constant: target.namespace.constant,
+        constant: target.namespace.fqdn || target.namespace.constant,
       });
     }
 

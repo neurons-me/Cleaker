@@ -51,7 +51,5 @@ For the **Repo HTML landing page**, open `index.html` in the root.
 <img src="https://suign.github.io/assets/imgs/neurons_me_logo.png" alt="neurons.me logo" width="89">
 
 ###### [neurons.me](https://neurons.me)
-
 **MIT License.**
-
 ###### suiGn

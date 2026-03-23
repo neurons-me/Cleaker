@@ -18,14 +18,14 @@ If `.me` is the local semantic kernel, `cleaker` is the glove that wraps it:
 Three forms define the stack:
 
 ```ts
-cleaker("ana.cleaker:read/profile")       // remote pointer — NRP grammar
+cleaker("me://ana.cleaker:read/profile")  // remote pointer — me target grammar
 cleaker(me)                               // kernel binding — wraps a .me instance
 cleaker(me, { namespace, secret })        // triad — bind + open in one call
 ```
 
 - `.me` resolves what **is** in the local tree.
 - `cleaker(...)` resolves what **is remote** or binds the local kernel to the network.
-- `NRP` is the transport grammar that makes remote semantic branches addressable.
+- `me://` is the semantic target grammar that makes remote semantic branches addressable.
 
 ## ⟁ Install
 
@@ -38,7 +38,7 @@ npm install cleaker
 ```ts
 import cleaker from 'cleaker';
 
-const ptr = cleaker("ana.cleaker:read/profile");
+const ptr = cleaker("me://ana.cleaker:read/profile");
 // ptr.__ptr.resolution.status === 'unresolved'
 ```
 
@@ -125,29 +125,51 @@ The test proves semantic equivalence between:
 - source kernel state built through normal `.me` writes
 - target kernel state reconstructed only from ledger memories through `cleaker`
 
-## 𝔊 NRP Grammar
+## 𝔊 me:// Grammar
 
 Canonical target grammar:
+
 ```txt
-[prefix.]constant:selector/path
+me://<namespace>[<context>]:<operation>/<path>
 ```
 
 Examples:
+
 ```txt
-ana.cleaker:read/profile
-vault.cleaker:secret/wallet.balance
-social.neurons:query/posts[author == 'ana']
+me://ana.cleaker:read/profile
+me://ana[device:macbook|device:iphone;protocol:https]:read/profile
+me://cleaker.me/users/ana:read/profile
+me://wikileaks[host:wikileaks.org|protocol:https]:read/page
 ```
 
 Layer meaning:
-- `[prefix.]constant` → namespace identity
-- `:selector` → capability / semantic port
-- `/path` → branch or executable semantic expression
+- `<namespace>` → semantic identity or namespace region
+- `[<context>]` → optional binding algebra for resolution
+- `:<operation>` → intent such as `read`, `write`, `claim`, `open`
+- `/path` → semantic path inside that namespace
 
-Canonical URI form:
+Context operators:
+- `|` → OR between resolution branches
+- `;` → AND inside one branch
+- `,` → sugar that expands into multiple OR branches for the same key
+
+Examples:
+
 ```txt
-nrp://ana.cleaker:read/profile
+me://ana[device:macbook|device:iphone]:read/profile
+me://ana[device:iphone,macbook;protocol:https]:read/profile
 ```
+
+The second form normalizes to:
+
+```txt
+me://ana[device:iphone;protocol:https|device:macbook;protocol:https]:read/profile
+```
+
+Legacy note:
+- `nrp://` is still accepted as an alias during parsing
+- `ana.cleaker:read/profile` is still accepted as a shorthand input
+- the canonical serialized form is always `me://...`
 
 ## ⊂ Alpha State
 
