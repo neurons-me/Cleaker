@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/algebra/index.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,qBAAqB,EACrB,oBAAoB,EACpB,uBAAuB,GACxB,MAAM,mBAAmB,CAAC;AAE3B,OAAO,EAAE,YAAY,EAAE,cAAc,EAAE,UAAU,EAAE,gBAAgB,EAAE,MAAM,cAAc,CAAC;AAC1F,OAAO,EACL,eAAe,EACf,gBAAgB,EAChB,iBAAiB,EACjB,gBAAgB,EAChB,eAAe,GAChB,MAAM,YAAY,CAAC"}

@@ -1,4 +1,5 @@
 import type { ParsedTarget } from '../types/target';
+import { DEFAULT_CLEAKER_NAMESPACE_ORIGIN } from '../constants';
 import type {
   RemotePointerDefinition,
   RemotePointerPayload,
@@ -51,7 +52,7 @@ export function createRemotePointer(
     const isSovereignTarget =
       target.namespace.prefix === null &&
       (target.namespace.constant === 'local' || target.namespace.constant === 'self');
-    const origin = String(resolveOptions.origin || 'http://localhost:8161').replace(/\/+$/, '');
+    const origin = String(resolveOptions.origin || DEFAULT_CLEAKER_NAMESPACE_ORIGIN).replace(/\/+$/, '');
     const dotPath = String(target.intent.path || '').trim().replace(/^\/+/, '');
     const endpoint = `${origin}/${dotPath}`;
     const startedAt = Date.now();

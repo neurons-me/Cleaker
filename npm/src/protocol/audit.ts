@@ -52,8 +52,23 @@ function normalizeUsername(value: string): string {
   return String(value || '').trim().toLowerCase();
 }
 
+function extractPathSuffix(path: string): string {
+  const raw = String(path || '').trim();
+  if (!raw) return '';
+
+  if (raw.includes('/')) {
+    return raw.split('/').pop() || '';
+  }
+
+  if (raw.includes('.')) {
+    return raw.split('.').pop() || '';
+  }
+
+  return raw;
+}
+
 function normalizeType(path: string, data: unknown): Pick<TimelineEvent, 'type' | 'severity' | 'title' | 'detail'> {
-  const suffix = String(path || '').split('/').pop() || '';
+  const suffix = extractPathSuffix(path);
 
   if (suffix === 'status') {
     if (String(data || '').toLowerCase() === 'revoked') {

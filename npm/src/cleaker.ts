@@ -1,5 +1,9 @@
 import { parseTarget } from './parse/parseTarget';
 import { createRemotePointer } from './pointer/remotePointer';
+import {
+  DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
+  DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
+} from './constants';
 import { bindKernel } from './binder';
 import type { BindKernelOptions } from './binder';
 import type { CreateRemotePointerOptions } from './pointer/remotePointer';

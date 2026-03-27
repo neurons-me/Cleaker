@@ -6,6 +6,8 @@ export interface HostAttestationPayload {
   attestation: string;
   daemonPublicKey: string;
   capabilities?: string[];
+  label?: string;
+  hostname?: string;
 }
 
 export type SessionMode = 'cloud' | 'host';

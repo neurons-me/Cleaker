@@ -52,6 +52,11 @@ export {
   stringifyMeTarget,
 } from './parse/parseMeTarget';
 export { parseTarget } from './parse/parseTarget';
+export {
+  composeNamespace,
+  parseNamespaceExpression,
+  stringifyNamespaceExpression,
+} from './namespace/expression';
 export type {
   SemanticPath,
   SemanticSelector,
@@ -85,6 +90,10 @@ export type {
 } from './types/target';
 export type {
   NamespaceHostRecord,
+  NamespaceSelectorAtom,
+  NamespaceSelectorClause,
+  NamespaceSelectorSet,
+  ParsedNamespaceExpression,
   NamespacePublicKey,
   NamespaceRecord,
   NamespaceSelectorPolicy,

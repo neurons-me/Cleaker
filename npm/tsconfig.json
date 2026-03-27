@@ -8,10 +8,12 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "noEmit": true
   }
   ,
   "include": [
+    "index.ts",
     "src/**/*",
     "server.ts"
   ]

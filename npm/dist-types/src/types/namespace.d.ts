@@ -22,4 +22,30 @@ export interface NamespaceRecord {
     hosts: NamespaceHostRecord[];
     signature?: string;
 }
+export interface NamespaceSelectorAtom {
+    key: string;
+    value: string;
+    raw: string;
+}
+export type NamespaceSelectorClause = NamespaceSelectorAtom[];
+export type NamespaceSelectorSet = NamespaceSelectorClause[];
+export interface ParsedNamespaceExpression {
+    raw: string;
+    expression: string;
+    base: string;
+    fqdn: string;
+    prefix: string | null;
+    constant: string;
+    labels: string[];
+    contextRaw: string | null;
+    context: NamespaceSelectorSet;
+    operation: string | null;
+    path: string;
+    transport: {
+        protocol: 'http' | 'https';
+        host: string;
+        port: number | null;
+        origin: string;
+    };
+}
 //# sourceMappingURL=namespace.d.ts.map

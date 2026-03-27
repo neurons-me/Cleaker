@@ -1,5 +1,6 @@
 import { parseTarget } from './parse/parseTarget';
 import { createRemotePointer } from './pointer/remotePointer';
+import { DEFAULT_CLEAKER_NAMESPACE_ORIGIN } from './constants';
 import type { CreateRemotePointerOptions } from './pointer/remotePointer';
 import type {
   BindKernelResolverOptions,
@@ -321,7 +322,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     ? String(process.env.CLEAKER_CLAIM_ORIGIN || '')
     : '';
   const claimOrigin = normalizeOrigin(
-    String(options.claimOrigin || options.origin || envClaimOrigin || 'http://localhost:8161'),
+    String(options.claimOrigin || options.origin || envClaimOrigin || DEFAULT_CLEAKER_NAMESPACE_ORIGIN),
   );
 
   let currentState: CleakerState = 'idle';
@@ -890,7 +891,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   async function open(input: OpenNodeInput): Promise<OpenNodeResult> {
     const namespace = String(input.namespace || '').trim();
     const secret = String(input.secret || '');
-    const origin = String(input.origin || 'http://localhost:8161').replace(/\/+$/, '');
+    const origin = String(input.origin || DEFAULT_CLEAKER_NAMESPACE_ORIGIN).replace(/\/+$/, '');
 
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
     if (!secret) throw new Error('SECRET_REQUIRED');
