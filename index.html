@@ -4,7 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>cleaker</title>
-    <link rel="stylesheet" href="../../this/GUI/npm/dist/styles.css" />
+    <script>
+      window.__cleakerRuntimeAssets = (function () {
+        const LOCAL_CSS = "../../this/GUI/npm/dist/styles.css";
+        const LOCAL_GUI = "../../this/GUI/npm/dist/this.gui.umd.js";
+        const LOCAL_REACT = "../../this/GUI/npm/node_modules/react/umd/react.production.min.js";
+        const LOCAL_REACTDOM = "../../this/GUI/npm/node_modules/react-dom/umd/react-dom.production.min.js";
+        const CDN_CSS = "https://cdn.jsdelivr.net/npm/this.gui@latest/dist/styles.css";
+        const CDN_GUI = "https://cdn.jsdelivr.net/npm/this.gui@latest/dist/this.gui.umd.js";
+        const CDN_REACT = "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js";
+        const CDN_REACTDOM = "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js";
+        const protocol = String(window.location.protocol || "").toLowerCase();
+        const useLocal = protocol === "file:";
+
+        return useLocal
+          ? {
+              source: "local",
+              css: LOCAL_CSS,
+              gui: LOCAL_GUI,
+              react: LOCAL_REACT,
+              reactdom: LOCAL_REACTDOM,
+            }
+          : {
+              source: "cdn",
+              css: CDN_CSS,
+              gui: CDN_GUI,
+              react: CDN_REACT,
+              reactdom: CDN_REACTDOM,
+            };
+      })();
+    </script>
     <style>
       :root {
         color-scheme: dark;
@@ -169,10 +198,8 @@
 
     <div id="root"></div>
 
-    <script src="../../this/GUI/npm/node_modules/react/umd/react.production.min.js"></script>
-    <script src="../../this/GUI/npm/node_modules/react-dom/umd/react-dom.production.min.js"></script>
-    <script src="../../this/GUI/npm/dist/this.gui.umd.js"></script>
     <script>
+      window.__startCleakerApp = function () {
       (function () {
         const root = document.getElementById("root");
         const GUI = window.GUI;
@@ -1161,6 +1188,99 @@
         syncGuiThemeScope();
         window.addEventListener("hashchange", syncRoute);
         syncRoute();
+      })();
+      };
+    </script>
+    <script>
+      (function () {
+        const root = document.getElementById("root");
+        const assets = window.__cleakerRuntimeAssets || {};
+
+        function showRuntimeError(message) {
+          if (!root) return;
+          root.innerHTML =
+            '<div style="padding:24px;font:14px/1.5 ui-sans-serif,system-ui;color:#e2e8f0">' +
+            String(message || "Failed to load Cleaker runtime.") +
+            "</div>";
+        }
+
+        function loadStylesheet(href) {
+          return new Promise((resolve, reject) => {
+            if (!href) {
+              resolve();
+              return;
+            }
+            const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find(
+              (node) => node.getAttribute("href") === href
+            );
+            if (existing) {
+              resolve(existing);
+              return;
+            }
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = href;
+            link.onload = () => resolve(link);
+            link.onerror = () => reject(new Error(`stylesheet failed: ${href}`));
+            document.head.appendChild(link);
+          });
+        }
+
+        function loadScript(src) {
+          return new Promise((resolve, reject) => {
+            if (!src) {
+              resolve();
+              return;
+            }
+            const existing = Array.from(document.querySelectorAll("script[src]")).find(
+              (node) => node.getAttribute("src") === src
+            );
+            if (existing) {
+              if (existing.dataset.loaded === "true") {
+                resolve(existing);
+                return;
+              }
+              existing.addEventListener("load", () => resolve(existing), { once: true });
+              existing.addEventListener(
+                "error",
+                () => reject(new Error(`script failed: ${src}`)),
+                { once: true }
+              );
+              return;
+            }
+
+            const script = document.createElement("script");
+            script.src = src;
+            script.async = false;
+            script.onload = () => {
+              script.dataset.loaded = "true";
+              resolve(script);
+            };
+            script.onerror = () => reject(new Error(`script failed: ${src}`));
+            document.body.appendChild(script);
+          });
+        }
+
+        async function boot() {
+          try {
+            await loadStylesheet(assets.css);
+            await loadScript(assets.react);
+            await loadScript(assets.reactdom);
+            await loadScript(assets.gui);
+
+            if (typeof window.__startCleakerApp === "function") {
+              window.__startCleakerApp();
+              return;
+            }
+            throw new Error("Cleaker bootstrap function is missing.");
+          } catch (error) {
+            console.error("[Cleaker] Failed to load runtime assets.", error);
+            const source = assets.source ? ` from ${assets.source}` : "";
+            showRuntimeError(`Failed to load Cleaker runtime${source}.`);
+          }
+        }
+
+        void boot();
       })();
     </script>
   </body>
