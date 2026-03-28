@@ -177,6 +177,8 @@
         const root = document.getElementById("root");
         const GUI = window.GUI;
         const React = window.React;
+        const DEFAULT_CLEAKER_THEME_ID = "mdrn.church";
+        const DEFAULT_CLEAKER_THEME_MODE = "light";
         if (!root) return;
 
         if (!GUI || typeof GUI.mount !== "function" || !React) {
@@ -414,6 +416,262 @@
           };
         }
 
+        function sanitizeThemeScopeToken(raw) {
+          return String(raw || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]/g, "_");
+        }
+
+        function readGuiThemeScope() {
+          const preview = readCleakerNamespacePreview();
+          const rootNamespace = compactNamespaceDisplay(
+            preview.resolverHostName ||
+              preview.namespaceHost ||
+              preview.rootHostNamespace ||
+              preview.namespaceExpression ||
+              "cleaker.me"
+          ) || "cleaker.me";
+
+          const subjectHandle = String(preview.subjectHandleNamespace || "").trim().toLowerCase();
+          const rootScopeBase = `cleaker.gui.theme.root.${sanitizeThemeScopeToken(rootNamespace)}`;
+          const rootThemeId =
+            (() => {
+              try {
+                return String(localStorage.getItem(`${rootScopeBase}.themeId`) || "").trim();
+              } catch {
+                return "";
+              }
+            })() || DEFAULT_CLEAKER_THEME_ID;
+          const rootThemeMode =
+            (() => {
+              try {
+                return String(localStorage.getItem(`${rootScopeBase}.themeMode`) || "").trim();
+              } catch {
+                return "";
+              }
+            })() || DEFAULT_CLEAKER_THEME_MODE;
+
+          if (subjectHandle) {
+            const userScopeBase = `cleaker.gui.theme.user.${sanitizeThemeScopeToken(subjectHandle)}`;
+            return {
+              scopeId: `user:${subjectHandle}`,
+              themeIdKey: `${userScopeBase}.themeId`,
+              themeModeKey: `${userScopeBase}.themeMode`,
+              defaultThemeId: rootThemeId,
+              defaultMode: rootThemeMode === "dark" ? "dark" : "light",
+            };
+          }
+
+          return {
+            scopeId: `root:${rootNamespace}`,
+            themeIdKey: `${rootScopeBase}.themeId`,
+            themeModeKey: `${rootScopeBase}.themeMode`,
+            defaultThemeId: DEFAULT_CLEAKER_THEME_ID,
+            defaultMode: DEFAULT_CLEAKER_THEME_MODE,
+          };
+        }
+
+        function syncGuiThemeScope() {
+          if (typeof window === "undefined") return;
+          const detail = readGuiThemeScope();
+          try {
+            window.__thisGuiThemeScope = () => readGuiThemeScope();
+            window.dispatchEvent(
+              new CustomEvent("this.gui:themeScope:changed", {
+                detail,
+              })
+            );
+          } catch {}
+        }
+
+        window.__thisGuiThemeScope = () => readGuiThemeScope();
+
+        function readScopedThemeSelection() {
+          const scope =
+            typeof window.__thisGuiThemeScope === "function"
+              ? window.__thisGuiThemeScope()
+              : readGuiThemeScope();
+
+          const themeIdKey = String(scope?.themeIdKey || "").trim();
+          const themeModeKey = String(scope?.themeModeKey || "").trim();
+
+          let themeId = "";
+          let mode = "";
+          try {
+            themeId =
+              String(
+                (themeIdKey && localStorage.getItem(themeIdKey)) ||
+                  localStorage.getItem("this.gui:themeId") ||
+                  scope?.defaultThemeId ||
+                  DEFAULT_CLEAKER_THEME_ID
+              ).trim() || DEFAULT_CLEAKER_THEME_ID;
+            mode =
+              String(
+                (themeModeKey && localStorage.getItem(themeModeKey)) ||
+                  localStorage.getItem("this.gui:themeMode") ||
+                  scope?.defaultMode ||
+                  DEFAULT_CLEAKER_THEME_MODE
+              ).trim() || DEFAULT_CLEAKER_THEME_MODE;
+          } catch {
+            themeId = String(scope?.defaultThemeId || DEFAULT_CLEAKER_THEME_ID).trim() || DEFAULT_CLEAKER_THEME_ID;
+            mode = String(scope?.defaultMode || DEFAULT_CLEAKER_THEME_MODE).trim() || DEFAULT_CLEAKER_THEME_MODE;
+          }
+
+          return {
+            scopeId: String(scope?.scopeId || "global").trim(),
+            defaultThemeId: String(scope?.defaultThemeId || DEFAULT_CLEAKER_THEME_ID).trim() || DEFAULT_CLEAKER_THEME_ID,
+            themeId,
+            mode: mode === "dark" ? "dark" : "light",
+          };
+        }
+
+        function createFooterThemeCatalogAction() {
+          if (
+            !React ||
+            typeof React.createElement !== "function" ||
+            !GUI ||
+            !GUI.Modal ||
+            !GUI.ThemesCatalog
+          ) {
+            return null;
+          }
+
+          const IconButton =
+            (GUI.Atoms && GUI.Atoms.IconButton) ||
+            GUI.IconButton ||
+            null;
+          const Box =
+            GUI.Box ||
+            (GUI.Atoms && GUI.Atoms.Box) ||
+            null;
+          const Typography =
+            GUI.Typography ||
+            (GUI.Atoms && GUI.Atoms.Typography) ||
+            null;
+
+          if (!IconButton || !Box || !Typography) return null;
+
+          function FooterThemeCatalogAction() {
+            const [open, setOpen] = React.useState(false);
+            const [version, setVersion] = React.useState(0);
+
+            React.useEffect(() => {
+              const rerender = () => setVersion((value) => value + 1);
+              window.addEventListener("this.gui:themeId:changed", rerender);
+              window.addEventListener("this.gui:themeMode:changed", rerender);
+              window.addEventListener("this.gui:themeScope:changed", rerender);
+              window.addEventListener("cleaker:namespace-preview-changed", rerender);
+              window.addEventListener("cleaker:session:credentials-changed", rerender);
+              window.addEventListener("storage", rerender);
+              return () => {
+                window.removeEventListener("this.gui:themeId:changed", rerender);
+                window.removeEventListener("this.gui:themeMode:changed", rerender);
+                window.removeEventListener("this.gui:themeScope:changed", rerender);
+                window.removeEventListener("cleaker:namespace-preview-changed", rerender);
+                window.removeEventListener("cleaker:session:credentials-changed", rerender);
+                window.removeEventListener("storage", rerender);
+              };
+            }, []);
+
+            const themeSelection = readScopedThemeSelection();
+            const scopeLabel =
+              themeSelection.scopeId.startsWith("user:")
+                ? `User Theme`
+                : `Root Theme`;
+
+            return React.createElement(
+              React.Fragment,
+              null,
+              React.createElement(
+                IconButton,
+                {
+                  key: `footer-theme-trigger-${version}`,
+                  "aria-label": `Theme catalog · ${themeSelection.themeId}`,
+                  title: `${scopeLabel} · ${themeSelection.themeId} · ${themeSelection.mode}`,
+                  onClick: () => setOpen(true),
+                  size: "small",
+                  sx: {
+                    color: "primary.main",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    "&:hover": {
+                      bgcolor: "background.nav",
+                      borderColor: "primary.main",
+                    },
+                  },
+                },
+                React.createElement(GUI.Icon, { name: "palette", fontSize: 18 })
+              ),
+              React.createElement(
+                GUI.Modal,
+                {
+                  open,
+                  onClose: () => setOpen(false),
+                  title: "Theme Catalog",
+                  width: 920,
+                  height: "auto",
+                  blurBackground: true,
+                },
+                React.createElement(
+                  Box,
+                  {
+                    sx: {
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1.25,
+                    },
+                  },
+                  React.createElement(
+                    Box,
+                    {
+                      sx: {
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.35,
+                        pb: 0.5,
+                      },
+                    },
+                    React.createElement(
+                      Typography,
+                      {
+                        variant: "body2",
+                        sx: { color: "text.secondary" },
+                      },
+                      scopeLabel
+                    ),
+                    React.createElement(
+                      Typography,
+                      {
+                        variant: "body2",
+                        sx: { fontFamily: "monospace", color: "text.primary" },
+                      },
+                      `${themeSelection.themeId} · ${themeSelection.mode}`
+                    )
+                  ),
+                  React.createElement(
+                    Box,
+                    {
+                      sx: {
+                        maxHeight: "72vh",
+                        overflowY: "auto",
+                        pr: 0.5,
+                      },
+                    },
+                    React.createElement(GUI.ThemesCatalog, {
+                      variant: "grid",
+                      compact: true,
+                    })
+                  )
+                )
+              )
+            );
+          }
+
+          return React.createElement(FooterThemeCatalogAction);
+        }
+
         const themeToggle =
           typeof GUI.ThemeModeToggle === "function"
             ? React.createElement(GUI.ThemeModeToggle, {
@@ -550,9 +808,27 @@
             .toLowerCase();
         }
 
+        function extractGroupKeyFromPath(path) {
+          const normalized = normalizeRoutePath(path);
+          const match = normalized.match(/^\/groups\/([^\/]+)$/i);
+          return match ? String(match[1] || "").trim().toLowerCase() : "";
+        }
+
+        function isGroupRoute(path) {
+          return Boolean(extractGroupKeyFromPath(path));
+        }
+
+        function getGroupRouteProps(groupKey) {
+          return {
+            ...getBlockchainRouteProps(),
+            groupKey,
+          };
+        }
+
         function readFooterContext(currentPath) {
           const preview = readCleakerNamespacePreview();
           const normalizedPath = normalizeRoutePath(currentPath);
+          const groupKey = extractGroupKeyFromPath(normalizedPath);
           const rootNamespace = compactNamespaceDisplay(
             preview.resolverHostName ||
               preview.namespaceHost ||
@@ -563,13 +839,18 @@
 
           const subjectHandle = String(preview.subjectHandleNamespace || "").trim().toLowerCase();
           const subject = subjectHandle.includes(".") ? subjectHandle.split(".")[0] || "" : "";
-          const scope = normalizedPath === "/chain" ? "me.blockchain" : "me.users";
+          const scope = groupKey
+            ? "me.group"
+            : normalizedPath === "/chain"
+              ? "me.blockchain"
+              : "me.users";
 
           return {
             rootNamespace,
             subject,
             subjectHandle,
             scope,
+            groupKey,
           };
         }
 
@@ -594,12 +875,19 @@
         });
 
         window.addEventListener("cleaker:session:credentials-changed", () => {
+          syncGuiThemeScope();
+          rerender();
+        });
+
+        window.addEventListener("cleaker:namespace-preview-changed", () => {
+          syncGuiThemeScope();
           rerender();
         });
 
         window.addEventListener("storage", (event) => {
           const key = event && event.key ? String(event.key) : "";
           if (!key || key === "cleaker.session.username.v1" || key === "cleaker.namespace.v1") {
+            syncGuiThemeScope();
             rerender();
           }
         });
@@ -608,7 +896,10 @@
           const inspectorEnabled = getInspectorEnabled();
           const adminViewEnabled = getAdminViewEnabled();
           const leftBarCleakerQR = createLeftBarCleakerQR();
-          const onChainRoute = normalizeRoutePath(currentPath) === "/chain";
+          const normalizedPath = normalizeRoutePath(currentPath);
+          const onChainRoute = normalizedPath === "/chain";
+          const activeGroupKey = extractGroupKeyFromPath(normalizedPath) || (normalizedPath === "/groups" ? "dev-team" : "");
+          const onGroupRoute = normalizedPath === "/groups" || Boolean(activeGroupKey);
           const footerContext = readFooterContext(currentPath);
           const leftBar = {
             initialView: "rail",
@@ -700,6 +991,17 @@
                   },
                 },
               },
+              {
+                type: "action",
+                props: {
+                  label: "Group",
+                  icon: "groups",
+                  active: onGroupRoute,
+                  onClick: () => {
+                    writeRouteHash("/groups/dev-team");
+                  },
+                },
+              },
             ],
           };
 
@@ -726,6 +1028,16 @@
                   href: "#/",
                 },
               },
+              footerContext.groupKey
+                ? {
+                    type: "link",
+                    props: {
+                      label: `groups.${footerContext.groupKey}`,
+                      icon: "groups",
+                      href: `#/groups/${footerContext.groupKey}`,
+                    },
+                  }
+                : null,
               footerContext.subject
                 ? {
                     type: "link",
@@ -751,17 +1063,35 @@
             position: "static",
           };
 
-          const contentSpec = onChainRoute
-            ? {
-                type: GUI.Blockchain,
-                props: getBlockchainRouteProps(),
-              }
-            : {
-                type: GUI.Cleaker,
+          const footerThemeCatalogAction = createFooterThemeCatalogAction();
+          if (footerThemeCatalogAction) {
+            footer.rightElements = [
+              {
+                type: "action",
                 props: {
-                  allowLocalDaemon: false,
+                  label: "Theme Catalog",
+                  element: footerThemeCatalogAction,
                 },
-              };
+              },
+            ];
+          }
+
+          const contentSpec = onGroupRoute
+            ? {
+                type: GUI.CleakerGroup,
+                props: getGroupRouteProps(activeGroupKey),
+              }
+            : onChainRoute
+              ? {
+                  type: GUI.Blockchain,
+                  props: getBlockchainRouteProps(),
+                }
+              : {
+                  type: GUI.Cleaker,
+                  props: {
+                    allowLocalDaemon: false,
+                  },
+                };
 
           return {
             type: GUI.Layout,
@@ -805,6 +1135,11 @@
         if (router) {
           router.set("/", () => buildSpec("/"));
           router.set("/chain", () => buildSpec("/chain"));
+          router.set("/groups", () => buildSpec("/groups/dev-team"));
+          router.set("/groups/:groupKey", ({ ctx }) => {
+            const groupKey = ctx?.params?.groupKey || "dev-team";
+            return buildSpec(`/groups/${groupKey}`);
+          });
           router.onChange((spec) => {
             const inspectorEnabled = getInspectorEnabled();
             const adminViewEnabled = getAdminViewEnabled();
@@ -823,6 +1158,7 @@
         if (typeof GUI.ensureRuntimeControlSurface === "function") {
           GUI.ensureRuntimeControlSurface();
         }
+        syncGuiThemeScope();
         window.addEventListener("hashchange", syncRoute);
         syncRoute();
       })();

@@ -33,6 +33,55 @@ cleaker(me, { namespace, secret })        // triad — bind + open in one call
 npm install cleaker
 ```
 
+## ⟐ Node-Side Semantics
+
+Yes: the same `cleaker(...)` contract works on the Node side.
+
+```ts
+import cleaker from 'cleaker';
+import Me from 'this.me';
+
+const me = new Me();
+const node = cleaker(me, {
+  origin: 'http://localhost:8161',
+  namespace: 'suign.suis-macbook-air.local',
+  secret: 'luna',
+});
+
+await node.ready;
+```
+
+Think of the stack like this:
+
+- `.me` = local semantic kernel
+- `cleaker(me)` = bind the kernel to remote namespace resolution
+- `cleaker(me, { namespace, secret, origin })` = bind + open + hydrate from ledger
+- `cleaker("me://...")` = create a remote semantic pointer without needing a bound kernel
+
+So in Node you can do all three:
+
+```ts
+import cleaker from 'cleaker';
+import Me from 'this.me';
+
+const me = new Me();
+const local = cleaker(me);
+const self = cleaker(me, {
+  namespace: 'ana.cleaker.me',
+  secret: 'luna',
+  origin: 'http://localhost:8161',
+});
+const ptr = cleaker('me://ana.cleaker.me:read/profile');
+```
+
+The important distinction is:
+
+- `local` is a bound facade over your kernel
+- `self` is the same facade, but hydrated/opened against a namespace vault
+- `ptr` is just an unresolved remote target definition
+
+That means Cleaker is not only a browser/runtime idea. It works as a Node-side namespace cable too, which is why it can sit underneath apps, servers, installers, and semantic bootstraps.
+
 ## ⟐ Remote Pointer
 
 ```ts
