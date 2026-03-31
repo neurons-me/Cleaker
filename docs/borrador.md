@@ -340,11 +340,8 @@ Where:
 
 ### Conflict Resolution
 If multiple sources define the same semantic region:
-
 Resolution follows refinement priority:
-
 more specific > less specific
-
 Formally:
 
 B ⊑ A  ⇒  B overrides A
@@ -361,7 +358,6 @@ No implicit memory.
 
 ### Wake-Up Model
 A .me node “awakens” as follows:
-
 connect → ingest → construct → activate
 
 ---
