@@ -214,17 +214,41 @@
           return;
         }
 
-        const DOM_ICON_GRID = [
-          "#####....####...##..#..##",
-          "##..##..##..##..###.#.###",
-          "##...#..#....#..##.###.##",
-          "##...#..#....#..##..#..##",
-          "##...#..#....#..##.....##",
-          "##...#..#....#..##.....##",
-          "##...#..#....#..##.....##",
-          "##..##..##..##..##.....##",
-          "#####....####...##.....##",
-        ];
+        function mountSemanticCleaker() {
+          const inspectorEnabled =
+            typeof GUI.getInspectorEnabled === "function"
+              ? Boolean(GUI.getInspectorEnabled())
+              : false;
+          const adminViewEnabled =
+            typeof GUI.getAdminViewEnabled === "function"
+              ? Boolean(GUI.getAdminViewEnabled())
+              : false;
+
+            GUI.mount(
+              {
+                type: "CleakerComposer",
+                props: {},
+              },
+            root,
+            {
+              gui: GUI,
+              React: window.React,
+              ReactDOM: window.ReactDOM,
+              inspectorEnabled,
+              adminViewEnabled,
+              inspectorToggleVisible: false,
+            }
+          );
+        }
+
+        if (typeof GUI.ensureRuntimeControlSurface === "function") {
+          GUI.ensureRuntimeControlSurface();
+        }
+        window.addEventListener("this.gui:inspector:changed", mountSemanticCleaker);
+        window.addEventListener("this.gui:adminView:changed", mountSemanticCleaker);
+        mountSemanticCleaker();
+        return;
+/*
 
         function createDomIcon(options) {
           if (typeof React.createElement !== "function") return null;
@@ -1182,12 +1206,7 @@
           });
         }
 
-        if (typeof GUI.ensureRuntimeControlSurface === "function") {
-          GUI.ensureRuntimeControlSurface();
-        }
-        syncGuiThemeScope();
-        window.addEventListener("hashchange", syncRoute);
-        syncRoute();
+*/
       })();
       };
     </script>
