@@ -69,6 +69,22 @@ type CryptoLike = {
   ): boolean;
 };
 
+type CommonJsGlobalLike = typeof globalThis & {
+  require?: NodeRequire;
+  module?: {
+    require?: NodeRequire;
+  };
+};
+
+function getGlobalRequire(): NodeRequire | null {
+  const candidate = globalThis as CommonJsGlobalLike;
+  if (typeof candidate.require === 'function') return candidate.require;
+  if (candidate.module && typeof candidate.module.require === 'function') {
+    return candidate.module.require;
+  }
+  return null;
+}
+
 function getBuiltinModule<T>(...names: string[]): T | null {
   if (typeof process !== 'undefined' && typeof process.getBuiltinModule === 'function') {
     for (const name of names) {
@@ -81,7 +97,7 @@ function getBuiltinModule<T>(...names: string[]): T | null {
   }
 
   try {
-    const req = Function('return typeof require !== "undefined" ? require : null')() as NodeRequire | null;
+    const req = getGlobalRequire();
     if (!req) return null;
 
     for (const name of names) {

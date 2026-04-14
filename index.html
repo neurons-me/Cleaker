@@ -1,114 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cleaker Bootstrap</title>
-  </head>
-  <body>
-    <div id="root"></div>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cleaker</title>
+</head>
+<body>
+<div id="root"></div>
+<!--Load...
+ ▗▄▄▖▗▖ ▗▖▗▄▄▄▖
+▐▌   ▐▌ ▐▌  █  
+▐▌▝▜▌▐▌ ▐▌  █  
+▝▚▄▞▘▝▚▄▞▘▗▄█▄▖ -->   
+<script
+  src="../../this/GUI/npm/dist/this.gui.bootstrap.umd.js"
+  crossorigin="anonymous"></script>
+<!--load...
+▄ ▄▄▄▄  ▗▞▀▚▖
+  █ █ █ ▐▛▀▀▘
+  █   █ ▝▚▄▄▖ -->
+<script
+  src="../../this/.me/npm/dist/me.umd.js"
+  crossorigin="anonymous"></script>
+<script src="./routes.js"></script>
+<script>
+  (async function () {
+    const root = document.getElementById("root");
+    await window.GUI.bootstrap();
+    const GUI = window.GUI;
+    const me = new Me();
+    const runtime = GUI.render(me);
+    const router = GUI.router(root, {
+      runtime: runtime,
+      useHistory: false,
+    });
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/this.gui@latest/dist/this.gui.bootstrap.umd.js"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/this.me@latest/dist/me.umd.js"
-      crossorigin="anonymous"
-    ></script>
+    if (typeof window.registerRoutes === "function") {
+      window.registerRoutes(router);
+    }
 
-    <script>
-      (async function () {
-        const root = document.getElementById("root");
+    await router.start("/");
 
-        function fail(message) {
-          if (!root) return;
-          root.innerHTML =
-            '<div style="font-family:ui-sans-serif,system-ui;padding:24px">' +
-            String(message || "Bootstrap failed.") +
-            "</div>";
-        }
+  })().catch(function (error) {
+    const root = document.getElementById("root");
+    if (root) root.textContent = error.message || String(error);
+  });
+</script>
 
-        if (!root) return;
-
-        if (!window.GUI || typeof window.GUI.bootstrap !== "function") {
-          fail("window.GUI.bootstrap is missing.");
-          return;
-        }
-
-        await window.GUI.bootstrap();
-
-        const GUI = window.GUI;
-        const MeGlobal =
-          window.Me || window.me || window.thisMe || window["this.me"];
-
-        if (typeof MeGlobal !== "function") {
-          fail("window.Me is missing.");
-          return;
-        }
-
-        const me = new MeGlobal();
-        const runtime =
-          typeof GUI.render === "function"
-            ? GUI.render(me)
-            : typeof GUI.RunMe === "function"
-              ? GUI.RunMe(me)
-              : undefined;
-
-        window.me = me;
-        window.runtime = runtime;
-
-        GUI.mount(
-          {
-            type: "Page",
-            props: {
-              title: "Cleaker Bootstrap",
-              subtitle: "CDN bootstrap for this.GUI + this.me",
-            },
-            children: [
-              {
-                type: "Paper",
-                props: {
-                  sx: {
-                    p: 2,
-                    mt: 2,
-                    borderRadius: 2,
-                  },
-                },
-                children: [
-                  {
-                    type: "Typography",
-                    props: {
-                      variant: "body1",
-                      sx: { fontWeight: 800 },
-                    },
-                    children: ["GUI ready"],
-                  },
-                  {
-                    type: "Typography",
-                    props: {
-                      variant: "body2",
-                      sx: { mt: 1, opacity: 0.8 },
-                    },
-                    children: ["window.me initialized from CDN UMD"],
-                  },
-                ],
-              },
-            ],
-          },
-          root,
-          {
-            runtime: runtime,
-          },
-        );
-      })().catch(function (error) {
-        const root = document.getElementById("root");
-        if (!root) return;
-        root.innerHTML =
-          '<div style="font-family:ui-sans-serif,system-ui;padding:24px">' +
-          String(error && error.message ? error.message : error) +
-          "</div>";
-      });
-    </script>
   </body>
 </html>

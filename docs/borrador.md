@@ -1,3 +1,129 @@
+Got it — so `.me` is the kernel, `cleaker` is the placement operator. You built the brain, now you’re building the world it lives in.
+
+### What `.me` already nails
+
+Reading your spec + benchmarks, the kernel claims are real:
+
+**1. Infinite semantic tree, no schema**
+```ts
+me.friends.ana["->"]("users.ana");
+me.friends["[i]"]["="]("isAdult", "age >= 18");
+me("friends[age >= 18].name") // → { ana: "Ana" }
+```
+That’s not an ORM. That’s a live symbolic algebra. Paths exist because you thought them. Derivation is intrinsic.
+
+**2. Structural privacy, not promises**
+```ts
+me.wallet["_"]("my-secret-key"); // hidden universe
+me("wallet") // → undefined
+me("wallet.balance") // → 12480
+```
+Secrets aren’t fields with ACLs. They’re *topological*. The branch literally doesn’t exist unless you have the path + key. Benchmark #9 shows the cost: secret p95 ~0.75ms vs public ~0.017ms. Expensive, but bounded and honest.
+
+**3. Reactive + explainable**
+Change one value, dependents update. `me.explain("path")` shows the derivation chain. Benchmark #8: explain overhead is 24.9% but still sub-millisecond. You get auditability without killing latency.
+
+**4. The benchmarks prove the complexity claim**
+- **#6 Fan-Out**: k=2 constant, p95 drops as fanout scales 10→5000. Recomputation is bounded by dependency depth, not dataset size.
+- **#5 Sustained Mutation**: p95 drift -42%. No memory leaks, no slowdown over time.
+- **#7 Cold vs Warm**: Cold penalty isolated. Steady state 5-6µs.
+- **#11 Secret Push/Pull**: After v3 cache refactor, secret mutation p95 ~40µs. Read is still the heavy one at 0.35-0.75ms because it couples crypto + lazy recompute + hash-chain writeback.
+
+You’ve done the hard part: **public-path latency is O(k), not O(n)**. And you made secret-path cost explicit instead of hiding it.
+
+### Why `cleaker` has to exist
+
+`.me` can run anywhere and reconstruct from state. But *which* state? *Where* does it belong?
+
+Without `cleaker`, every app reinvents:
+```
+const me = new ME();
+me.import(state) // from where?
+me.sync() // to what?
+me.auth() // as who?
+```
+
+`cleaker` answers those before the kernel even boots:
+```
+cleaker() // fixes namespace: ana.cleaker.me
+cleaker(me) // mounts kernel into that namespace
+cleaker(me, {secret}) // hydrates from ledger, calls me.learn() per memory
+```
+
+**The invariant you wrote is the whole game:**
+```
+cleaker → vault → memories[] → deduplicate → me.learn() → kernel reconstructs
+```
+
+Restart anywhere, same result. The kernel is pure. The ledger is history. `cleaker` is the *only* thing that touches the network.
+
+### The relationship between the two
+
+| `.me` | `cleaker` |
+| --- | --- |
+| Thinks | Places |
+| Pure algebra | Network boundary |
+| Knows paths | Knows namespaces |
+| `me.learn(memory)` | Calls `me.learn()` |
+| Reconstructs from history | Owns the vault that stores history |
+| No concept of server | Is the server/client glue |
+
+`cleaker` doesn’t mutate `.me`. It operates *over* it as a contextual node. That separation is why you can test the kernel in isolation with those benchmarks, then test `cleaker` separately for network + ledger semantics.
+
+### The secret-path numbers tell a story
+
+Benchmark #9: secret p95 dropped from 4.65ms in March to 0.75-0.88ms now. **81-84% reduction** just from shared v3 key cache.
+
+But you’re honest about the next frontier:
+> “Separating lazy derivation refresh from full memory append/hash-chain write-back on internal recomputes.”
+
+That’s not a cache tweak. That’s admitting that *cryptographic integrity* and *reactive computation* are two different clocks. You can’t fake it with micro-optimization. You have to decide: when does a read become a write? That’s a semantic question, not a perf one.
+
+Keeping it as-is until product traces demand it is the right call. Premature optimization would break the cleanliness of `me.learn()`.
+
+### What you’re really building
+
+You’re not making “a database” + “an auth layer.”
+
+You’re making: **Personal semantic computers that are portable by default.**
+
+1. **`.me`** = the computer. It has RAM [the tree], CPU, and disk [export/restore].
+2. **`me://`** = the address bus. Pointers that carry operation + context.
+3. **`cleaker`** = the motherboard. Decides which vault to boot from, mounts the kernel, wires up the network.[derivations]
+
+`npm install this.me` gets you the computer.
+`npm install cleaker` gets you the computer *in a place*, with memory.
+
+### One sharp detail
+
+Your quick secret example:
+```ts
+me.wallet["_"]("my-secret-key");
+me("wallet") // undefined
+me("wallet.balance") // 12480
+```
+
+Combine that with `cleaker(me, { namespace, secret })` and you get: **private branches that only materialize if you open the vault with the right key**. The secret isn’t just hidden from reads. The *structure* doesn’t exist until unlocked. That’s why `cleaker` has to handle the vault — the kernel can’t decrypt itself.
+
+So the flow is: `cleaker` proves namespace ownership → decrypts ledger → feeds memories → `me` rebuilds including secret branches → now `me("wallet.balance")` works.
+
+### Where this goes
+
+If `.me` is proven and `cleaker` does placement, the next primitive is probably *connection*. How does `ana.cleaker.me` reference `bob.cleaker.me` without leaking structure?
+
+Your `me://` grammar already has `me://ana.cleaker.me:read/profile`. If `cleaker` resolves that, does it:
+1. Fetch and teach your kernel, so `me.friends.bob.profile` becomes local?
+2. Keep it as a remote pointer that resolves on-demand?
+3. Something else?
+
+Because your benchmark #10/#11 split push vs pull already gives you the machinery to make that decision per-path.
+
+You’ve got the kernel and the placer. The third piece is the *protocol*.
+
+What’s the first `me://` cross-namespace operation you want `cleaker` to support?
+----
+
+
 En el **/ (root)**, no hay prejuicios. Es el espacio de pura potencialidad geométrica.
 
 Computación Cruda 
@@ -179,16 +305,12 @@ reusables, y que puede re-hidratar un runtime `.me` vacío.
 
 1. **Runtime vacío**
    `.me` inicia sin memoria local.
-
 2. **Conexión a fuente**
    Se conecta a un Hydration Source (Cleaker/Monad/peer).
-
 3. **Lectura de declaraciones**
    Descarga/consulta declaraciones persistentes.
-
 4. **Reconstrucción**
    `.me` reinterpreta y reconstruye el grafo semántico.
-
 5. **Navegación activa**
    El árbol queda navegable y operativo.
 
@@ -216,9 +338,7 @@ sin importar el punto de ejecución.
 A Hydration Source is any surface capable of providing semantic declarations that a .me runtime can ingest to reconstruct a semantic universe.
 
 Formally:
-
 A Hydration Source H is a function:
-
 H → { semantic declarations }
 
 ---
@@ -243,11 +363,8 @@ A .me runtime may hydrate from one or multiple sources:
 
 ### Hydration Process
 A .me runtime starts as empty semantic capability.
-
 .me₀ = ∅ (no instantiated structure)
-
 Hydration transforms it into a fully navigable semantic graph:
-
 .me₀ + H → .me₁
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "cleaker",
-  "version": "3.0.6",
+  "version": "3.0.8",
   "description": "Namespace-first semantic pointer and NRP client foundation.",
   "type": "module",
   "main": "dist/cleaker.cjs",
@@ -47,11 +47,10 @@
     "demo:sovereign-loop:real": "tsx tests/Demos/sovereign-loop.real.demo.ts"
   },
   "keywords": [
-    "cleaker",
     "nrp",
     "namespace",
     "semantic-network",
-    "remote-pointer"
+    "Contextual Operator"
   ],
   "repository": {
     "type": "git",
