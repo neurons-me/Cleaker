@@ -1,4 +1,4 @@
-<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760758662/this.me-removebg-preview_fvyeda.png" alt="CLEAKER" width="188" height="188">
+<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png" alt="Cleaker SVG Image" width="144" height="144">
 
 # CLEAKER
 > *Resolutio ante directionem; nomen ante locum.*
@@ -32,8 +32,8 @@ Not:
 `identity = user + config`
 
 But:
-
 `subject = cleaker(me)`
+
 This is why **cleaker** appears so early in the stack. It is not a utility. It is the founding operation.
 
 ------
@@ -43,7 +43,7 @@ This is why **cleaker** appears so early in the stack. It is not a utility. It i
 ```ts
 cleaker()
 // Fixes the current namespace context.
-// The runtime, monad, or host surface already knows the namespace
+// The runtime, monad.ai, or host surface already knows the namespace
 // (hostname, domain, surface). Cleaker crystallizes it as a root.
 
 cleaker(me)

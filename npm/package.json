@@ -1,7 +1,7 @@
 {
   "name": "cleaker",
   "version": "3.0.8",
-  "description": "Namespace-first semantic pointer and NRP client foundation.",
+  "description": "The set of all points within a fixed contextual distance of a random path up to a certain moment t.",
   "type": "module",
   "main": "dist/cleaker.cjs",
   "module": "dist/cleaker.es.js",
@@ -47,11 +47,14 @@
     "demo:sovereign-loop:real": "tsx tests/Demos/sovereign-loop.real.demo.ts"
   },
   "keywords": [
-    "nrp",
-    "namespace",
-    "semantic-network",
-    "Contextual Operator"
-  ],
+  "cleaker",
+  "namespace",
+  "semantic-network",
+  "wiener-sausage",
+  "me://",
+  "contextual-binding",
+  "semantic-mounting"
+],
   "repository": {
     "type": "git",
     "url": "https://github.com/neurons-me/Cleaker.git"

@@ -9,7 +9,6 @@ import type { BindKernelOptions } from './binder';
 import type { CreateRemotePointerOptions } from './pointer/remotePointer';
 import type { RemotePointerDefinition } from './types/pointer';
 import type { CleakerNode, MeKernel } from './types/kernel';
-
 export interface CleakerOptions
   extends CreateRemotePointerOptions,
     Pick<
