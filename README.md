@@ -5,8 +5,6 @@
 
 > **שם קודם למקום**
 
-Entry Points
-
 <img src="https://suign.github.io/assets/imgs/neurons_me_logo.png" alt="neurons.me logo" width="89">
 
 ###### [neurons.me](https://neurons.me)
