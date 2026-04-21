@@ -1,6 +1,5 @@
 ### **El Universo Plano**
-En el nivel más básico de la realidad solo existen dos direcciones.  
-Todo lo demás es composición de esas dos.
+En el nivel más básico de la realidad solo existen dos direcciones. Todo lo demás es composición de esas dos.
 
 En lógica clásica:  
 `0 / 1`  

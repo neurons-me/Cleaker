@@ -1,9 +1,8 @@
 ## Cleaker
-For Python. Not yet.
-Open to Collaborations.
-Please visit node/typescript/javascript versions:
-https://neurons-me.github.io/Cleaker
+Currently available for node.js only.
+
+Python coming soon...
+
 https://neurons.me
 https://cleaker.me
-
 

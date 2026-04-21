@@ -2,7 +2,6 @@
 
 # CLEAKER
 > ***Resolutio ante directionem; nomen ante locum.***
-
 > **שם קודם למקום**
 
 <img src="https://suign.github.io/assets/imgs/neurons_me_logo.png" alt="neurons.me logo" width="89">

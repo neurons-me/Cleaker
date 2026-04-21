@@ -9,11 +9,8 @@ Cleaker is a single question made computable:
 > **Who are you, relative to where you are?**
 
 `.me` is **who**.
-
 `namespace` is **where**. 
-
 `cleaker()` fixes the **where**.
-
 `cleaker(me)` places **who** into that **where**.
 
 That is the whole idea.
@@ -163,7 +160,6 @@ Restart the kernel, call `cleaker(me, { namespace, secret })` again, and the ker
 ------
 
 ## Node-side usage
-
 The same contract works server-side:
 
 ```ts
@@ -292,7 +288,6 @@ npm run test:sovereign-loop
 ------
 
 ## Alpha state
-
 **Implemented:**
 - `me://` target grammar + parser
 - Remote pointer contract + explicit states
