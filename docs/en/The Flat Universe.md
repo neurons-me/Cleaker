@@ -17,7 +17,6 @@ Dimensions, geometry, complexity, consciousness — all are iterations of a bina
 `A → not-A`
 
 The base needs no purpose. No intention. No direction.  
-
 Only one rule: **allow distinction.**
 
 > **If you can compute it, you cannot lose it.**  

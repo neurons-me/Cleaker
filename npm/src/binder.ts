@@ -1,6 +1,10 @@
 import { parseTarget } from './parse/parseTarget';
 import { createRemotePointer } from './pointer/remotePointer';
-import { DEFAULT_CLEAKER_NAMESPACE_ORIGIN } from './constants';
+import {
+  DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
+  DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
+} from './constants';
+import { composeNamespace, parseNamespaceExpression } from './namespace/expression';
 import type { CreateRemotePointerOptions } from './pointer/remotePointer';
 import type {
   BindKernelResolverOptions,
@@ -26,6 +30,8 @@ import type {
   SemanticResolverSource,
 } from './resolver/semanticResolver';
 import { loadPersistentClaimRecord } from './resolver/persistentClaimSource';
+
+const ME_EXPRESSION_SYMBOL = Symbol.for('me.expression');
 
 type OpenResponse = {
   ok: boolean;
@@ -125,6 +131,31 @@ function buildOrigin(protocol: string | null, host: string | null, port: number 
   return `${protocol}://${host}:${port}`;
 }
 
+function stripPort(raw: string): string {
+  return String(raw || '').trim().toLowerCase().replace(/:\d+$/i, '');
+}
+
+function normalizeSurfaceOrigin(input: string): string {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+
+  const candidate = raw.includes('://')
+    ? raw
+    : `${isLoopbackishHost(raw) ? 'http' : 'https'}://${raw}`;
+
+  try {
+    const parsed = new URL(candidate.endsWith('/') ? candidate : `${candidate}/`);
+    const protocol = parsed.protocol.toLowerCase();
+    const hostname = String(parsed.hostname || '').trim().toLowerCase();
+    if (!protocol || !hostname) return '';
+    return `${protocol}//${hostname}`;
+  } catch {
+    const host = stripPort(raw.replace(/^https?:\/\//i, '').split('/')[0] || '');
+    if (!host) return '';
+    return `${isLoopbackishHost(host) ? 'http' : 'https'}://${host}`;
+  }
+}
+
 function hashMemory(memory: unknown): string {
   const m = (memory ?? {}) as Record<string, unknown>;
   const explicit = String(m.hash || '').trim();
@@ -143,6 +174,178 @@ function normalizeOrigin(origin: string): string {
   } catch {
     return raw.replace(/\/+$/, '').toLowerCase();
   }
+}
+
+function normalizeExpression(value: unknown): string | null {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  return normalized || null;
+}
+
+function readKernelExpression(me: MeKernel): string | null {
+  try {
+    const viaSymbol = normalizeExpression((me as any)[ME_EXPRESSION_SYMBOL]);
+    if (viaSymbol) return viaSymbol;
+  } catch {
+    // Ignore and fall through to the reflective plane.
+  }
+
+  try {
+    const runtime = (me as any)['!'];
+    const currentExpression = runtime?.currentExpression;
+    if (typeof currentExpression === 'function') {
+      const value = normalizeExpression(currentExpression());
+      if (value) return value;
+    }
+    if (
+      currentExpression &&
+      typeof currentExpression === 'object' &&
+      typeof (currentExpression as { call?: () => unknown }).call === 'function'
+    ) {
+      const value = normalizeExpression((currentExpression as { call: () => unknown }).call());
+      if (value) return value;
+    }
+  } catch {
+    // Kernels may omit the escape plane entirely.
+  }
+
+  return null;
+}
+
+function isLoopbackishHost(raw: string): boolean {
+  const host = stripPort(raw);
+  return /^(localhost|127(?:\.\d{1,3}){3}|0\.0\.0\.0)$/.test(host);
+}
+
+function readLocationHost(): string {
+  if (typeof globalThis === 'undefined') return '';
+
+  const locationLike = (globalThis as { location?: unknown }).location;
+  if (!locationLike) return '';
+
+  if (typeof locationLike === 'string') {
+    try {
+      const parsedHost = new URL(locationLike.includes('://') ? locationLike : `https://${locationLike}`).hostname.toLowerCase();
+      return isLoopbackishHost(parsedHost) ? '' : parsedHost;
+    } catch {
+      const fallbackHost = stripPort(String(locationLike).trim().toLowerCase());
+      return isLoopbackishHost(fallbackHost) ? '' : fallbackHost;
+    }
+  }
+
+  const record = locationLike as Record<string, unknown>;
+  const host = stripPort(String(record.hostname || record.host || '').trim().toLowerCase());
+  if (isLoopbackishHost(host)) return '';
+  if (host) return host;
+
+  const origin = String(record.origin || record.href || '').trim();
+  if (!origin) return '';
+
+  try {
+    const parsedHost = new URL(origin.includes('://') ? origin : `https://${origin}`).hostname.toLowerCase();
+    return isLoopbackishHost(parsedHost) ? '' : parsedHost;
+  } catch {
+    return '';
+  }
+}
+
+function readLocationSurfaceOrigin(): string {
+  if (typeof globalThis === 'undefined') return '';
+
+  const locationLike = (globalThis as { location?: unknown }).location;
+  if (!locationLike) return '';
+
+  if (typeof locationLike === 'string') {
+    return normalizeSurfaceOrigin(locationLike);
+  }
+
+  const record = locationLike as Record<string, unknown>;
+  const origin = normalizeSurfaceOrigin(String(record.origin || ''));
+  if (origin) return origin;
+
+  const href = String(record.href || '').trim();
+  if (href) return normalizeSurfaceOrigin(href);
+
+  const host = String(record.hostname || record.host || '').trim().toLowerCase();
+  if (!host) return '';
+  return normalizeSurfaceOrigin(host);
+}
+
+function readConfiguredSurfaceOrigin(input: string): string {
+  const constant = deriveNamespaceConstant(input);
+  if (!constant) return '';
+  return normalizeSurfaceOrigin(constant);
+}
+
+type BuiltinOsLike = {
+  hostname?: () => string;
+};
+
+function readRuntimeHostSurfaceOrigin(): string {
+  if (typeof process === 'undefined') return '';
+
+  const envCandidate = String(
+    process.env.CLEAKER_SURFACE_HOST
+      || process.env.MONAD_SELF_IDENTITY
+      || process.env.CLEAKER_NAMESPACE_ROOT
+      || process.env.CLEAKER_NAMESPACE_HOST
+      || process.env.HOSTNAME
+      || process.env.COMPUTERNAME
+      || '',
+  ).trim();
+  const envSurface = readConfiguredSurfaceOrigin(envCandidate);
+  if (envSurface) return envSurface;
+
+  const runtime = process as typeof process & {
+    getBuiltinModule?: (name: string) => unknown;
+  };
+  if (typeof runtime.getBuiltinModule !== 'function') return '';
+
+  try {
+    const os = runtime.getBuiltinModule('node:os') as BuiltinOsLike | undefined;
+    const hostname = String(os?.hostname?.() || '').trim();
+    if (!hostname) return '';
+    return normalizeSurfaceOrigin(hostname);
+  } catch {
+    return '';
+  }
+}
+
+function deriveNamespaceConstant(input: string): string {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      return parseNamespaceExpression(new URL(raw).hostname).constant;
+    } catch {
+      return '';
+    }
+  }
+
+  try {
+    return parseNamespaceExpression(raw).constant;
+  } catch {
+    try {
+      const url = new URL(raw.includes('://') ? raw : `https://${raw}`);
+      return parseNamespaceExpression(url.hostname).constant;
+    } catch {
+      return '';
+    }
+  }
+}
+
+function uniqueOrigins(origins: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>();
+  const output: string[] = [];
+
+  for (const origin of origins) {
+    const normalized = normalizeOrigin(String(origin || ''));
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    output.push(normalized);
+  }
+
+  return output;
 }
 
 function hashFn(input: string): string {
@@ -308,7 +511,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const remoteSlots = new Map<string, RemoteSlot>();
   const semanticSlots = new Map<string, RemoteSlot>();
   const listeners = new Map<keyof CleakerEvents, Set<(...args: unknown[]) => void>>();
-  const defaultNamespace = String(options.namespace || '').trim();
+  const explicitNamespace = String(options.namespace || '').trim();
   const defaultSecret = String(options.secret || '');
   const bootstrapOrigins = Array.isArray(options.bootstrap)
     ? options.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
@@ -331,7 +534,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     cycleId: 0,
     state: 'idle',
     overall: bootstrapOrigins.length ? 'degraded' : 'offline',
-    activeNamespace: defaultNamespace,
+    activeNamespace: resolveNamespace(),
     totalHosts: 0,
     verifiedHosts: 0,
     hosts: [],
@@ -355,6 +558,57 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const semanticTransportAllowlist = Array.isArray(options.semanticTransportAllowlist)
     ? options.semanticTransportAllowlist.map((item) => String(item || '').toLowerCase()).filter(Boolean)
     : ['http', 'https'];
+
+  function resolveSurfaceNamespaceConstant(): string {
+    const locationHost = readLocationHost();
+    if (locationHost) return deriveNamespaceConstant(locationHost);
+
+    const envNamespaceRoot = typeof process !== 'undefined'
+      ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '')
+      : '';
+    if (envNamespaceRoot) return deriveNamespaceConstant(envNamespaceRoot);
+
+    const claimSurface = String(options.claimOrigin || '').trim();
+    if (claimSurface) return deriveNamespaceConstant(claimSurface);
+
+    return deriveNamespaceConstant(DEFAULT_CLEAKER_NAMESPACE_ORIGIN);
+  }
+
+  function resolveNamespace(inputNamespace?: string): string {
+    const explicit = String(inputNamespace || explicitNamespace || '').trim();
+    if (explicit) return explicit;
+
+    const expression = readKernelExpression(me);
+    if (!expression) return '';
+
+    const constant = resolveSurfaceNamespaceConstant();
+    if (!constant) return '';
+
+    return composeNamespace(expression, constant);
+  }
+
+  function resolveSurfaceOrigins(runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
+    const locationSurfaceOrigin = readLocationSurfaceOrigin();
+    const envNamespaceSurface = typeof process !== 'undefined'
+      ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '')
+      : '';
+    const configuredSurfaceOrigin = readConfiguredSurfaceOrigin(
+      String(options.claimOrigin || envClaimOrigin || envNamespaceSurface || ''),
+    );
+    const runtimeHostSurfaceOrigin = readRuntimeHostSurfaceOrigin();
+
+    return uniqueOrigins([
+      preferredOrigin,
+      options.origin,
+      ...bootstrapOrigins,
+      ...runtimeBootstrap,
+      locationSurfaceOrigin,
+      configuredSurfaceOrigin,
+      runtimeHostSurfaceOrigin,
+      DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
+      DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
+    ]);
+  }
 
   function resolveBoundKernelTarget(path: string): unknown {
     const normalized = String(path || '').trim().replace(/^\/+/, '').replace(/\//g, '.');
@@ -535,7 +789,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   }
 
   function discoverHosts(input: { namespace?: string; bootstrap?: string[] } = {}): CleakerHostRecord[] {
-    const namespace = String(input.namespace || defaultNamespace || '').trim();
+    const namespace = resolveNamespace(input.namespace);
     if (!namespace) return [];
 
     const hostMap = new Map<string, CleakerHostRecord>();
@@ -564,7 +818,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       const runtimeBootstrap = Array.isArray(input.bootstrap)
         ? input.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
         : [];
-      const fallbackOrigins = [normalizeOrigin(options.origin || ''), ...bootstrapOrigins, ...runtimeBootstrap].filter(Boolean);
+      const fallbackOrigins = resolveSurfaceOrigins(runtimeBootstrap);
       fallbackOrigins.forEach((origin) => {
         const host = toHostRecord({ origin }, namespace);
         if (!host) return;
@@ -661,7 +915,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   }
 
   async function validateHosts(input: ValidateHostsOptions = {}): Promise<CleakerStatus> {
-    const namespace = String(input.namespace || defaultNamespace || '').trim();
+    const namespace = resolveNamespace(input.namespace);
     const secret = String(input.secret !== undefined ? input.secret : defaultSecret);
     const strategy = input.triadStrategy || 'first-success';
     const timeoutMs = Number(input.timeoutMs || 5000);
@@ -889,51 +1143,68 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   }
 
   async function open(input: OpenNodeInput): Promise<OpenNodeResult> {
-    const namespace = String(input.namespace || '').trim();
+    const namespace = resolveNamespace(input.namespace);
     const secret = String(input.secret || '');
-    const origin = String(input.origin || DEFAULT_CLEAKER_NAMESPACE_ORIGIN).replace(/\/+$/, '');
 
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
     if (!secret) throw new Error('SECRET_REQUIRED');
 
     const fetcher = input.fetcher || fetch;
-    const response = await fetcher(`${origin}/claims/open`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        ...(input.headers || {}),
-      },
-      body: JSON.stringify({ namespace, secret }),
-    });
+    const origins = resolveSurfaceOrigins([], input.origin);
+    let lastError = 'OPEN_FAILED';
 
-    const data = (await response.json()) as OpenResponse;
-    if (!response.ok || !data?.ok) {
-      throw new Error(String(data?.error || `OPEN_FAILED_${response.status}`));
+    for (const origin of origins) {
+      try {
+        const response = await fetcher(`${origin}/claims/open`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            ...(input.headers || {}),
+          },
+          body: JSON.stringify({ namespace, secret }),
+        });
+
+        let data: OpenResponse | null = null;
+        try {
+          data = (await response.json()) as OpenResponse;
+        } catch {
+          data = null;
+        }
+
+        if (!response.ok || !data?.ok) {
+          lastError = String(data?.error || `OPEN_FAILED_${response.status}`);
+          continue;
+        }
+
+        const allMemories = Array.isArray(data.memories) ? data.memories : [];
+        const memories = allMemories.filter((memory) => hydrateMemory(memory));
+
+        me.noise = String(data.noise || '');
+
+        return {
+          status: 'verified',
+          namespace: String(data.namespace || namespace),
+          identityHash: String(data.identityHash || ''),
+          noise: String(data.noise || ''),
+          openedAt: Number(data.openedAt || Date.now()),
+          memoriesCount: memories.length,
+        };
+      } catch {
+        lastError = 'NETWORK_ERROR';
+      }
     }
 
-    const allMemories = Array.isArray(data.memories) ? data.memories : [];
-    const memories = allMemories.filter((memory) => hydrateMemory(memory));
-
-    me.noise = String(data.noise || '');
-
-    return {
-      status: 'verified',
-      namespace: String(data.namespace || namespace),
-      identityHash: String(data.identityHash || ''),
-      noise: String(data.noise || ''),
-      openedAt: Number(data.openedAt || Date.now()),
-      memoriesCount: memories.length,
-    };
+    throw new Error(lastError);
   }
 
-  if (options.namespace) {
-    discoverHosts({ namespace: options.namespace });
+  if (resolveNamespace()) {
+    discoverHosts({ namespace: explicitNamespace });
   }
 
-  // Triad: auto-open if namespace + secret were provided at bind time
-  if (options.namespace && options.secret) {
+  // Triad: auto-open if secret is provided and namespace can be resolved from context.
+  if (options.secret) {
     _ready = open({
-      namespace: options.namespace,
+      namespace: explicitNamespace,
       secret: options.secret,
       origin: options.origin,
       fetcher: options.fetcher,

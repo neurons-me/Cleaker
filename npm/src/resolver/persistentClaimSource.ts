@@ -1,3 +1,4 @@
+import { DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN } from '../constants';
 import type {
   NamespacePublicKey,
   NamespaceRecord,
@@ -265,7 +266,7 @@ function resolveOrigins(options: PersistentClaimDiscoveryOptions): string[] {
     options.origin,
     ...explicitOrigins,
     envOrigin,
-    'http://localhost:8161',
+    DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
   ]);
   return candidateOrigins.map((origin) => normalizeOrigin(origin)).filter(Boolean);
 }

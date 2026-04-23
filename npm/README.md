@@ -92,6 +92,7 @@ import cleaker from 'cleaker';
 import Me from 'this.me';
 
 const me = new Me();
+me["@"]("ana");
 me.profile.name('Ana');
 
 const node = cleaker(me);
@@ -109,23 +110,41 @@ await pending.promise; // resolves against the server, then teaches the kernel
 
 ------
 
-## Operational triad form — `cleaker(me, { namespace, secret })`
-As a practical implementation form, you can also pass namespace and secret at bind time so the vault opens automatically. No manual `.open()` call required:
+## Operational triad form — `cleaker(me, { secret })`
+As a practical implementation form, you can pass a secret at bind time so the vault opens automatically. If the kernel already has an active expression and the surface hostname is known, Cleaker derives the full namespace contextually. No manual `.open()` call required:
 
 ```ts
 import cleaker from 'cleaker';
 import Me from 'this.me';
 
 const me = new Me();
+me["@"]("ana");
 const self = cleaker(me, {
-  namespace: 'ana.cleaker.me',
   secret: 'luna',
-  origin: 'http://localhost:8161',
+  origin: 'http://localhost:8161', // optional channel override
 });
 
 await self.ready;
 
 self.profile.name; // value from remote memory, learned locally
+```
+
+Derivation rule:
+
+- If you pass `namespace`, that exact namespace wins.
+- Otherwise Cleaker reads `me["@"](...)` from the kernel and combines it with the current surface root.
+- Loopback dev hosts like `localhost` do not become public namespace roots; they fall back to `cleaker.me` by default.
+- Default transport surfaces stay host-level: `http://localhost`, `https://<domain>`, `https://<hostname>`, `https://cleaker.me`.
+- Ports are treated as explicit channels, not as namespace identity. If you pass `origin`, Cleaker respects that exact channel.
+
+You can still override the derived context explicitly when needed:
+
+```ts
+const self = cleaker(me, {
+  namespace: 'ana.cleaker.me',
+  secret: 'luna',
+  origin: 'http://localhost:8161',
+});
 ```
 
 `self.ready` is a `Promise<OpenNodeResult | null>`. It resolves when hydration completes, or rejects silently (`null`) on error.
