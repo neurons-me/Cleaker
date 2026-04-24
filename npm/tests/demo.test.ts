@@ -17,6 +17,7 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
 	const namespaceFqdn = `${namespacePrefix}.cleaker`;
 	const expression = `${namespaceFqdn}:read/profile`;
   const secret = 'luna';
+  const identityHash = 'demo-kernel-hash';
 
   const learned: unknown[] = [];
 
@@ -41,6 +42,7 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
     body: JSON.stringify({
       namespace: namespaceFqdn,
       secret,
+      identityHash,
     }),
   });
   const claimJson = (await claimResponse.json()) as { ok?: boolean; error?: string };
@@ -56,6 +58,7 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
 	const opened0 = await node.open({
 		namespace: namespaceFqdn,
 		secret,
+		identityHash,
 		origin: 'http://localhost:8161',
 	});
 	console.log('[3.1] First open response:', JSON.stringify(opened0, null, 2));
@@ -85,6 +88,7 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
   const opened = await node.open({
     namespace: namespaceFqdn,
     secret,
+    identityHash,
     origin: 'http://localhost:8161',
   });
   console.log('[5.1] Open response:', JSON.stringify(opened, null, 2));

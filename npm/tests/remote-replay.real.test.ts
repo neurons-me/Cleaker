@@ -22,6 +22,8 @@ async function fetchJson(url: string, init: RequestInit, label: string) {
 void run('Remote Replay: remote ledger history collapses into present .me state', async () => {
   const namespace = `replay-${Date.now().toString().slice(-6)}.cleaker`;
   const secret = 'luna';
+  const seed = `remote-replay:${namespace}`;
+  const identityHash = `kernel:${seed}`;
 
   console.log('\n[Remote Replay]');
   console.log('origin ->', origin);
@@ -32,7 +34,7 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ namespace, secret }),
+      body: JSON.stringify({ namespace, secret, identityHash }),
     },
     'claim',
   );
@@ -46,7 +48,7 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ namespace, secret }),
+      body: JSON.stringify({ namespace, secret, identityHash }),
     },
     'open:seed',
   );
@@ -96,7 +98,7 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
 
   console.log('[Remote Replay] seed thoughts written to remote ledger');
 
-  const self = cleaker(new Me() as any, { namespace, secret, origin }) as any;
+  const self = cleaker(new Me(seed) as any, { namespace, secret, identityHash, origin }) as any;
   const opened = await self.ready;
 
   assert.ok(opened, 'triad auto-open should hydrate a fresh kernel');

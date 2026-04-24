@@ -15,6 +15,7 @@ export interface CleakerOptions
       BindKernelOptions,
       | 'namespace'
       | 'secret'
+      | 'identityHash'
       | 'origin'
       | 'bootstrap'
       | 'claimDir'

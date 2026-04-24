@@ -32,6 +32,7 @@ import type {
 import { loadPersistentClaimRecord } from './resolver/persistentClaimSource';
 
 const ME_EXPRESSION_SYMBOL = Symbol.for('me.expression');
+const ME_IDENTITY_SYMBOL = Symbol.for('me.identity');
 
 type OpenResponse = {
   ok: boolean;
@@ -46,6 +47,7 @@ type OpenResponse = {
 export interface BindKernelOptions extends CreateRemotePointerOptions {
   namespace?: string;
   secret?: string;
+  identityHash?: string;
   origin?: string;
   bootstrap?: string[];
   claimDir?: string;
@@ -181,6 +183,11 @@ function normalizeExpression(value: unknown): string | null {
   return normalized || null;
 }
 
+function normalizeIdentityHash(value: unknown): string | null {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  return normalized || null;
+}
+
 function readKernelExpression(me: MeKernel): string | null {
   try {
     const viaSymbol = normalizeExpression((me as any)[ME_EXPRESSION_SYMBOL]);
@@ -203,6 +210,51 @@ function readKernelExpression(me: MeKernel): string | null {
     ) {
       const value = normalizeExpression((currentExpression as { call: () => unknown }).call());
       if (value) return value;
+    }
+  } catch {
+    // Kernels may omit the escape plane entirely.
+  }
+
+  return null;
+}
+
+function readKernelIdentityHash(me: MeKernel): string | null {
+  try {
+    const viaSymbol = (me as any)[ME_IDENTITY_SYMBOL];
+    if (viaSymbol && typeof viaSymbol === 'object') {
+      const value = normalizeIdentityHash((viaSymbol as { hash?: unknown }).hash);
+      if (value) return value;
+    }
+    const direct = normalizeIdentityHash(viaSymbol);
+    if (direct) return direct;
+  } catch {
+    // Ignore and fall through to the reflective plane.
+  }
+
+  try {
+    const runtime = (me as any)['!'];
+    const identity = runtime?.identity;
+    if (typeof identity === 'function') {
+      const value = identity();
+      if (value && typeof value === 'object') {
+        const hash = normalizeIdentityHash((value as { hash?: unknown }).hash);
+        if (hash) return hash;
+      }
+      const direct = normalizeIdentityHash(value);
+      if (direct) return direct;
+    }
+    if (
+      identity &&
+      typeof identity === 'object' &&
+      typeof (identity as { call?: () => unknown }).call === 'function'
+    ) {
+      const value = (identity as { call: () => unknown }).call();
+      if (value && typeof value === 'object') {
+        const hash = normalizeIdentityHash((value as { hash?: unknown }).hash);
+        if (hash) return hash;
+      }
+      const direct = normalizeIdentityHash(value);
+      if (direct) return direct;
     }
   } catch {
     // Kernels may omit the escape plane entirely.
@@ -513,6 +565,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const listeners = new Map<keyof CleakerEvents, Set<(...args: unknown[]) => void>>();
   const explicitNamespace = String(options.namespace || '').trim();
   const defaultSecret = String(options.secret || '');
+  const explicitIdentityHash = normalizeIdentityHash(options.identityHash);
   const bootstrapOrigins = Array.isArray(options.bootstrap)
     ? options.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
     : [];
@@ -608,6 +661,13 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
       DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
     ]);
+  }
+
+  function resolveIdentityHash(inputIdentityHash?: string): string {
+    return normalizeIdentityHash(inputIdentityHash)
+      || explicitIdentityHash
+      || readKernelIdentityHash(me)
+      || '';
   }
 
   function resolveBoundKernelTarget(path: string): unknown {
@@ -851,6 +911,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     origin: string,
     namespace: string,
     secret: string,
+    identityHash: string,
     timeoutMs: number,
     fetcher: typeof fetch,
   ): Promise<OpenResponse | { ok: false; error: string }> {
@@ -862,7 +923,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         headers: {
           'content-type': 'application/json',
         },
-        body: JSON.stringify({ namespace, secret }),
+        body: JSON.stringify({
+          namespace,
+          secret,
+          ...(identityHash ? { identityHash } : {}),
+        }),
         signal: controller?.signal,
       });
       let data: OpenResponse | { ok: false; error: string } = { ok: false, error: 'UNKNOWN_ERROR' };
@@ -917,6 +982,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   async function validateHosts(input: ValidateHostsOptions = {}): Promise<CleakerStatus> {
     const namespace = resolveNamespace(input.namespace);
     const secret = String(input.secret !== undefined ? input.secret : defaultSecret);
+    const identityHash = resolveIdentityHash(input.identityHash);
     const strategy = input.triadStrategy || 'first-success';
     const timeoutMs = Number(input.timeoutMs || 5000);
     const fetcher = options.fetcher || fetch;
@@ -993,7 +1059,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       }
 
       transition('opening', cycleId);
-      const opened = await openRemote(host.origin, namespace, secret, timeoutMs, fetcher);
+      const opened = await openRemote(host.origin, namespace, secret, identityHash, timeoutMs, fetcher);
       if (!opened.ok) {
         const errorCode = String(opened.error || 'OPEN_FAILED');
         host.status.triad = errorCode === 'CLAIM_NOT_FOUND' ? 'unverified' : 'failed';
@@ -1145,6 +1211,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   async function open(input: OpenNodeInput): Promise<OpenNodeResult> {
     const namespace = resolveNamespace(input.namespace);
     const secret = String(input.secret || '');
+    const identityHash = resolveIdentityHash(input.identityHash);
 
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
     if (!secret) throw new Error('SECRET_REQUIRED');
@@ -1161,7 +1228,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
             'content-type': 'application/json',
             ...(input.headers || {}),
           },
-          body: JSON.stringify({ namespace, secret }),
+          body: JSON.stringify({
+            namespace,
+            secret,
+            ...(identityHash ? { identityHash } : {}),
+          }),
         });
 
         let data: OpenResponse | null = null;
@@ -1206,6 +1277,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     _ready = open({
       namespace: explicitNamespace,
       secret: options.secret,
+      identityHash: options.identityHash,
       origin: options.origin,
       fetcher: options.fetcher,
     }).catch(() => null);

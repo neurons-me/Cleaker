@@ -245,7 +245,7 @@ POST /             → write a memory entry
 ```bash
 curl -s -X POST http://localhost:8161/claims \
   -H "content-type: application/json" \
-  -d '{ "namespace": "ana.cleaker.me", "secret": "luna" }'
+  -d '{ "namespace": "ana.cleaker.me", "secret": "luna", "identityHash": "<me[\"!\"].identity().hash>" }'
 ```
 
 **Open:**
@@ -253,8 +253,11 @@ curl -s -X POST http://localhost:8161/claims \
 ```bash
 curl -s -X POST http://localhost:8161/claims/open \
   -H "content-type: application/json" \
-  -d '{ "namespace": "ana.cleaker.me", "secret": "luna" }'
+  -d '{ "namespace": "ana.cleaker.me", "secret": "luna", "identityHash": "<me[\"!\"].identity().hash>" }'
 ```
+
+The server now treats `identityHash` as the kernel anchor and `secret` as the unlock key. To reopen a vault on a fresh runtime, use the same `.me` seed so `me["!"].identity().hash` stays stable across sessions.
+If your installed `this.me` build does not expose the reflective identity hash yet, pass `identityHash` explicitly into `cleaker(me, { ... })` or `open({ ... })` as a temporary compatibility bridge.
 
 Response shape:
 

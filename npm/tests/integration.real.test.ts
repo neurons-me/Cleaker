@@ -95,10 +95,15 @@ void run('Integration Real: cleaker(me) binds the actual .me kernel and teaches 
 
 void run('Integration Real: triad binding — cleaker(me, { namespace, secret }) auto-opens the vault', async () => {
   const me = new Me();
+  const expectedIdentityHash = 'npm-me-identity';
 
-  const triadFetcher: typeof fetch = async (endpoint) => {
+  const triadFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
     if (url.endsWith('/claims/open')) {
+      const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
+        identityHash?: string;
+      };
+      assert.equal(payload.identityHash, expectedIdentityHash);
       return new Response(
         JSON.stringify({
           ok: true,
@@ -120,6 +125,7 @@ void run('Integration Real: triad binding — cleaker(me, { namespace, secret })
   const self = cleaker(me, {
     namespace: 'demo.cleaker',
     secret: 'luna',
+    identityHash: expectedIdentityHash,
     fetcher: triadFetcher,
   });
 
@@ -140,6 +146,7 @@ void run('Integration Real: triad binding — cleaker(me, { namespace, secret })
 void run('Integration Real: cleaker(me, { secret }) derives namespace from active expression + host context', async () => {
   const me = new WorkspaceMe() as any;
   me['@']('ana');
+  const expectedIdentityHash = String(me['!']?.identity?.().hash || '');
 
   let openedNamespace = '';
   const triadFetcher: typeof fetch = async (endpoint, init) => {
@@ -147,8 +154,10 @@ void run('Integration Real: cleaker(me, { secret }) derives namespace from activ
     if (url.endsWith('/claims/open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
+        identityHash?: string;
       };
       openedNamespace = String(payload.namespace || '');
+      assert.equal(payload.identityHash, expectedIdentityHash);
 
       return new Response(
         JSON.stringify({
@@ -194,6 +203,7 @@ void run('Integration Real: cleaker(me, { secret }) derives namespace from activ
 void run('Integration Real: localhost surfaces default to cleaker.me as the namespace root', async () => {
   const me = new WorkspaceMe() as any;
   me['@']('ana');
+  const expectedIdentityHash = String(me['!']?.identity?.().hash || '');
 
   let openedNamespace = '';
   const hits: string[] = [];
@@ -203,8 +213,10 @@ void run('Integration Real: localhost surfaces default to cleaker.me as the name
     if (url.endsWith('/claims/open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
+        identityHash?: string;
       };
       openedNamespace = String(payload.namespace || '');
+      assert.equal(payload.identityHash, expectedIdentityHash);
 
       if (!url.startsWith(`${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/claims/open`)) {
         return new Response(JSON.stringify({ ok: false, error: 'NOT_FOUND' }), { status: 404 });
@@ -252,6 +264,7 @@ void run('Integration Real: localhost surfaces default to cleaker.me as the name
 void run('Integration Real: explicit origin keeps the port as a channel override', async () => {
   const me = new WorkspaceMe() as any;
   me['@']('ana');
+  const expectedIdentityHash = String(me['!']?.identity?.().hash || '');
 
   const hits: string[] = [];
   const triadFetcher: typeof fetch = async (endpoint, init) => {
@@ -260,7 +273,9 @@ void run('Integration Real: explicit origin keeps the port as a channel override
     if (url.endsWith('/claims/open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
+        identityHash?: string;
       };
+      assert.equal(payload.identityHash, expectedIdentityHash);
 
       return new Response(
         JSON.stringify({
@@ -303,6 +318,7 @@ void run('Integration Real: explicit origin keeps the port as a channel override
 void run('Integration Real: localhost surfaces fall back to cleaker.me when the local daemon is unavailable', async () => {
   const me = new WorkspaceMe() as any;
   me['@']('ana');
+  const expectedIdentityHash = String(me['!']?.identity?.().hash || '');
 
   let openedNamespace = '';
   const hits: string[] = [];
@@ -312,8 +328,10 @@ void run('Integration Real: localhost surfaces fall back to cleaker.me when the 
     if (url.endsWith('/claims/open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
+        identityHash?: string;
       };
       openedNamespace = String(payload.namespace || '');
+      assert.equal(payload.identityHash, expectedIdentityHash);
 
       if (url.startsWith(`${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/claims/open`)) {
         return new Response(JSON.stringify({ ok: false, error: 'NETWORK_DOWN' }), { status: 503 });
@@ -400,6 +418,7 @@ void run('Integration Real: discoverHosts treats localhost and cleaker.me as def
 void run('Integration Real: explicit namespace still overrides derived context', async () => {
   const me = new WorkspaceMe() as any;
   me['@']('ana');
+  const expectedIdentityHash = String(me['!']?.identity?.().hash || '');
 
   let openedNamespace = '';
   const triadFetcher: typeof fetch = async (endpoint, init) => {
@@ -407,8 +426,10 @@ void run('Integration Real: explicit namespace still overrides derived context',
     if (url.endsWith('/claims/open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
+        identityHash?: string;
       };
       openedNamespace = String(payload.namespace || '');
+      assert.equal(payload.identityHash, expectedIdentityHash);
 
       return new Response(
         JSON.stringify({

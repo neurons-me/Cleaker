@@ -4,6 +4,7 @@ import type { SemanticResolver, SemanticResolverDefaults, SemanticResolverSource
 export interface BindKernelOptions extends CreateRemotePointerOptions {
     namespace?: string;
     secret?: string;
+    identityHash?: string;
     origin?: string;
     bootstrap?: string[];
     claimDir?: string;

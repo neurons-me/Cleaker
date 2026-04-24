@@ -3,6 +3,7 @@ import type { RemotePointerDefinition, ResolvePointerResult } from './pointer';
 export interface OpenNodeInput {
     namespace: string;
     secret: string;
+    identityHash?: string;
     origin?: string;
     headers?: Record<string, string>;
     fetcher?: typeof fetch;
@@ -104,6 +105,7 @@ export interface ValidateHostsOptions {
     timeoutMs?: number;
     namespace?: string;
     secret?: string;
+    identityHash?: string;
     bootstrap?: string[];
 }
 export interface CleakerEvents {
