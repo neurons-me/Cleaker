@@ -240,6 +240,8 @@ POST /claims/open   → open and recover state
 POST /             → write a memory entry
 ```
 
+These HTTP routes are part of the current implementation surface. They are not themselves the canonical NRP resource grammar; they are the current transport binding used by the daemon and client runtime.
+
 **Claim:**
 
 ```bash
@@ -258,6 +260,8 @@ curl -s -X POST http://localhost:8161/claims/open \
 
 The server now treats `identityHash` as the kernel anchor and `secret` as the unlock key. To reopen a vault on a fresh runtime, use the same `.me` seed so `me["!"].identity().hash` stays stable across sessions.
 If your installed `this.me` build does not expose the reflective identity hash yet, pass `identityHash` explicitly into `cleaker(me, { ... })` or `open({ ... })` as a temporary compatibility bridge.
+
+At the moment, claim/open is an implementation-specific binding: claim is anchored to `identityHash`, while `secret` is used to unlock and reopen the namespace state. This may evolve in future transport bindings, but it does not change the canonical namespace/resource model described by the NRP.
 
 Response shape:
 
