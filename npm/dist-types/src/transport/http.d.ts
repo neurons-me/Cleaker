@@ -1,9 +1,9 @@
 import type { CleakerTransportClient } from './client';
-import type { ResolveResult } from '../resolver/resolver';
+import type { ResolvePointerResult } from '../types/pointer';
 export declare class HttpTransportClient implements CleakerTransportClient {
     private connected;
     private endpoint;
-    connect(resolution: ResolveResult): Promise<void>;
+    connect(resolution: ResolvePointerResult): Promise<void>;
     disconnect(): Promise<void>;
     isConnected(): boolean;
 }

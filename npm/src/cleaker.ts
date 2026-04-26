@@ -18,17 +18,7 @@ export interface CleakerOptions
       | 'identityHash'
       | 'origin'
       | 'bootstrap'
-      | 'claimDir'
-      | 'claimDirs'
-      | 'claimOrigin'
       | 'fetcher'
-      | 'semanticResolver'
-      | 'semanticDefaults'
-      | 'semanticNamespaceRoot'
-      | 'semanticSources'
-      | 'semanticSelector'
-      | 'semanticNetwork'
-      | 'semanticTransportAllowlist'
     > {}
 
 export function cleaker(target: string, options?: CleakerOptions): RemotePointerDefinition;

@@ -16,10 +16,3 @@ export class CleakerParseError extends CleakerError {
     this.name = 'CleakerParseError';
   }
 }
-
-export class CleakerResolverError extends CleakerError {
-  constructor(message: string, details?: Record<string, unknown>) {
-    super('RESOLVE_FAILED', message, details);
-    this.name = 'CleakerResolverError';
-  }
-}

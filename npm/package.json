@@ -1,7 +1,7 @@
 {
   "name": "cleaker",
-  "version": "3.0.8",
-  "description": "The set of all points within a fixed contextual distance of a random path up to a certain moment t.",
+  "version": "3.0.9",
+  "description": "Bind a .me kernel to a namespace and hydrate it through monad.ai.",
   "type": "module",
   "main": "dist/cleaker.cjs",
   "module": "dist/cleaker.es.js",
@@ -30,7 +30,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "docs:publish": "npm run docs:build && touch docs/.vitepress/dist/.nojekyll",
-    "test": "npm run test:quickstart && npm run test:demo && npm run test:axioms && npm run test:algebra && npm run test:browser && npm run test:bind && npm run test:integration:real && npm run test:sovereign-loop && npm run test:builds && npm run test:contracts",
+    "test": "npm run test:quickstart && npm run test:demo && npm run test:axioms && npm run test:algebra && npm run test:bind && npm run test:integration:real && npm run test:sovereign-loop && npm run test:builds && npm run test:contracts",
     "test:quickstart": "tsx tests/quickstart.test.ts",
     "test:demo": "tsx tests/demo.test.ts",
     "test:bind": "tsx tests/bind.test.ts",
@@ -39,7 +39,6 @@
     "test:sovereign-loop": "tsx tests/sovereign-loop.test.ts",
     "test:axioms": "tsx tests/axioms.test.ts",
     "test:algebra": "tsx tests/algebra.test.ts",
-    "test:browser": "tsx tests/browser-namespace.test.ts",
     "test:builds": "node tests/Builds/esm.test.mjs && node tests/Builds/cjs.test.cjs && tsc --noEmit -p tsconfig.json",
     "test:contracts": "node tests/contracts/nrp.contract.test.mjs",
     "test:prebuild": "node tests/pre-build.test.mjs",
@@ -47,14 +46,14 @@
     "demo:sovereign-loop:real": "tsx tests/Demos/sovereign-loop.real.demo.ts"
   },
   "keywords": [
-  "cleaker",
-  "namespace",
-  "semantic-network",
-  "wiener-sausage",
-  "me://",
-  "contextual-binding",
-  "semantic-mounting"
-],
+    "cleaker",
+    "namespace",
+    "me://",
+    "contextual-binding",
+    "semantic-mounting",
+    "namespace-projection",
+    "monad.ai"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/neurons-me/Cleaker.git"

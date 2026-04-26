@@ -8,6 +8,32 @@ import Me from 'this.me';
 import { ME as WorkspaceMe } from '../../../../this/.me/npm/src/me.ts';
 import { run } from './test.util.ts';
 
+function readBody(init?: RequestInit) {
+  return JSON.parse(String(init?.body || '{}')) as Record<string, unknown>;
+}
+
+function isPrimaryOperation(url: string, init: RequestInit | undefined, operation: string) {
+  if (!url.endsWith('/')) return false;
+  const body = readBody(init);
+  return String(body.operation || '') === operation;
+}
+
+function openEnvelope(namespace: string, identityHash: string, noise: string, memories: unknown[] = []) {
+  return {
+    ok: true,
+    target: {
+      namespace: {
+        me: namespace,
+        host: namespace,
+      },
+    },
+    identityHash,
+    noise,
+    openedAt: Date.now(),
+    memories,
+  };
+}
+
 async function withLocation<T>(
   location: { host?: string; hostname?: string; origin?: string; href?: string },
   fn: () => Promise<T> | T,
@@ -42,22 +68,17 @@ async function withLocation<T>(
 void run('Integration Real: cleaker(me) binds the actual .me kernel and teaches it remote memories', async () => {
   const me = new Me();
   (me as any).profile.name('Sui');
-
-  const node = cleaker(me);
-  const baselineMemories = Array.isArray(me.memories) ? me.memories.length : 0;
-
-  node.bindKernelResolver({
-    resolveOptions: {
-      fetcher: async (endpoint: URL | RequestInfo) => {
-        const url = String(endpoint);
-        assert.ok(url.endsWith('/profile'), 'Resolver should request the real profile endpoint');
-        return new Response(JSON.stringify({ ok: true, value: { displayName: 'Ana', origin: 'remote' } }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      },
+  const node = cleaker(me, {
+    fetcher: async (endpoint: URL | RequestInfo) => {
+      const url = String(endpoint);
+      assert.ok(url.endsWith('/profile'), 'Resolver should request the real profile endpoint');
+      return new Response(JSON.stringify({ ok: true, value: { displayName: 'Ana', origin: 'remote' } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
     },
   });
+  const baselineMemories = Array.isArray(me.memories) ? me.memories.length : 0;
 
   assert.strictEqual((node as any).profile.name, 'Sui', 'Real kernel local cognition should remain immediate');
 
@@ -99,22 +120,15 @@ void run('Integration Real: triad binding — cleaker(me, { namespace, secret })
 
   const triadFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
-    if (url.endsWith('/claims/open')) {
+    if (isPrimaryOperation(url, init as RequestInit | undefined, 'open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         identityHash?: string;
       };
       assert.equal(payload.identityHash, expectedIdentityHash);
       return new Response(
-        JSON.stringify({
-          ok: true,
-          namespace: 'demo.cleaker',
-          identityHash: 'abc123',
-          noise: 'xrand',
-          openedAt: Date.now(),
-          memories: [
-            { path: 'profile.name', operator: null, expression: 'Triad', value: 'Triad', timestamp: 1 },
-          ],
-        }),
+        JSON.stringify(openEnvelope('demo.cleaker', 'abc123', 'xrand', [
+          { path: 'profile.name', operator: null, expression: 'Triad', value: 'Triad', timestamp: 1 },
+        ])),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -151,7 +165,7 @@ void run('Integration Real: cleaker(me, { secret }) derives namespace from activ
   let openedNamespace = '';
   const triadFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
-    if (url.endsWith('/claims/open')) {
+    if (isPrimaryOperation(url, init as RequestInit | undefined, 'open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
         identityHash?: string;
@@ -160,16 +174,9 @@ void run('Integration Real: cleaker(me, { secret }) derives namespace from activ
       assert.equal(payload.identityHash, expectedIdentityHash);
 
       return new Response(
-        JSON.stringify({
-          ok: true,
-          namespace: openedNamespace,
-          identityHash: 'derived-identity',
-          noise: 'derived-noise',
-          openedAt: Date.now(),
-          memories: [
-            { path: 'profile.name', operator: null, expression: 'Ana', value: 'Ana', timestamp: 1 },
-          ],
-        }),
+        JSON.stringify(openEnvelope(openedNamespace, 'derived-identity', 'derived-noise', [
+          { path: 'profile.name', operator: null, expression: 'Ana', value: 'Ana', timestamp: 1 },
+        ])),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -210,7 +217,7 @@ void run('Integration Real: localhost surfaces default to cleaker.me as the name
   const triadFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
     hits.push(url);
-    if (url.endsWith('/claims/open')) {
+    if (isPrimaryOperation(url, init as RequestInit | undefined, 'open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
         identityHash?: string;
@@ -218,19 +225,12 @@ void run('Integration Real: localhost surfaces default to cleaker.me as the name
       openedNamespace = String(payload.namespace || '');
       assert.equal(payload.identityHash, expectedIdentityHash);
 
-      if (!url.startsWith(`${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/claims/open`)) {
+      if (url !== `${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/`) {
         return new Response(JSON.stringify({ ok: false, error: 'NOT_FOUND' }), { status: 404 });
       }
 
       return new Response(
-        JSON.stringify({
-          ok: true,
-          namespace: openedNamespace,
-          identityHash: 'localhost-identity',
-          noise: 'localhost-noise',
-          openedAt: Date.now(),
-          memories: [],
-        }),
+        JSON.stringify(openEnvelope(openedNamespace, 'localhost-identity', 'localhost-noise')),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -256,7 +256,7 @@ void run('Integration Real: localhost surfaces default to cleaker.me as the name
       assert.equal(openedNamespace, 'ana.cleaker.me');
       assert.equal(result!.namespace, 'ana.cleaker.me');
       assert.equal(self.getStatus().activeNamespace, 'ana.cleaker.me');
-      assert.deepEqual(hits, [`${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/claims/open`]);
+      assert.deepEqual(hits, [`${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/`]);
     },
   );
 });
@@ -270,7 +270,7 @@ void run('Integration Real: explicit origin keeps the port as a channel override
   const triadFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
     hits.push(url);
-    if (url.endsWith('/claims/open')) {
+    if (isPrimaryOperation(url, init as RequestInit | undefined, 'open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
         identityHash?: string;
@@ -278,14 +278,7 @@ void run('Integration Real: explicit origin keeps the port as a channel override
       assert.equal(payload.identityHash, expectedIdentityHash);
 
       return new Response(
-        JSON.stringify({
-          ok: true,
-          namespace: String(payload.namespace || ''),
-          identityHash: 'explicit-channel-identity',
-          noise: 'explicit-channel-noise',
-          openedAt: Date.now(),
-          memories: [],
-        }),
+        JSON.stringify(openEnvelope(String(payload.namespace || ''), 'explicit-channel-identity', 'explicit-channel-noise')),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -310,7 +303,7 @@ void run('Integration Real: explicit origin keeps the port as a channel override
       const result = await self.ready;
       assert.ok(result !== null, 'Explicit origin triad auto-open should resolve');
       assert.equal(result!.namespace, 'ana.cleaker.me');
-      assert.deepEqual(hits, ['http://localhost:8161/claims/open']);
+      assert.deepEqual(hits, ['http://localhost:8161/']);
     },
   );
 });
@@ -325,7 +318,7 @@ void run('Integration Real: localhost surfaces fall back to cleaker.me when the 
   const triadFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
     hits.push(url);
-    if (url.endsWith('/claims/open')) {
+    if (isPrimaryOperation(url, init as RequestInit | undefined, 'open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
         identityHash?: string;
@@ -333,20 +326,13 @@ void run('Integration Real: localhost surfaces fall back to cleaker.me when the 
       openedNamespace = String(payload.namespace || '');
       assert.equal(payload.identityHash, expectedIdentityHash);
 
-      if (url.startsWith(`${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/claims/open`)) {
+      if (url === `${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/`) {
         return new Response(JSON.stringify({ ok: false, error: 'NETWORK_DOWN' }), { status: 503 });
       }
 
-      if (url.startsWith(`${DEFAULT_CLEAKER_NAMESPACE_ORIGIN}/claims/open`)) {
+      if (url === `${DEFAULT_CLEAKER_NAMESPACE_ORIGIN}/`) {
         return new Response(
-          JSON.stringify({
-            ok: true,
-            namespace: openedNamespace,
-            identityHash: 'public-fallback-identity',
-            noise: 'public-fallback-noise',
-            openedAt: Date.now(),
-            memories: [],
-          }),
+          JSON.stringify(openEnvelope(openedNamespace, 'public-fallback-identity', 'public-fallback-noise')),
           { status: 200, headers: { 'content-type': 'application/json' } },
         );
       }
@@ -373,8 +359,8 @@ void run('Integration Real: localhost surfaces fall back to cleaker.me when the 
       assert.equal(openedNamespace, 'ana.cleaker.me');
       assert.equal(result!.namespace, 'ana.cleaker.me');
       assert.equal(self.getStatus().activeNamespace, 'ana.cleaker.me');
-      assert.equal(hits[0], `${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/claims/open`);
-      assert.equal(hits.at(-1), `${DEFAULT_CLEAKER_NAMESPACE_ORIGIN}/claims/open`);
+      assert.equal(hits[0], `${DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN}/`);
+      assert.equal(hits.at(-1), `${DEFAULT_CLEAKER_NAMESPACE_ORIGIN}/`);
       assert.ok(
         hits.every((url) => !url.includes(':8161/claims/open')),
         'Default surface candidates should stay host-level and avoid pinning ports',
@@ -423,7 +409,7 @@ void run('Integration Real: explicit namespace still overrides derived context',
   let openedNamespace = '';
   const triadFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
-    if (url.endsWith('/claims/open')) {
+    if (isPrimaryOperation(url, init as RequestInit | undefined, 'open')) {
       const payload = JSON.parse(String((init as RequestInit | undefined)?.body || '{}')) as {
         namespace?: string;
         identityHash?: string;
@@ -432,14 +418,7 @@ void run('Integration Real: explicit namespace still overrides derived context',
       assert.equal(payload.identityHash, expectedIdentityHash);
 
       return new Response(
-        JSON.stringify({
-          ok: true,
-          namespace: openedNamespace,
-          identityHash: 'override-identity',
-          noise: 'override-noise',
-          openedAt: Date.now(),
-          memories: [],
-        }),
+        JSON.stringify(openEnvelope(openedNamespace, 'override-identity', 'override-noise')),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -466,6 +445,88 @@ void run('Integration Real: explicit namespace still overrides derived context',
       assert.equal(openedNamespace, 'manual.cleaker.me');
       assert.equal(result!.namespace, 'manual.cleaker.me');
       assert.equal(self.getStatus().activeNamespace, 'manual.cleaker.me');
+    },
+  );
+});
+
+void run('Integration Real: cleaker claims missing namespaces with proof before reopening', async () => {
+  const me = new WorkspaceMe() as any;
+  me['@']('ana');
+  const hits: Array<{ url: string; operation: string }> = [];
+  let openAttempts = 0;
+
+  const triadFetcher: typeof fetch = async (endpoint, init) => {
+    const url = String(endpoint);
+    const payload = readBody(init as RequestInit | undefined);
+    const operation = String(payload.operation || '');
+    hits.push({ url, operation });
+
+    if (url === 'https://cleaker.me/' && operation === 'open') {
+      openAttempts += 1;
+      if (openAttempts === 1) {
+        return new Response(JSON.stringify({ ok: false, error: 'CLAIM_NOT_FOUND' }), {
+          status: 404,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      return new Response(
+        JSON.stringify(openEnvelope('ana.cleaker.me', 'claimed-identity', 'claimed-noise', [
+          { path: 'profile.name', operator: null, expression: 'Ana', value: 'Ana', timestamp: 1 },
+        ])),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+
+    if (url === 'https://cleaker.me/' && operation === 'claim') {
+      assert.equal(String(payload.namespace || ''), 'ana.cleaker.me');
+      assert.equal(String(payload.secret || ''), 'luna');
+      const proof = payload.proof as Record<string, unknown>;
+      assert.ok(proof, 'claim should carry proof');
+      assert.equal(String(proof.namespace || ''), 'ana.cleaker.me');
+      assert.ok(String(proof.signature || '').length > 0);
+      assert.ok(String(proof.publicKey || '').length > 0);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          target: {
+            namespace: {
+              me: 'ana.cleaker.me',
+              host: 'ana.cleaker.me',
+            },
+          },
+          identityHash: String(proof.identityHash || ''),
+          createdAt: Date.now(),
+          publicKey: 'proof-public-key',
+        }),
+        { status: 201, headers: { 'content-type': 'application/json' } },
+      );
+    }
+
+    return new Response(JSON.stringify({ ok: false, error: 'NOT_FOUND' }), { status: 404 });
+  };
+
+  await withLocation(
+    {
+      host: 'cleaker.me',
+      hostname: 'cleaker.me',
+      origin: 'https://cleaker.me',
+      href: 'https://cleaker.me/',
+    },
+    async () => {
+      const self = cleaker(me, {
+        secret: 'luna',
+        fetcher: triadFetcher,
+      });
+
+      const result = await self.ready;
+      assert.ok(result !== null, 'Claim-then-open triad flow should resolve');
+      assert.equal(result!.namespace, 'ana.cleaker.me');
+      assert.equal((self as any).profile.name, 'Ana');
+      assert.deepEqual(
+        hits.map((hit) => hit.operation),
+        ['open', 'claim', 'open'],
+      );
     },
   );
 });

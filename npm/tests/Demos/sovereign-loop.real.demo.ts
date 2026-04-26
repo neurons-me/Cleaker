@@ -62,20 +62,20 @@ console.log('source memories ->', exportedMemories.length);
 
 console.log('\n[PHASE B] claim/open/write on cleaker server');
 
-const claimResponse = await fetchJson(`${origin}/claims`, {
+const claimResponse = await fetchJson(`${origin}/`, {
   method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ namespace, secret, identityHash }),
+  body: JSON.stringify({ operation: 'claim', namespace, secret, identityHash }),
 }, 'claim');
 const claimBody = (await claimResponse.json()) as { ok?: boolean; error?: string };
 if (!claimBody.ok && claimBody.error !== 'NAMESPACE_TAKEN') {
   throw new Error(`CLAIM_FAILED: ${String(claimBody.error || claimResponse.status)}`);
 }
 
-const opened0 = await fetchJson(`${origin}/claims/open`, {
+const opened0 = await fetchJson(`${origin}/`, {
   method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ namespace, secret, identityHash }),
+  body: JSON.stringify({ operation: 'open', namespace, secret, identityHash }),
 }, 'open');
 const openBody0 = (await opened0.json()) as {
   ok?: boolean;

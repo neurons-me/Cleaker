@@ -34,12 +34,13 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
 
   console.log(`\n[1] Binding kernel -> cleaker(me)`);
 
-  const claimResponse = await fetch('http://localhost:8161/claims', {
+  const claimResponse = await fetch('http://localhost:8161/', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
+      operation: 'claim',
       namespace: namespaceFqdn,
       secret,
       identityHash,
@@ -54,7 +55,7 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
 	const operation = node.pointer(expression);
 	console.log('[2.1] Pointer created');
 
-	console.log('\n[3] Opening namespace first to recover identity hash...');
+  console.log('\n[3] Opening namespace through the primary binding...');
 	const opened0 = await node.open({
 		namespace: namespaceFqdn,
 		secret,

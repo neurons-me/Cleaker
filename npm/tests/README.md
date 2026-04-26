@@ -1,65 +1,30 @@
 # cleaker tests
 
-Current layers:
-- `axioms.test.ts`: semantic invariants of grammar and pointer shape
-- `contracts/nrp.contract.test.mjs`: built-contract expectations
+`cleaker` is now a small binder package. Its tests focus on that smaller contract:
+
+- `quickstart.test.ts`: string target parsing and pointer shape
+- `bind.test.ts`: kernel binding and direct pointer behavior
+- `integration.real.test.ts`: namespace derivation, host discovery, and primary HTTP binding behavior
+- `sovereign-loop.test.ts`: replay hydration into a fresh `.me` kernel
+- `remote-replay.real.test.ts`: real daemon claim/open/write/replay loop
 - `Builds/*`: ESM/CJS/type surface checks
+- `contracts/nrp.contract.test.mjs`: wire-level contract expectations for `me://`
 
-Planned next:
-- resolver tests
-- transport handshake tests
-- `.me` integration tests
-- sync/replay tests
+## Runtime expectation
 
-## Claim and Verify (Server-side reference)
-
-Even though this package focuses on parser/pointer contracts, claim verification currently runs in the server layer and is the canonical source for namespace identity checks.
-
-Reference test:
-- core/cleaker/server/tests/claim_test_verification.ts
-
-### What is validated
-
-1. Verified flow
-- Claim a fresh namespace with a secret
-- Open the same namespace with the same secret
-- Assert that recovered noise equals originally issued noise
-
-2. Failed flow
-- Claim a fresh namespace with a secret
-- Open with a different secret
-- Assert CLAIM_VERIFICATION_FAILED
-
-### Minimal test logic (English summary)
+The canonical transport path is:
 
 ```txt
-claim(namespace, secret) -> ok
-open(namespace, secret) -> ok and noise matches
-
-claim(namespace, secret) -> ok
-open(namespace, wrongSecret) -> fail with CLAIM_VERIFICATION_FAILED
+POST / { operation: "claim" | "open" | "write", ... }
 ```
 
-### Run and expected output
+Legacy `/claims/open` can still be tolerated by the runtime for backwards compatibility, but the tests in this package should prefer the primary binding.
 
-```bash
-cd core/cleaker/server
-npm run build
-npm test
-```
+## Why these tests exist
 
-Expected output:
+The package is no longer a registry, session, or audit framework. The important guarantees now are:
 
-```txt
-PASS claim_test_verification.verified
-PASS claim_test_verification.failed
-All claim verification tests passed.
-```
-
-### Why this matters for replay hydration
-
-Claim verification is the gate before namespace open. After verification succeeds, open can safely return:
-- noise for deterministic local derivations
-- memories ordered by timestamp for semantic replay
-
-This is the mechanism that allows a kernel to recover the same mental state after restart.
+1. a `.me` kernel can be projected into a namespace
+2. `cleaker` can auto-open or auto-claim and then hydrate
+3. remote pointers still parse and resolve correctly
+4. the public package surface stays small and stable

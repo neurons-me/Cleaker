@@ -6,7 +6,4 @@ export declare class CleakerError extends Error {
 export declare class CleakerParseError extends CleakerError {
     constructor(message: string, details?: Record<string, unknown>);
 }
-export declare class CleakerResolverError extends CleakerError {
-    constructor(message: string, details?: Record<string, unknown>);
-}
 //# sourceMappingURL=errors.d.ts.map

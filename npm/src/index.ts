@@ -1,56 +1,4 @@
 export { default } from './cleaker';
-export type * from './protocol/handshake';
-export { SessionOrchestrator } from './protocol/session';
-export type {
-	CleakerSessionEnvelope,
-	SessionMode,
-	SessionOrchestratorConfig,
-	SessionState,
-	SessionStorageAdapter,
-	SessionSyncOptions,
-	SessionSyncResult,
-} from './protocol/session';
-export { AuditClient } from './protocol/audit';
-export type {
-	AuditClientConfig,
-	HostMemoryEvent,
-	TimelineEvent,
-	TimelineEventType,
-	TimelineSeverity,
-} from './protocol/audit';
-export {
-	emailRegexPasses,
-	normalizeUsername,
-	phoneRegexPasses,
-	usernameRegexPasses,
-	validatePublicProfileInputs,
-} from './protocol/validation';
-export type {
-	PublicProfileValidationResult,
-	ValidationRuleOptions,
-} from './protocol/validation';
-export {
-  SemanticResolver,
-  createWebSurfaceSource,
-  parseSemanticPath,
-} from './resolver/semanticResolver';
-export { CleakerResolver } from './resolver/resolver';
-export {
-  PersistentClaimNamespaceRecordSource,
-  buildNamespaceRecordFromPersistentClaim,
-  listPersistentClaims,
-  loadPersistentClaimRecord,
-  resolvePersistentClaimDirs,
-} from './resolver/persistentClaimSource';
-export {
-  PersistentClaimRegistry,
-  loadRegistryMetadata,
-  resolveRegistryMetadataDirs,
-} from './registry/claimRegistry';
-export {
-  parseMeTarget,
-  stringifyMeTarget,
-} from './parse/parseMeTarget';
 export { parseTarget } from './parse/parseTarget';
 export {
   composeNamespace,
@@ -58,43 +6,49 @@ export {
   stringifyNamespaceExpression,
 } from './namespace/expression';
 export type {
-  SemanticPath,
-  SemanticSelector,
-  SemanticSelectorGroup,
-  SemanticResolveInput,
-  SemanticResolveResult,
-  SemanticResolverDefaults,
-  SemanticResolverSource,
-  SurfaceBinding,
-  TransportAddress,
-} from './resolver/semanticResolver';
+  CleakerErrorPayload,
+  CleakerEvents,
+  CleakerHostRecord,
+  CleakerNode,
+  CleakerReadyPayload,
+  CleakerState,
+  CleakerStatus,
+  CleakerTransportState,
+  CleakerTriadState,
+  CleakerOverallState,
+  KernelPendingResolution,
+  MeKernel,
+  OpenNodeInput,
+  OpenNodeResult,
+  ValidateHostsOptions,
+} from './types/kernel';
 export type {
-  LoadedPersistentClaim,
-  PersistentClaimDiscoveryOptions,
-  PersistentClaimRecord,
-} from './resolver/persistentClaimSource';
-export type {
-  ClaimRegistryEntry,
-  ClaimRegistryIndexOptions,
-  ClaimRegistrySearchHit,
-  LoadedRegistryMetadata,
-  RegistryMetadataRecord,
-} from './registry/claimRegistry';
-export type { NamespaceRecordLookupInput, NamespaceRecordSource } from './resolver/namespaceRecord';
+  NamespaceHostRecord,
+  NamespacePublicKey,
+  NamespaceRecord,
+  NamespaceSelectorAtom,
+  NamespaceSelectorClause,
+  NamespaceSelectorPolicy,
+  NamespaceSelectorSet,
+  ParsedNamespaceExpression,
+} from './types/namespace';
 export type {
   MeTargetContextAtom,
   MeTargetContextClause,
   MeTargetContextSet,
-  ParsedTarget,
   ParseTargetOptions,
+  ParsedTarget,
+  SelectorMode,
 } from './types/target';
 export type {
-  NamespaceHostRecord,
-  NamespaceSelectorAtom,
-  NamespaceSelectorClause,
-  NamespaceSelectorSet,
-  ParsedNamespaceExpression,
-  NamespacePublicKey,
-  NamespaceRecord,
-  NamespaceSelectorPolicy,
-} from './types/namespace';
+  PointerStatus,
+  RemotePointerDefinition,
+  RemotePointerIdentity,
+  RemotePointerIntent,
+  RemotePointerOperationalState,
+  RemotePointerPayload,
+  RemotePointerResolution,
+  RemotePointerTransport,
+  ResolvePointerOptions,
+  ResolvePointerResult,
+} from './types/pointer';

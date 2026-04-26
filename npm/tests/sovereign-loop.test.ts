@@ -68,10 +68,14 @@ void run('Sovereign Loop: explicit .me + cleaker coexistence via triad hydration
   // PHASE B: cleaker layer (network adapter + vault replay)
   console.log('\n[PHASE B] cleaker triad binding over a fresh .me kernel');
 
-  const ledgerFetcher: typeof fetch = async (endpoint) => {
+  const ledgerFetcher: typeof fetch = async (endpoint, init) => {
     const url = String(endpoint);
+    const payload =
+      init?.body && typeof init.body === 'string'
+        ? (JSON.parse(init.body) as { operation?: string })
+        : {};
 
-    if (url.endsWith('/claims/open')) {
+    if (url.endsWith('/') && payload.operation === 'open') {
       return new Response(
         JSON.stringify({
           ok: true,

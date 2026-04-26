@@ -24,8 +24,13 @@ const exported = source.inspect();
 const exportedMemories = Array.isArray(exported.memories) ? exported.memories : [];
 console.log('source memories ->', exportedMemories.length);
 console.log('\n[PHASE B] cleaker + fresh .me (triad hydration)');
-const ledgerFetcher: typeof fetch = async (endpoint) => {
-  if (!String(endpoint).endsWith('/claims/open')) {
+const ledgerFetcher: typeof fetch = async (endpoint, init) => {
+  const payload =
+    init?.body && typeof init.body === 'string'
+      ? (JSON.parse(init.body) as { operation?: string })
+      : {};
+
+  if (!String(endpoint).endsWith('/') || payload.operation !== 'open') {
     return Response.json({ ok: false, error: 'NOT_FOUND' }, { status: 404 });
   }
 

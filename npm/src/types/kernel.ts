@@ -33,19 +33,11 @@ export interface KernelPendingResolution {
   promise: Promise<ResolvePointerResult>;
 }
 
-export interface BindKernelResolverOptions {
-  detectRemote?: (path: string[]) => boolean;
-  mapToExpression?: (path: string[]) => string | null;
-  applyResult?: (result: unknown, path: string[]) => void;
-  resolveOptions?: ResolvePointerOptions;
-}
-
 export interface CleakerNode extends MeKernel {
   kernel: MeKernel;
   ready: Promise<OpenNodeResult | null>;
   open(input: OpenNodeInput): Promise<OpenNodeResult>;
   pointer(expression: string, options?: ResolvePointerOptions): RemotePointerDefinition;
-  bindKernelResolver(options?: BindKernelResolverOptions): boolean;
   state: CleakerState;
   currentCycleId: number;
   discoverHosts(): CleakerHostRecord[];

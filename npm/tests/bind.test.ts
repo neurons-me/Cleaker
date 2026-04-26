@@ -22,22 +22,16 @@ function createMockKernel(): MockKernel {
 
 void run('Bind: cleaker(me) wraps kernel and resolves remote reads without kernel hooks', async () => {
   const me = createMockKernel();
-  const node = cleaker(me);
-
-  const bound = node.bindKernelResolver({
-    resolveOptions: {
-      fetcher: async (endpoint: URL | RequestInfo) => {
-        const url = String(endpoint);
-        assert.ok(url.endsWith('/profile'), 'Resolver should target the correct path');
-        return new Response(JSON.stringify({ ok: true, value: { displayName: 'Ana' } }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      },
+  const node = cleaker(me, {
+    fetcher: async (endpoint: URL | RequestInfo) => {
+      const url = String(endpoint);
+      assert.ok(url.endsWith('/profile'), 'Resolver should target the correct path');
+      return new Response(JSON.stringify({ ok: true, value: { displayName: 'Ana' } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
     },
   });
-
-  assert.strictEqual(bound, true, 'Wrapper configuration should succeed');
 
   const localValue = (node as any).profile.name;
   assert.strictEqual(localValue, 'Sui', 'Wrapper should preserve local-first reads');

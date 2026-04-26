@@ -7,7 +7,6 @@ import {
 import { composeNamespace, parseNamespaceExpression } from './namespace/expression';
 import type { CreateRemotePointerOptions } from './pointer/remotePointer';
 import type {
-  BindKernelResolverOptions,
   CleakerErrorPayload,
   CleakerEvents,
   CleakerHostRecord,
@@ -23,13 +22,6 @@ import type {
 } from './types/kernel';
 import type { RemotePointerDefinition, ResolvePointerResult } from './types/pointer';
 import type { ResolvePointerOptions } from './types/pointer';
-import type {
-  SemanticResolveResult,
-  SemanticResolver,
-  SemanticResolverDefaults,
-  SemanticResolverSource,
-} from './resolver/semanticResolver';
-import { loadPersistentClaimRecord } from './resolver/persistentClaimSource';
 
 const ME_EXPRESSION_SYMBOL = Symbol.for('me.expression');
 const ME_IDENTITY_SYMBOL = Symbol.for('me.identity');
@@ -42,6 +34,33 @@ type OpenResponse = {
   noise?: string;
   memories?: unknown[];
   openedAt?: number;
+  target?: {
+    namespace?: string | { me?: string; host?: string };
+  };
+};
+
+type ClaimProof = {
+  identityHash: string;
+  expression: string;
+  namespace: string;
+  rootNamespace: string;
+  publicKey: string;
+  message: string;
+  signature: string;
+  timestamp: number;
+};
+
+type ClaimResponse = {
+  ok: boolean;
+  error?: string;
+  namespace?: string | { me?: string; host?: string };
+  identityHash?: string;
+  publicKey?: string;
+  createdAt?: number;
+  persistentClaim?: unknown;
+  target?: {
+    namespace?: string | { me?: string; host?: string };
+  };
 };
 
 export interface BindKernelOptions extends CreateRemotePointerOptions {
@@ -50,17 +69,7 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
   identityHash?: string;
   origin?: string;
   bootstrap?: string[];
-  claimDir?: string;
-  claimDirs?: string[];
-  claimOrigin?: string;
   fetcher?: typeof fetch;
-  semanticResolver?: SemanticResolver;
-  semanticDefaults?: SemanticResolverDefaults;
-  semanticNamespaceRoot?: string;
-  semanticSources?: SemanticResolverSource[];
-  semanticSelector?: string;
-  semanticNetwork?: boolean;
-  semanticTransportAllowlist?: string[];
 }
 
 type RemoteSlot = {
@@ -127,12 +136,6 @@ function stableStringify(value: unknown): string {
   return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`;
 }
 
-function buildOrigin(protocol: string | null, host: string | null, port: number | null): string | null {
-  if (!protocol || !host) return null;
-  if (port === null) return `${protocol}://${host}`;
-  return `${protocol}://${host}:${port}`;
-}
-
 function stripPort(raw: string): string {
   return String(raw || '').trim().toLowerCase().replace(/:\d+$/i, '');
 }
@@ -186,6 +189,35 @@ function normalizeExpression(value: unknown): string | null {
 function normalizeIdentityHash(value: unknown): string | null {
   const normalized = typeof value === 'string' ? value.trim() : '';
   return normalized || null;
+}
+
+function normalizeNamespaceValue(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') {
+    const normalized = value.trim();
+    if (normalized) return normalized;
+  }
+
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    const me = typeof record.me === 'string' ? record.me.trim() : '';
+    if (me) return me;
+    const host = typeof record.host === 'string' ? record.host.trim() : '';
+    if (host) return host;
+  }
+
+  return fallback;
+}
+
+function resolveEnvelopeNamespace(data: unknown, fallback = ''): string {
+  if (!data || typeof data !== 'object') return fallback;
+  const record = data as Record<string, unknown>;
+  const direct = normalizeNamespaceValue(record.namespace, '');
+  if (direct) return direct;
+  const target = record.target;
+  if (target && typeof target === 'object') {
+    return normalizeNamespaceValue((target as Record<string, unknown>).namespace, fallback);
+  }
+  return fallback;
 }
 
 function readKernelExpression(me: MeKernel): string | null {
@@ -261,6 +293,73 @@ function readKernelIdentityHash(me: MeKernel): string | null {
   }
 
   return null;
+}
+
+function readKernelRuntimeMethod<T extends (...args: any[]) => unknown>(
+  me: MeKernel,
+  methodName: string,
+): T | null {
+  try {
+    const runtime = (me as any)['!'];
+    const method = runtime?.[methodName];
+    if (typeof method === 'function') return method as T;
+    if (method && typeof method === 'object' && typeof method.call === 'function') {
+      return ((...args: unknown[]) => method.call(...args)) as T;
+    }
+  } catch {
+    // Ignore and fall back.
+  }
+
+  try {
+    const direct = (me as any)[methodName];
+    if (typeof direct === 'function') return direct.bind(me) as T;
+  } catch {
+    // Ignore and report unsupported below.
+  }
+
+  return null;
+}
+
+function resolveProofRootNamespace(namespace: string): string {
+  const raw = String(namespace || '').trim();
+  if (!raw) return '';
+  try {
+    return parseNamespaceExpression(raw).constant;
+  } catch {
+    const parts = raw.split('.').map((part) => part.trim()).filter(Boolean);
+    if (parts.length > 1) return parts.slice(1).join('.');
+    return raw;
+  }
+}
+
+async function proveKernelNamespace(me: MeKernel, namespace: string): Promise<ClaimProof> {
+  const prove = readKernelRuntimeMethod<(input: { rootNamespace: string; challenge?: string | null }) => Promise<unknown>>(
+    me,
+    'prove',
+  );
+  if (!prove) {
+    throw new Error('PROVE_UNSUPPORTED');
+  }
+
+  const rootNamespace = resolveProofRootNamespace(namespace);
+  if (!rootNamespace) {
+    throw new Error('ROOT_NAMESPACE_REQUIRED');
+  }
+
+  const proof = await prove({ rootNamespace, challenge: null });
+  if (!proof || typeof proof !== 'object') {
+    throw new Error('PROOF_INVALID');
+  }
+
+  const claimedNamespace = String((proof as Record<string, unknown>).namespace || '').trim();
+  if (!claimedNamespace) {
+    throw new Error('PROOF_INVALID');
+  }
+  if (claimedNamespace !== namespace) {
+    throw new Error('PROOF_NAMESPACE_MISMATCH');
+  }
+
+  return proof as ClaimProof;
 }
 
 function isLoopbackishHost(raw: string): boolean {
@@ -561,7 +660,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const hydratedMemories: unknown[] = [];
   const remoteOverlay = new Map<string, unknown>();
   const remoteSlots = new Map<string, RemoteSlot>();
-  const semanticSlots = new Map<string, RemoteSlot>();
   const listeners = new Map<keyof CleakerEvents, Set<(...args: unknown[]) => void>>();
   const explicitNamespace = String(options.namespace || '').trim();
   const defaultSecret = String(options.secret || '');
@@ -569,17 +667,13 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const bootstrapOrigins = Array.isArray(options.bootstrap)
     ? options.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
     : [];
-  const explicitClaimDirs = Array.isArray(options.claimDirs)
-    ? options.claimDirs.map((dir) => String(dir || '').trim()).filter(Boolean)
-    : [];
-  const claimDir = String(options.claimDir || '').trim();
-  const claimDirs = claimDir ? [claimDir, ...explicitClaimDirs] : explicitClaimDirs;
-  const envClaimOrigin = typeof process !== 'undefined'
-    ? String(process.env.CLEAKER_CLAIM_ORIGIN || '')
-    : '';
-  const claimOrigin = normalizeOrigin(
-    String(options.claimOrigin || options.origin || envClaimOrigin || DEFAULT_CLEAKER_NAMESPACE_ORIGIN),
-  );
+  const pointerResolveOptions: ResolvePointerOptions = {
+    ...(options.origin ? { origin: options.origin } : {}),
+    ...(options.fetcher ? { fetcher: options.fetcher } : {}),
+    headers: {
+      accept: 'application/json',
+    },
+  };
 
   let currentState: CleakerState = 'idle';
   let currentCycleId = 0;
@@ -596,21 +690,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
   // Triad auto-open: if namespace + secret are provided at bind time, open immediately in the background.
   let _ready: Promise<OpenNodeResult | null> = Promise.resolve(null);
-  let resolverConfig: Required<BindKernelResolverOptions> = {
-    detectRemote: defaultDetectRemote,
-    mapToExpression: defaultMapToExpression,
-    applyResult: (result: unknown, path: string[]) => unwrapResolvedValue(result),
-    resolveOptions: {},
-  };
-  const semanticResolver = options.semanticResolver ?? null;
-  const semanticDefaults = options.semanticDefaults ?? {};
-  const semanticNamespaceRoot = options.semanticNamespaceRoot ?? null;
-  const semanticSources = Array.isArray(options.semanticSources) ? options.semanticSources : undefined;
-  const semanticSelector = String(options.semanticSelector || 'read').trim() || 'read';
-  const semanticNetwork = options.semanticNetwork !== false;
-  const semanticTransportAllowlist = Array.isArray(options.semanticTransportAllowlist)
-    ? options.semanticTransportAllowlist.map((item) => String(item || '').toLowerCase()).filter(Boolean)
-    : ['http', 'https'];
 
   function resolveSurfaceNamespaceConstant(): string {
     const locationHost = readLocationHost();
@@ -620,9 +699,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '')
       : '';
     if (envNamespaceRoot) return deriveNamespaceConstant(envNamespaceRoot);
-
-    const claimSurface = String(options.claimOrigin || '').trim();
-    if (claimSurface) return deriveNamespaceConstant(claimSurface);
 
     return deriveNamespaceConstant(DEFAULT_CLEAKER_NAMESPACE_ORIGIN);
   }
@@ -645,9 +721,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     const envNamespaceSurface = typeof process !== 'undefined'
       ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '')
       : '';
-    const configuredSurfaceOrigin = readConfiguredSurfaceOrigin(
-      String(options.claimOrigin || envClaimOrigin || envNamespaceSurface || ''),
-    );
+    const configuredSurfaceOrigin = readConfiguredSurfaceOrigin(envNamespaceSurface || '');
     const runtimeHostSurfaceOrigin = readRuntimeHostSurfaceOrigin();
 
     return uniqueOrigins([
@@ -676,90 +750,25 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     return tryReadLocal(me, normalized.split('.').filter(Boolean));
   }
 
-  function isSemanticCandidate(raw: string): boolean {
+  function isRemoteTargetExpression(raw: string): boolean {
     const trimmed = String(raw || '').trim();
     if (!trimmed) return false;
-    if (trimmed.includes('://')) return false;
-    if (trimmed.includes(':')) return false;
-    return trimmed.includes('/');
+    return trimmed.startsWith('me://') || trimmed.startsWith('nrp://') || trimmed.includes(':');
   }
 
-  function buildSemanticKey(raw: string): string {
-    return `semantic:${raw}`;
-  }
-
-  function semanticRawToPathSegments(raw: string): string[] {
-    const trimmed = String(raw || '').trim();
-    if (!trimmed) return [];
-    const sanitized = trimmed.replace(/^me:\/\//, '').replace(/^\/+/, '');
-    const parts = sanitized.split('/').map((part) => part.trim()).filter(Boolean);
-    if (!parts.length) return [];
-    const [head, ...rest] = parts;
-    if (head.includes('.')) {
-      const namespaceParts = head.split('.').map((segment) => segment.trim()).filter(Boolean);
-      return [...namespaceParts, ...rest];
-    }
-    return parts;
-  }
-
-  function pathToSemanticRaw(path: string[]): string | null {
-    const parts = path.map((segment) => String(segment || '').trim()).filter(Boolean);
-    if (parts.length === 0) return null;
-    if (parts[0].includes('.')) {
-      if (parts.length < 2) return null;
-      return [parts[0], ...parts.slice(1)].join('/');
-    }
-    if (parts.length >= 2 && parts[1].toLowerCase() === 'me') {
-      const namespace = `${parts[0]}.me`;
-      const rest = parts.slice(2);
-      if (rest.length === 0) return null;
-      return [namespace, ...rest].join('/');
-    }
-    return null;
-  }
-
-  function semanticResultToExpression(result: SemanticResolveResult): string | null {
-    const namespace = result.namespace ?? result.semantic.namespace;
-    if (!namespace) return null;
-    const path = result.semantic.path || 'profile';
-    return `${namespace}:${semanticSelector}/${path}`;
-  }
-
-  function semanticResultToPath(result: SemanticResolveResult): string[] {
-    const rawPath = result.semantic.path || 'profile';
-    return rawPath.split('/').map((segment) => segment.trim()).filter(Boolean);
-  }
-
-  function buildSemanticResolveOptions(
-    result: SemanticResolveResult,
-    base: ResolvePointerOptions,
-  ): ResolvePointerOptions {
-    const options: ResolvePointerOptions = {
-      ...base,
-    };
-    const protocol = result.transport.protocol?.toLowerCase() ?? null;
-    if (protocol && semanticTransportAllowlist.includes(protocol)) {
-      const origin = buildOrigin(
-        result.transport.protocol,
-        result.transport.host,
-        result.transport.port,
-      );
-      if (origin) options.origin = options.origin || origin;
-    }
-    const namespace = result.namespace ?? result.semantic.namespace;
-    if (namespace && !options.host) options.host = namespace;
-    return options;
-  }
-
-  async function resolveSemantic(raw: string): Promise<SemanticResolveResult | null> {
-    if (!semanticResolver) return null;
+  function parseRemoteTargetPath(raw: string): string[] | null {
+    if (!isRemoteTargetExpression(raw)) return null;
     try {
-      return await semanticResolver.resolve({
-        raw,
-        defaults: semanticDefaults,
-        namespaceRoot: semanticNamespaceRoot ?? undefined,
-        sources: semanticSources,
+      const parsed = parseTarget(raw, {
+        defaultMode: 'reactive',
+        allowShorthandRead: true,
       });
+      return String(parsed.path || '')
+        .trim()
+        .replace(/^\/+/, '')
+        .split('/')
+        .map((segment) => segment.trim())
+        .filter(Boolean);
     } catch {
       return null;
     }
@@ -825,29 +834,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     writeKernelPath(me, [...base, 'error'], host.error || '');
   }
 
-  function discoverClaimHost(namespace: string): CleakerHostRecord | null {
-    const loaded = loadPersistentClaimRecord(namespace, {
-      claimDirs,
-    });
-    if (!loaded) return null;
-
-    return toHostRecord({
-      origin: claimOrigin,
-      alias: 'persistent-claim',
-      capabilities: {
-        canClaim: true,
-        canOpen: true,
-        canRelay: false,
-      },
-      status: {
-        transport: 'unknown',
-        triad: 'unverified',
-        latencyMs: 0,
-        lastSeen: 0,
-      },
-    }, loaded.claim.namespace);
-  }
-
   function discoverHosts(input: { namespace?: string; bootstrap?: string[] } = {}): CleakerHostRecord[] {
     const namespace = resolveNamespace(input.namespace);
     if (!namespace) return [];
@@ -864,14 +850,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         }, namespace);
         if (parsed) hostMap.set(parsed.id, parsed);
       });
-    }
-
-    if (hostMap.size === 0) {
-      const claimedHost = discoverClaimHost(namespace);
-      if (claimedHost) {
-        hostMap.set(claimedHost.id, claimedHost);
-        persistHostRecord(namespace, claimedHost);
-      }
     }
 
     if (hostMap.size === 0) {
@@ -907,6 +885,101 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     }
   }
 
+  async function postJson(
+    endpoint: string,
+    body: Record<string, unknown>,
+    timeoutMs: number,
+    fetcher: typeof fetch,
+    headers: Record<string, string> = {},
+  ): Promise<{
+    ok: boolean;
+    status: number;
+    data: Record<string, unknown> | null;
+    error?: string;
+  }> {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+    try {
+      const response = await fetcher(endpoint, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify(body),
+        signal: controller?.signal,
+      });
+
+      let data: Record<string, unknown> | null = null;
+      try {
+        data = (await response.json()) as Record<string, unknown>;
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok || !data?.ok) {
+        return {
+          ok: false,
+          status: response.status,
+          data,
+          error: String(data?.error || `REQUEST_FAILED_${response.status}`),
+        };
+      }
+
+      return {
+        ok: true,
+        status: response.status,
+        data,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.name : String(error);
+      return {
+        ok: false,
+        status: 0,
+        data: null,
+        error: message === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR',
+      };
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+
+  function normalizeOpenResponse(
+    data: Record<string, unknown>,
+    namespace: string,
+    identityHash: string,
+  ): OpenResponse {
+    return {
+      ok: true,
+      namespace: resolveEnvelopeNamespace(data, namespace),
+      identityHash: normalizeIdentityHash(data.identityHash) || identityHash,
+      noise: String(data.noise || ''),
+      memories: Array.isArray(data.memories) ? data.memories : [],
+      openedAt: Number(data.openedAt || Date.now()),
+      target: data.target && typeof data.target === 'object'
+        ? (data.target as { namespace?: string | { me?: string; host?: string } })
+        : undefined,
+    };
+  }
+
+  function normalizeClaimResponse(
+    data: Record<string, unknown>,
+    namespace: string,
+    identityHash: string,
+  ): ClaimResponse {
+    return {
+      ok: true,
+      namespace: resolveEnvelopeNamespace(data, namespace),
+      identityHash: normalizeIdentityHash(data.identityHash) || identityHash,
+      publicKey: typeof data.publicKey === 'string' ? data.publicKey : undefined,
+      createdAt: Number(data.createdAt || Date.now()),
+      persistentClaim: data.persistentClaim,
+      target: data.target && typeof data.target === 'object'
+        ? (data.target as { namespace?: string | { me?: string; host?: string } })
+        : undefined,
+    };
+  }
+
   async function openRemote(
     origin: string,
     namespace: string,
@@ -914,44 +987,131 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     identityHash: string,
     timeoutMs: number,
     fetcher: typeof fetch,
+    headers: Record<string, string> = {},
   ): Promise<OpenResponse | { ok: false; error: string }> {
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+    const primary = await postJson(
+      `${normalizeOrigin(origin)}/`,
+      {
+        operation: 'open',
+        namespace,
+        secret,
+        ...(identityHash ? { identityHash } : {}),
+      },
+      timeoutMs,
+      fetcher,
+      {
+        'x-forwarded-host': namespace,
+        ...headers,
+      },
+    );
+
+    if (primary.ok && primary.data) {
+      return normalizeOpenResponse(primary.data, namespace, identityHash);
+    }
+
+    const primaryError = String(primary.error || 'OPEN_FAILED');
+    if (primary.status !== 404 || primaryError === 'CLAIM_NOT_FOUND') {
+      return { ok: false, error: primaryError };
+    }
+
+    const legacy = await postJson(
+      `${normalizeOrigin(origin)}/claims/open`,
+      {
+        namespace,
+        secret,
+        ...(identityHash ? { identityHash } : {}),
+      },
+      timeoutMs,
+      fetcher,
+      headers,
+    );
+
+    if (legacy.ok && legacy.data) {
+      return normalizeOpenResponse(legacy.data, namespace, identityHash);
+    }
+
+    return {
+      ok: false,
+      error: String(legacy.error || primaryError),
+    };
+  }
+
+  async function claimRemote(
+    origin: string,
+    namespace: string,
+    secret: string,
+    timeoutMs: number,
+    fetcher: typeof fetch,
+    headers: Record<string, string> = {},
+  ): Promise<ClaimResponse | { ok: false; error: string }> {
+    let proof: ClaimProof;
     try {
-      const response = await fetcher(`${normalizeOrigin(origin)}/claims/open`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          namespace,
-          secret,
-          ...(identityHash ? { identityHash } : {}),
-        }),
-        signal: controller?.signal,
-      });
-      let data: OpenResponse | { ok: false; error: string } = { ok: false, error: 'UNKNOWN_ERROR' };
-      try {
-        data = (await response.json()) as OpenResponse | { ok: false; error: string };
-      } catch {
-        data = { ok: false, error: `OPEN_FAILED_${response.status}` };
-      }
-      if (!response.ok || !data.ok) {
-        return {
-          ok: false,
-          error: String((data as { error?: string }).error || `OPEN_FAILED_${response.status}`),
-        };
-      }
-      return data;
+      proof = await proveKernelNamespace(me, namespace);
     } catch (error) {
-      const message = error instanceof Error ? error.name : String(error);
       return {
         ok: false,
-        error: message === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR',
+        error: error instanceof Error ? error.message : 'PROOF_INVALID',
       };
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
     }
+
+    const claimed = await postJson(
+      `${normalizeOrigin(origin)}/`,
+      {
+        operation: 'claim',
+        namespace,
+        secret,
+        proof,
+      },
+      timeoutMs,
+      fetcher,
+      {
+        'x-forwarded-host': namespace,
+        ...headers,
+      },
+    );
+
+    if (!claimed.ok || !claimed.data) {
+      return {
+        ok: false,
+        error: String(claimed.error || 'CLAIM_FAILED'),
+      };
+    }
+
+    return normalizeClaimResponse(claimed.data, namespace, proof.identityHash);
+  }
+
+  async function bindRemoteLifecycle(
+    origin: string,
+    namespace: string,
+    secret: string,
+    identityHash: string,
+    timeoutMs: number,
+    fetcher: typeof fetch,
+    headers: Record<string, string> = {},
+  ): Promise<OpenResponse | { ok: false; error: string }> {
+    const opened = await openRemote(origin, namespace, secret, identityHash, timeoutMs, fetcher, headers);
+    if (opened.ok || opened.error !== 'CLAIM_NOT_FOUND') {
+      return opened;
+    }
+
+    const claimed = await claimRemote(origin, namespace, secret, timeoutMs, fetcher, headers);
+    if (!claimed.ok) {
+      return {
+        ok: false,
+        error: String(claimed.error || 'CLAIM_FAILED'),
+      };
+    }
+
+    const reopenedIdentityHash = normalizeIdentityHash(claimed.identityHash) || identityHash;
+    return openRemote(
+      origin,
+      resolveEnvelopeNamespace(claimed, namespace),
+      secret,
+      reopenedIdentityHash,
+      timeoutMs,
+      fetcher,
+      headers,
+    );
   }
 
   function getStatus(): CleakerStatus {
@@ -1059,7 +1219,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       }
 
       transition('opening', cycleId);
-      const opened = await openRemote(host.origin, namespace, secret, identityHash, timeoutMs, fetcher);
+      const opened = await bindRemoteLifecycle(host.origin, namespace, secret, identityHash, timeoutMs, fetcher);
       if (!opened.ok) {
         const errorCode = String(opened.error || 'OPEN_FAILED');
         host.status.triad = errorCode === 'CLAIM_NOT_FOUND' ? 'unverified' : 'failed';
@@ -1221,48 +1381,34 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     let lastError = 'OPEN_FAILED';
 
     for (const origin of origins) {
-      try {
-        const response = await fetcher(`${origin}/claims/open`, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            ...(input.headers || {}),
-          },
-          body: JSON.stringify({
-            namespace,
-            secret,
-            ...(identityHash ? { identityHash } : {}),
-          }),
-        });
+      const opened = await bindRemoteLifecycle(
+        origin,
+        namespace,
+        secret,
+        identityHash,
+        5000,
+        fetcher,
+        input.headers || {},
+      );
 
-        let data: OpenResponse | null = null;
-        try {
-          data = (await response.json()) as OpenResponse;
-        } catch {
-          data = null;
-        }
-
-        if (!response.ok || !data?.ok) {
-          lastError = String(data?.error || `OPEN_FAILED_${response.status}`);
-          continue;
-        }
-
-        const allMemories = Array.isArray(data.memories) ? data.memories : [];
-        const memories = allMemories.filter((memory) => hydrateMemory(memory));
-
-        me.noise = String(data.noise || '');
-
-        return {
-          status: 'verified',
-          namespace: String(data.namespace || namespace),
-          identityHash: String(data.identityHash || ''),
-          noise: String(data.noise || ''),
-          openedAt: Number(data.openedAt || Date.now()),
-          memoriesCount: memories.length,
-        };
-      } catch {
-        lastError = 'NETWORK_ERROR';
+      if (!opened.ok) {
+        lastError = String(opened.error || 'OPEN_FAILED');
+        continue;
       }
+
+      const allMemories = Array.isArray(opened.memories) ? opened.memories : [];
+      const memories = allMemories.filter((memory) => hydrateMemory(memory));
+
+      me.noise = String(opened.noise || '');
+
+      return {
+        status: 'verified',
+        namespace: String(opened.namespace || namespace),
+        identityHash: String(opened.identityHash || identityHash || ''),
+        noise: String(opened.noise || ''),
+        openedAt: Number(opened.openedAt || Date.now()),
+        memoriesCount: memories.length,
+      };
     }
 
     throw new Error(lastError);
@@ -1283,24 +1429,14 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     }).catch(() => null);
   }
 
-  function bindKernelResolver(bindOptions: BindKernelResolverOptions = {}): boolean {
-    resolverConfig = {
-      detectRemote: bindOptions.detectRemote || resolverConfig.detectRemote,
-      mapToExpression: bindOptions.mapToExpression || resolverConfig.mapToExpression,
-      applyResult: bindOptions.applyResult || resolverConfig.applyResult,
-      resolveOptions: bindOptions.resolveOptions || resolverConfig.resolveOptions,
-    };
-    return true;
-  }
-
   function getOrCreateRemoteSlot(path: string[]): RemoteSlot | undefined {
-    if (!resolverConfig.detectRemote(path)) return undefined;
+    if (!defaultDetectRemote(path)) return undefined;
 
     const key = path.join('.');
     const existing = remoteSlots.get(key);
     if (existing) return existing;
 
-    const expression = resolverConfig.mapToExpression(path);
+    const expression = defaultMapToExpression(path);
     if (!expression) return undefined;
 
     const remotePointer = pointer(expression);
@@ -1318,11 +1454,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       } as ResolvePointerResult),
     };
 
-    slot.promise = remotePointer.resolve(resolverConfig.resolveOptions).then((resolved) => {
+    slot.promise = remotePointer.resolve(pointerResolveOptions).then((resolved) => {
       slot.lastResult = resolved;
       if (resolved.ok) {
-        const applied = resolverConfig.applyResult(resolved.data, path);
-        const learnedValue = applied === undefined ? unwrapResolvedValue(resolved.data) : applied;
+        const learnedValue = unwrapResolvedValue(resolved.data);
         remoteOverlay.set(key, learnedValue);
 
         const learnedMemory = createLearnedMemory(path, learnedValue);
@@ -1335,24 +1470,19 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     return slot;
   }
 
-  function getOrCreateSemanticSlot(raw: string, pathOverride?: string[]): RemoteSlot | undefined {
-    if (!semanticResolver || !isSemanticCandidate(raw)) return undefined;
-
-    const key = buildSemanticKey(raw);
-    const existing = semanticSlots.get(key);
+  function getOrCreateDirectRemoteSlot(raw: string): RemoteSlot | undefined {
+    const path = parseRemoteTargetPath(raw);
+    if (!path || path.length === 0) return undefined;
+    const key = `target:${raw}`;
+    const existing = remoteSlots.get(key);
     if (existing) return existing;
 
-    const placeholderPointer = pointer('semantic:read/_');
-    const overlaySegments = pathOverride && pathOverride.length
-      ? pathOverride.map((segment) => String(segment || '').trim()).filter(Boolean)
-      : semanticRawToPathSegments(raw);
-    const overlayKey = overlaySegments.join('.');
-    const placeholderPath = overlaySegments.length ? overlaySegments : ['profile'];
+    const remotePointer = pointer(raw);
     const slot: RemoteSlot = {
       key,
-      path: placeholderPath.length ? placeholderPath : ['profile'],
+      path: path.slice(),
       expression: raw,
-      pointer: placeholderPointer,
+      pointer: remotePointer,
       promise: Promise.resolve({
         ok: false,
         status: 0,
@@ -1362,91 +1492,18 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       } as ResolvePointerResult),
     };
 
-    slot.promise = (async () => {
-      const resolvedSemantic = await resolveSemantic(raw);
-      if (!resolvedSemantic) {
-        return {
-          ok: false,
-          status: 0,
-          endpoint: raw,
-          elapsedMs: 0,
-          data: { ok: false, error: 'SEMANTIC_UNRESOLVED' },
-        };
-      }
-
-      if (!resolvedSemantic.transport.uri) {
-        return {
-          ok: false,
-          status: 0,
-          endpoint: raw,
-          elapsedMs: 0,
-          data: {
-            ok: false,
-            error: 'SEMANTIC_BINDING_MISSING',
-            unresolved: resolvedSemantic.unresolved,
-            transport: resolvedSemantic.transport,
-            semantic: resolvedSemantic.semantic,
-          },
-        };
-      }
-
-      const semanticProtocol = resolvedSemantic.transport.protocol?.toLowerCase() ?? null;
-      const canNetwork = semanticNetwork &&
-        !!semanticProtocol &&
-        semanticTransportAllowlist.includes(semanticProtocol);
-      if (!canNetwork) {
-        const deferred = {
-          ok: false,
-          status: 0,
-          endpoint: resolvedSemantic.transport.uri || raw,
-          elapsedMs: 0,
-          data: {
-            ok: false,
-            error: 'SEMANTIC_TRANSPORT_DEFERRED',
-            transport: resolvedSemantic.transport,
-            semantic: resolvedSemantic.semantic,
-          },
-        } as ResolvePointerResult;
-        slot.lastResult = deferred;
-        return deferred;
-      }
-
-      const expression = semanticResultToExpression(resolvedSemantic);
-      if (!expression) {
-        return {
-          ok: false,
-          status: 0,
-          endpoint: raw,
-          elapsedMs: 0,
-          data: { ok: false, error: 'SEMANTIC_TARGET_MISSING' },
-        };
-      }
-
-      const resolvedPointer = pointer(expression);
-      const resolvedPath = semanticResultToPath(resolvedSemantic);
-      slot.expression = expression;
-      slot.pointer = resolvedPointer;
-      slot.path = resolvedPath;
-
-      const resolved = await resolvedPointer.resolve(
-        buildSemanticResolveOptions(resolvedSemantic, resolverConfig.resolveOptions),
-      );
+    slot.promise = remotePointer.resolve(pointerResolveOptions).then((resolved) => {
       slot.lastResult = resolved;
-
       if (resolved.ok) {
-        const applied = resolverConfig.applyResult(resolved.data, resolvedPath);
-        const learnedValue = applied === undefined ? unwrapResolvedValue(resolved.data) : applied;
+        const learnedValue = unwrapResolvedValue(resolved.data);
         remoteOverlay.set(key, learnedValue);
-        if (overlayKey) remoteOverlay.set(overlayKey, learnedValue);
-
-        const learnedMemory = createLearnedMemory(resolvedPath, learnedValue);
+        const learnedMemory = createLearnedMemory(path, learnedValue);
         if (learnedMemory) hydrateMemory(learnedMemory);
       }
-
       return resolved;
-    })();
+    });
 
-    semanticSlots.set(key, slot);
+    remoteSlots.set(key, slot);
     return slot;
   }
 
@@ -1471,18 +1528,18 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         if (typeof me === 'function') {
           if (args.length === 1 && typeof args[0] === 'string') {
             const raw = String(args[0] || '').trim();
-            if (semanticResolver && isSemanticCandidate(raw)) {
-              const semanticKey = buildSemanticKey(raw);
-              if (remoteOverlay.has(semanticKey)) return remoteOverlay.get(semanticKey);
-              const overlayKey = semanticRawToPathSegments(raw).join('.');
-              if (overlayKey && remoteOverlay.has(overlayKey)) return remoteOverlay.get(overlayKey);
-              const semanticSlot = getOrCreateSemanticSlot(raw);
-              return semanticSlot ? createPendingToken(semanticSlot) : undefined;
+            const remoteTargetPath = parseRemoteTargetPath(raw);
+            if (remoteTargetPath) {
+              const localRemote = tryReadLocal(me, remoteTargetPath);
+              if (localRemote !== undefined) return localRemote;
+              const directSlot = getOrCreateDirectRemoteSlot(raw);
+              return directSlot ? createPendingToken(directSlot) : undefined;
             }
+
             const local = tryReadLocal(me, raw.split('.').filter(Boolean));
             if (local !== undefined) return local;
-            if (raw.includes(':')) {
-              const slot = getOrCreateRemoteSlot(raw.split('.').filter(Boolean));
+            if (isRemoteTargetExpression(raw)) {
+              const slot = getOrCreateDirectRemoteSlot(raw);
               return slot ? createPendingToken(slot) : undefined;
             }
           }
@@ -1507,7 +1564,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
           if (key === 'open') return open;
           if (key === 'ready') return _ready;
           if (key === 'pointer') return pointer;
-          if (key === 'bindKernelResolver') return bindKernelResolver;
           if (key === 'discoverHosts') return discoverHosts;
           if (key === 'validateHosts') return validateHosts;
           if (key === 'getStatus') return getStatus;
@@ -1533,33 +1589,17 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
           return (cachedCurrent as Record<string, unknown>)[key];
         }
 
-        const semanticRaw = semanticResolver ? pathToSemanticRaw(path) : null;
-        if (semanticRaw) {
-          const semanticSlot = semanticSlots.get(buildSemanticKey(semanticRaw));
-          if (semanticSlot) {
-            if (key === 'status') {
-              return semanticSlot.lastResult
-                ? semanticSlot.pointer.__ptr.resolution.status
-                : 'pending';
-            }
-            if (key === 'pointer') return semanticSlot.pointer;
-            if (key === 'promise') return semanticSlot.promise;
-            if (key === 'result') return semanticSlot.lastResult;
-            if (key === 'then') return semanticSlot.promise.then.bind(semanticSlot.promise);
+        const currentSlot = getOrCreateRemoteSlot(path);
+        if (currentSlot) {
+          if (key === 'status') {
+            return currentSlot.lastResult
+              ? currentSlot.pointer.__ptr.resolution.status
+              : 'pending';
           }
-        } else {
-          const currentSlot = getOrCreateRemoteSlot(path);
-          if (currentSlot) {
-            if (key === 'status') {
-              return currentSlot.lastResult
-                ? currentSlot.pointer.__ptr.resolution.status
-                : 'pending';
-            }
-            if (key === 'pointer') return currentSlot.pointer;
-            if (key === 'promise') return currentSlot.promise;
-            if (key === 'result') return currentSlot.lastResult;
-            if (key === 'then') return currentSlot.promise.then.bind(currentSlot.promise);
-          }
+          if (key === 'pointer') return currentSlot.pointer;
+          if (key === 'promise') return currentSlot.promise;
+          if (key === 'result') return currentSlot.lastResult;
+          if (key === 'then') return currentSlot.promise.then.bind(currentSlot.promise);
         }
 
         const nextPath = [...path, key];
@@ -1568,12 +1608,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
         const local = tryReadLocal(me, nextPath);
         if (local !== undefined) return local;
-
-        const semanticRawNext = semanticResolver ? pathToSemanticRaw(nextPath) : null;
-        if (semanticRawNext) {
-          getOrCreateSemanticSlot(semanticRawNext, nextPath);
-          return createFacade(nextPath);
-        }
 
         getOrCreateRemoteSlot(nextPath);
         return createFacade(nextPath);
@@ -1584,6 +1618,5 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     });
   }
 
-  bindKernelResolver();
   return createFacade([]) as CleakerNode;
 }

@@ -30,11 +30,11 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
   console.log('namespace ->', namespace);
 
   const claim = await fetchJson(
-    `${origin}/claims`,
+    `${origin}/`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ namespace, secret, identityHash }),
+      body: JSON.stringify({ operation: 'claim', namespace, secret, identityHash }),
     },
     'claim',
   );
@@ -44,11 +44,11 @@ void run('Remote Replay: remote ledger history collapses into present .me state'
   }
 
   const opened0 = await fetchJson(
-    `${origin}/claims/open`,
+    `${origin}/`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ namespace, secret, identityHash }),
+      body: JSON.stringify({ operation: 'open', namespace, secret, identityHash }),
     },
     'open:seed',
   );
