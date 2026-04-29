@@ -65,7 +65,7 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
 	console.log('[3.1] First open response:', JSON.stringify(opened0, null, 2));
 	assert.equal(opened0.status, 'verified');
 
-	console.log('\n[4] Writing a real block to local ledger...');
+	console.log('\n[4] Writing a real memory event to the kernel ledger...');
 	const writeResponse = await fetch('http://localhost:8161/', {
 		method: 'POST',
 		headers: {
@@ -81,9 +81,22 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
 			},
 		}),
 	});
-	const writeJson = (await writeResponse.json()) as { ok?: boolean };
+	const writeJson = (await writeResponse.json()) as {
+		ok?: boolean;
+		memoryHash?: string | null;
+		prevMemoryHash?: string | null;
+		path?: string;
+		blockId?: string | null;
+		timestamp?: number;
+	};
 	console.log('[4.1] Write response:', JSON.stringify(writeJson, null, 2));
 	assert.equal(writeJson.ok, true, 'ledger write should succeed');
+	if (typeof writeJson.memoryHash === 'string') {
+		assert.equal(writeJson.path, 'profile');
+	} else {
+		assert.equal(typeof writeJson.blockId, 'string');
+		assert.equal(typeof writeJson.timestamp, 'number');
+	}
 
 	console.log('\n[5] Opening namespace again (hydration step)...');
   const opened = await node.open({
@@ -116,14 +129,17 @@ void run('Demo: cleaker(me) binds kernel and hydrates from ledger', async () => 
 
 	const resolvedData = resolved.data as {
 		ok?: boolean;
-		value?: { expression?: string; json?: string };
+		target?: {
+			path?: string;
+			value?: {
+				displayName?: string;
+				bio?: string;
+			};
+		};
 	};
 	assert.equal(resolvedData.ok, true);
-	assert.equal(resolvedData.value?.expression, 'profile');
-	const nested = JSON.parse(String(resolvedData.value?.json || '{}')) as {
-		value?: { displayName?: string };
-	};
-	assert.equal(nested.value?.displayName, 'Ana');
+	assert.equal(resolvedData.target?.path, 'profile');
+	assert.equal(resolvedData.target?.value?.displayName, 'Ana');
 	assert.equal(operation.__ptr.resolution.status, 'connected');
 
 	console.log('\n[7] Assertions passed: bind + open hydration + network resolution are working.');

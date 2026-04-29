@@ -17,22 +17,35 @@ export interface CleakerOptions
       | 'secret'
       | 'identityHash'
       | 'origin'
+      | 'space'
       | 'bootstrap'
       | 'fetcher'
     > {}
 
 export function cleaker(target: string, options?: CleakerOptions): RemotePointerDefinition;
+export function cleaker(kernel: MeKernel, space: string, options?: CleakerOptions): CleakerNode;
 export function cleaker(kernel: MeKernel, options?: CleakerOptions): CleakerNode;
 export function cleaker(
   input: string | MeKernel,
-  options: CleakerOptions = {},
+  spaceOrOptions?: string | CleakerOptions,
+  extraOptions?: CleakerOptions,
 ): RemotePointerDefinition | CleakerNode {
   if (typeof input === 'string') {
     const parsed = parseTarget(input, { defaultMode: 'reactive' });
-    return createRemotePointer(parsed, options);
+    return createRemotePointer(parsed, (spaceOrOptions as CleakerOptions) ?? {});
   }
 
-  return bindKernel(input, options);
+  let space: string | undefined;
+  let options: CleakerOptions;
+
+  if (typeof spaceOrOptions === 'string') {
+    space = spaceOrOptions;
+    options = extraOptions ?? {};
+  } else {
+    options = spaceOrOptions ?? {};
+  }
+
+  return bindKernel(input, { ...options, ...(space ? { space } : {}) });
 }
 
 export default cleaker;

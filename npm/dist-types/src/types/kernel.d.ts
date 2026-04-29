@@ -31,7 +31,8 @@ export interface KernelPendingResolution {
 export interface CleakerNode extends MeKernel {
     kernel: MeKernel;
     ready: Promise<OpenNodeResult | null>;
-    open(input: OpenNodeInput): Promise<OpenNodeResult>;
+    claim(input: OpenNodeInput): Promise<OpenNodeResult>;
+    signIn(input: OpenNodeInput): Promise<OpenNodeResult>;
     pointer(expression: string, options?: ResolvePointerOptions): RemotePointerDefinition;
     state: CleakerState;
     currentCycleId: number;

@@ -26,7 +26,7 @@ import type { ResolvePointerOptions } from './types/pointer';
 const ME_EXPRESSION_SYMBOL = Symbol.for('me.expression');
 const ME_IDENTITY_SYMBOL = Symbol.for('me.identity');
 
-type OpenResponse = {
+type SignInResponse = {
   ok: boolean;
   error?: string;
   namespace?: string;
@@ -68,6 +68,7 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
   secret?: string;
   identityHash?: string;
   origin?: string;
+  space?: string;
   bootstrap?: string[];
   fetcher?: typeof fetch;
 }
@@ -692,6 +693,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   let _ready: Promise<OpenNodeResult | null> = Promise.resolve(null);
 
   function resolveSurfaceNamespaceConstant(): string {
+    if (options.space) {
+      const spaceConstant = deriveNamespaceConstant(options.space);
+      if (spaceConstant) return spaceConstant;
+    }
+
     const locationHost = readLocationHost();
     if (locationHost) return deriveNamespaceConstant(locationHost);
 
@@ -717,6 +723,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   }
 
   function resolveSurfaceOrigins(runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
+    const spaceOrigin = options.space ? normalizeSurfaceOrigin(options.space) : '';
     const locationSurfaceOrigin = readLocationSurfaceOrigin();
     const envNamespaceSurface = typeof process !== 'undefined'
       ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '')
@@ -726,6 +733,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
     return uniqueOrigins([
       preferredOrigin,
+      spaceOrigin,
       options.origin,
       ...bootstrapOrigins,
       ...runtimeBootstrap,
@@ -944,11 +952,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     }
   }
 
-  function normalizeOpenResponse(
+  function normalizeSignInResponse(
     data: Record<string, unknown>,
     namespace: string,
     identityHash: string,
-  ): OpenResponse {
+  ): SignInResponse {
     return {
       ok: true,
       namespace: resolveEnvelopeNamespace(data, namespace),
@@ -980,7 +988,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     };
   }
 
-  async function openRemote(
+  async function signInRemote(
     origin: string,
     namespace: string,
     secret: string,
@@ -988,52 +996,30 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     timeoutMs: number,
     fetcher: typeof fetch,
     headers: Record<string, string> = {},
-  ): Promise<OpenResponse | { ok: false; error: string }> {
-    const primary = await postJson(
-      `${normalizeOrigin(origin)}/`,
-      {
-        operation: 'open',
-        namespace,
-        secret,
-        ...(identityHash ? { identityHash } : {}),
-      },
-      timeoutMs,
-      fetcher,
-      {
-        'x-forwarded-host': namespace,
-        ...headers,
-      },
-    );
+  ): Promise<SignInResponse | { ok: false; error: string }> {
+    const body = { namespace, secret, ...(identityHash ? { identityHash } : {}) };
 
-    if (primary.ok && primary.data) {
-      return normalizeOpenResponse(primary.data, namespace, identityHash);
-    }
+    // Primary: POST /claims/signIn
+    const primary = await postJson(`${normalizeOrigin(origin)}/claims/signIn`, body, timeoutMs, fetcher, headers);
+    if (primary.ok && primary.data) return normalizeSignInResponse(primary.data, namespace, identityHash);
 
     const primaryError = String(primary.error || 'OPEN_FAILED');
-    if (primary.status !== 404 || primaryError === 'CLAIM_NOT_FOUND') {
-      return { ok: false, error: primaryError };
+    if (primaryError === 'CLAIM_NOT_FOUND') return { ok: false, error: primaryError };
+
+    // Fallback: legacy POST / with operation:"open" (pre-Fase3 nodes)
+    if (primary.status === 404) {
+      const legacy = await postJson(
+        `${normalizeOrigin(origin)}/`,
+        { operation: 'open', ...body },
+        timeoutMs,
+        fetcher,
+        { 'x-forwarded-host': namespace, ...headers },
+      );
+      if (legacy.ok && legacy.data) return normalizeSignInResponse(legacy.data, namespace, identityHash);
+      return { ok: false, error: String(legacy.error || primaryError) };
     }
 
-    const legacy = await postJson(
-      `${normalizeOrigin(origin)}/claims/open`,
-      {
-        namespace,
-        secret,
-        ...(identityHash ? { identityHash } : {}),
-      },
-      timeoutMs,
-      fetcher,
-      headers,
-    );
-
-    if (legacy.ok && legacy.data) {
-      return normalizeOpenResponse(legacy.data, namespace, identityHash);
-    }
-
-    return {
-      ok: false,
-      error: String(legacy.error || primaryError),
-    };
+    return { ok: false, error: primaryError };
   }
 
   async function claimRemote(
@@ -1054,30 +1040,37 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       };
     }
 
+    // Primary: POST /me/kernel:claim/<namespace>
     const claimed = await postJson(
-      `${normalizeOrigin(origin)}/`,
-      {
-        operation: 'claim',
-        namespace,
-        secret,
-        proof,
-      },
+      `${normalizeOrigin(origin)}/me/kernel:claim/${encodeURIComponent(namespace)}`,
+      { namespace, secret, proof },
       timeoutMs,
       fetcher,
-      {
-        'x-forwarded-host': namespace,
-        ...headers,
-      },
+      headers,
     );
 
-    if (!claimed.ok || !claimed.data) {
-      return {
-        ok: false,
-        error: String(claimed.error || 'CLAIM_FAILED'),
-      };
+    if (claimed.ok && claimed.data) {
+      return normalizeClaimResponse(claimed.data, namespace, proof.identityHash);
     }
 
-    return normalizeClaimResponse(claimed.data, namespace, proof.identityHash);
+    // Fallback: legacy POST / with operation:"claim" (older nodes without /me/kernel:claim/*)
+    if (claimed.status === 404 || claimed.status === 405) {
+      const legacy = await postJson(
+        `${normalizeOrigin(origin)}/`,
+        { operation: 'claim', namespace, secret, proof },
+        timeoutMs,
+        fetcher,
+        { 'x-forwarded-host': namespace, ...headers },
+      );
+
+      if (legacy.ok && legacy.data) {
+        return normalizeClaimResponse(legacy.data, namespace, proof.identityHash);
+      }
+
+      return { ok: false, error: String(legacy.error || claimed.error || 'CLAIM_FAILED') };
+    }
+
+    return { ok: false, error: String(claimed.error || 'CLAIM_FAILED') };
   }
 
   async function bindRemoteLifecycle(
@@ -1088,8 +1081,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     timeoutMs: number,
     fetcher: typeof fetch,
     headers: Record<string, string> = {},
-  ): Promise<OpenResponse | { ok: false; error: string }> {
-    const opened = await openRemote(origin, namespace, secret, identityHash, timeoutMs, fetcher, headers);
+  ): Promise<SignInResponse | { ok: false; error: string }> {
+    const opened = await signInRemote(origin, namespace, secret, identityHash, timeoutMs, fetcher, headers);
     if (opened.ok || opened.error !== 'CLAIM_NOT_FOUND') {
       return opened;
     }
@@ -1103,7 +1096,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     }
 
     const reopenedIdentityHash = normalizeIdentityHash(claimed.identityHash) || identityHash;
-    return openRemote(
+    return signInRemote(
       origin,
       resolveEnvelopeNamespace(claimed, namespace),
       secret,
@@ -1368,7 +1361,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     };
   }
 
-  async function open(input: OpenNodeInput): Promise<OpenNodeResult> {
+  async function signIn(input: OpenNodeInput): Promise<OpenNodeResult> {
     const namespace = resolveNamespace(input.namespace);
     const secret = String(input.secret || '');
     const identityHash = resolveIdentityHash(input.identityHash);
@@ -1378,7 +1371,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
     const fetcher = input.fetcher || fetch;
     const origins = resolveSurfaceOrigins([], input.origin);
-    let lastError = 'OPEN_FAILED';
+    let lastError = 'SIGNIN_FAILED';
 
     for (const origin of origins) {
       const opened = await bindRemoteLifecycle(
@@ -1392,7 +1385,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       );
 
       if (!opened.ok) {
-        lastError = String(opened.error || 'OPEN_FAILED');
+        lastError = String(opened.error || 'SIGNIN_FAILED');
         continue;
       }
 
@@ -1414,13 +1407,45 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     throw new Error(lastError);
   }
 
+  async function claim(input: OpenNodeInput): Promise<OpenNodeResult> {
+    const namespace = resolveNamespace(input.namespace);
+    const secret = String(input.secret || '');
+
+    if (!namespace) throw new Error('NAMESPACE_REQUIRED');
+    if (!secret) throw new Error('SECRET_REQUIRED');
+
+    const fetcher = input.fetcher || fetch;
+    const origins = resolveSurfaceOrigins([], input.origin);
+    let lastError = 'CLAIM_FAILED';
+
+    for (const origin of origins) {
+      const result = await claimRemote(origin, namespace, secret, 5000, fetcher, input.headers || {});
+
+      if (!result.ok) {
+        lastError = String(result.error || 'CLAIM_FAILED');
+        continue;
+      }
+
+      return {
+        status: 'verified',
+        namespace: String(resolveEnvelopeNamespace(result, namespace)),
+        identityHash: String(result.identityHash || ''),
+        noise: '',
+        openedAt: Number(result.createdAt || Date.now()),
+        memoriesCount: 0,
+      };
+    }
+
+    throw new Error(lastError);
+  }
+
   if (resolveNamespace()) {
     discoverHosts({ namespace: explicitNamespace });
   }
 
-  // Triad: auto-open if secret is provided and namespace can be resolved from context.
+  // Triad: auto-signIn if secret is provided and namespace can be resolved from context.
   if (options.secret) {
-    _ready = open({
+    _ready = signIn({
       namespace: explicitNamespace,
       secret: options.secret,
       identityHash: options.identityHash,
@@ -1561,7 +1586,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
         if (path.length === 0) {
           if (key === 'kernel') return me;
-          if (key === 'open') return open;
+          if (key === 'claim') return claim;
+          if (key === 'signIn') return signIn;
           if (key === 'ready') return _ready;
           if (key === 'pointer') return pointer;
           if (key === 'discoverHosts') return discoverHosts;
