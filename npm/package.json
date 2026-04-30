@@ -1,7 +1,7 @@
 {
   "name": "cleaker",
   "version": "3.1.1",
-  "description": "Bind a .me kernel to a namespace and hydrate it through monad.ai.",
+  "description": "Who am I here.",
   "type": "module",
   "main": "dist/cleaker.cjs",
   "module": "dist/cleaker.es.js",

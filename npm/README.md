@@ -37,7 +37,7 @@ cleaker(suign, "192.168.1.5:8161")      // → 192.168.1.5:8161/suign
 
 > Two words. Two lines of code. Whole system.
 >
-> **Who are you, here.**
+> **Who are we, here.**
 
 ## Resolving "here"
 
