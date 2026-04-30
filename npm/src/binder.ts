@@ -2,6 +2,7 @@ import { parseTarget } from './parse/parseTarget';
 import { createRemotePointer } from './pointer/remotePointer';
 import {
   DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
+  DEFAULT_CLEAKER_LAN_PORT,
   DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
 } from './constants';
 import { composeNamespace, parseNamespaceExpression } from './namespace/expression';
@@ -160,6 +161,76 @@ function normalizeSurfaceOrigin(input: string): string {
     if (!host) return '';
     return `${isLoopbackishHost(host) ? 'http' : 'https'}://${host}`;
   }
+}
+
+function isIpAddress(host: string): boolean {
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+}
+
+function isBareHostname(host: string): boolean {
+  return !host.includes('.') && !isIpAddress(host);
+}
+
+function parseSpaceHostPort(raw: string): { host: string; port: number | null } {
+  const colonIdx = raw.lastIndexOf(':');
+  if (colonIdx > 0) {
+    const portStr = raw.slice(colonIdx + 1);
+    const portNum = parseInt(portStr, 10);
+    if (String(portNum) === portStr && portNum > 0) {
+      return { host: raw.slice(0, colonIdx), port: portNum };
+    }
+  }
+  return { host: raw, port: null };
+}
+
+// Resolves a user-supplied space string to a normalized origin URL per spec:
+// - IP address (with optional port) → http://{ip}:{port|8161}
+// - Bare hostname (no dot)          → http://{host}.local:{port|8161}
+// - Domain (has dot)                → https://{domain}:{port?}
+// - Already has ://                 → normalize as-is
+function normalizeSpaceOrigin(space: string): string {
+  const raw = String(space || '').trim();
+  if (!raw) return '';
+
+  if (raw.includes('://')) {
+    return normalizeOrigin(raw);
+  }
+
+  const { host, port } = parseSpaceHostPort(raw);
+  const lowerHost = host.toLowerCase();
+
+  if (isIpAddress(lowerHost)) {
+    return `http://${lowerHost}:${port ?? DEFAULT_CLEAKER_LAN_PORT}`;
+  }
+
+  if (isBareHostname(lowerHost)) {
+    return `http://${lowerHost}.local:${port ?? DEFAULT_CLEAKER_LAN_PORT}`;
+  }
+
+  // Public domain (has dot)
+  const portSuffix = port ? `:${port}` : '';
+  return `https://${lowerHost}${portSuffix}`;
+}
+
+// Returns the namespace constant (no port) for a user-supplied space string.
+function deriveSpaceNamespaceConstant(space: string): string {
+  const raw = String(space || '').trim();
+  if (!raw) return '';
+
+  if (raw.includes('://')) {
+    try {
+      return new URL(raw).hostname.toLowerCase();
+    } catch {
+      return '';
+    }
+  }
+
+  const { host } = parseSpaceHostPort(raw);
+  const lowerHost = host.toLowerCase();
+
+  if (isIpAddress(lowerHost)) return lowerHost;
+  if (isBareHostname(lowerHost)) return `${lowerHost}.local`;
+  return lowerHost;
 }
 
 function hashMemory(memory: unknown): string {
@@ -694,7 +765,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
   function resolveSurfaceNamespaceConstant(): string {
     if (options.space) {
-      const spaceConstant = deriveNamespaceConstant(options.space);
+      const spaceConstant = deriveSpaceNamespaceConstant(options.space);
       if (spaceConstant) return spaceConstant;
     }
 
@@ -723,7 +794,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   }
 
   function resolveSurfaceOrigins(runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
-    const spaceOrigin = options.space ? normalizeSurfaceOrigin(options.space) : '';
+    const spaceOrigin = options.space ? normalizeSpaceOrigin(options.space) : '';
     const locationSurfaceOrigin = readLocationSurfaceOrigin();
     const envNamespaceSurface = typeof process !== 'undefined'
       ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '')
