@@ -44,15 +44,11 @@ run('A3 - explicit me:// targets normalize without mutation of semantics', () =>
   assert.equal(ptr.intent.path, 'v1.users.get');
 });
 
-run('A4 - legacy nrp:// targets are accepted and normalized to me://', () => {
-  const remote = cleaker('nrp://dev.neurons:api/v1.users.get');
-  const ptr = remote.__ptr;
-  assert.equal(ptr.target.scheme, 'me');
-  assert.equal(ptr.target.raw, 'me://dev.neurons:api/v1.users.get');
-  assert.equal(ptr.identity.prefix, 'dev');
-  assert.equal(ptr.identity.constant, 'neurons');
-  assert.equal(ptr.intent.selector, 'api');
-  assert.equal(ptr.intent.path, 'v1.users.get');
+run('A4 - nrp:// scheme is not accepted', () => {
+  assert.throws(
+    () => cleaker('nrp://dev.neurons:api/v1.users.get'),
+    (err: unknown) => err instanceof Error,
+  );
 });
 
 console.log('All cleaker axioms passed.');

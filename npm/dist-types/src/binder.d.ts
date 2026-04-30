@@ -4,7 +4,6 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
     namespace?: string;
     secret?: string;
     identityHash?: string;
-    origin?: string;
     space?: string;
     bootstrap?: string[];
     fetcher?: typeof fetch;

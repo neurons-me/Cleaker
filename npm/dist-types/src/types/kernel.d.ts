@@ -4,7 +4,7 @@ export interface OpenNodeInput {
     namespace: string;
     secret: string;
     identityHash?: string;
-    origin?: string;
+    space?: string;
     headers?: Record<string, string>;
     fetcher?: typeof fetch;
 }
@@ -51,7 +51,7 @@ export type CleakerOverallState = 'healthy' | 'degraded' | 'offline';
 export interface CleakerHostRecord {
     id: string;
     alias?: string;
-    origin: string;
+    space: string;
     namespace: string;
     status: {
         transport: CleakerTransportState;

@@ -60,3 +60,31 @@ No dot — local hostname — `.local` and port `8161` added automatically.
 - Identity is both local and networked, depending on context.
 - “*Who are you, here*”: The system is about manifesting identity in the current context/space.
 
+## Summary Table
+
+| Input                                  | Normalized Origin                                            | Namespace constant |
+| -------------------------------------- | ------------------------------------------------------------ | ------------------ |
+| `cleaker(me)`                          | [https://cleaker.me](https://cleaker.me/)                    | cleaker.me         |
+| `cleaker(me, "neurons.me")`            | [https://neurons.me](https://neurons.me/)                    | neurons.me         |
+| `cleaker(me, "sui-desk")`              | [http://sui-desk.local:8161](http://sui-desk.local:8161/)    | sui-desk.local     |
+| `cleaker(me, "sui-desk:9000")`         | [http://sui-desk.local:9000](http://sui-desk.local:9000/)    | sui-desk.local     |
+| `cleaker(me, "192.168.1.5")`           | [http://192.168.1.5:8161](http://192.168.1.5:8161/)          | 192.168.1.5        |
+| `cleaker(me, "sui-laptop.local:8181")` | [https://sui-laptop.local:8181](https://sui-laptop.local:8181/) | sui-laptop.local   |
+
+### Core API
+
+```typescript
+import me from 'this.me' 
+import cleaker from 'cleaker'
+// Who are you (local sovereign identity) 
+const identity = me["@"]("suiGn")
+// Here — enter the matrix 
+const node = cleaker(identity)// → cleaker.me (default hub)
+const node = cleaker(identity, "neurons.me")   // → your node 
+const node = cleaker(identity, "sui-desk")     // → LAN
+await node.claim({ secret: "..." }) await node.signIn({ secret: "..." })
+// Reads
+const name = await node.profile.name 
+const friends = await node.friends.list
+```
+

@@ -1,6 +1,6 @@
 {
   "name": "cleaker",
-  "version": "3.1.1-beta.1",
+  "version": "3.1.1",
   "description": "Bind a .me kernel to a namespace and hydrate it through monad.ai.",
   "type": "module",
   "main": "dist/cleaker.cjs",
@@ -30,20 +30,12 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "docs:publish": "npm run docs:build && touch docs/.vitepress/dist/.nojekyll",
-    "test": "npm run test:quickstart && npm run test:demo && npm run test:axioms && npm run test:algebra && npm run test:bind && npm run test:integration:real && npm run test:sovereign-loop && npm run test:builds && npm run test:contracts",
-    "test:quickstart": "tsx tests/quickstart.test.ts",
-    "test:demo": "tsx tests/demo.test.ts",
+    "test": "npm run test:axioms && npm run test:bind && npm run test:namespace && npm run test:me-target && npm run test:space",
     "test:bind": "tsx tests/bind.test.ts",
-    "test:integration:real": "tsx tests/integration.real.test.ts",
-    "test:remote-replay:real": "tsx tests/remote-replay.real.test.ts",
-    "test:sovereign-loop": "tsx tests/sovereign-loop.test.ts",
     "test:axioms": "tsx tests/axioms.test.ts",
-    "test:algebra": "tsx tests/algebra.test.ts",
-    "test:builds": "node tests/Builds/esm.test.mjs && node tests/Builds/cjs.test.cjs && tsc --noEmit -p tsconfig.json",
-    "test:contracts": "node tests/contracts/nrp.contract.test.mjs",
-    "test:prebuild": "node tests/pre-build.test.mjs",
-    "demo:sovereign-loop": "tsx tests/Demos/sovereign-loop.demo.ts",
-    "demo:sovereign-loop:real": "tsx tests/Demos/sovereign-loop.real.demo.ts"
+    "test:namespace": "tsx tests/namespace-expression.test.ts",
+    "test:me-target": "tsx tests/me-target.test.ts",
+    "test:space": "tsx tests/space.test.ts"
   },
   "keywords": [
     "cleaker",

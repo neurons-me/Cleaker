@@ -16,7 +16,6 @@ export interface CleakerOptions
       | 'namespace'
       | 'secret'
       | 'identityHash'
-      | 'origin'
       | 'space'
       | 'bootstrap'
       | 'fetcher'

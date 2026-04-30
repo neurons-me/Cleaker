@@ -11,7 +11,7 @@ function run(name: string, fn: () => void) {
   }
 }
 
-run('parseMeTarget keeps legacy canonical targets working', () => {
+run('parseMeTarget parses canonical me:// targets', () => {
   const parsed = parseMeTarget('me://ana.cleaker:read/profile');
 
   assert.equal(parsed.namespace.fqdn, 'ana.cleaker');

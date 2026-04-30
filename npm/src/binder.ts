@@ -68,7 +68,6 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
   namespace?: string;
   secret?: string;
   identityHash?: string;
-  origin?: string;
   space?: string;
   bootstrap?: string[];
   fetcher?: typeof fetch;
@@ -624,7 +623,7 @@ function writeKernelPath(me: MeKernel, segments: string[], value: unknown): bool
 }
 
 function toHostRecord(input: Partial<CleakerHostRecord>, namespace: string): CleakerHostRecord | null {
-  const origin = normalizeOrigin(String(input.origin || ''));
+  const origin = normalizeOrigin(String(input.space || ''));
   if (!origin) return null;
   const id = String(input.id || '').trim() || computeHostId(origin);
   const baseStatus = input.status || {
@@ -641,7 +640,7 @@ function toHostRecord(input: Partial<CleakerHostRecord>, namespace: string): Cle
   return {
     id,
     alias: input.alias ? String(input.alias) : undefined,
-    origin,
+    space: origin,
     namespace,
     status: {
       transport: baseStatus.transport || 'unknown',
@@ -739,8 +738,9 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const bootstrapOrigins = Array.isArray(options.bootstrap)
     ? options.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
     : [];
+  const resolvedSpaceOrigin = options.space ? normalizeSpaceOrigin(options.space) : '';
   const pointerResolveOptions: ResolvePointerOptions = {
-    ...(options.origin ? { origin: options.origin } : {}),
+    ...(resolvedSpaceOrigin ? { origin: resolvedSpaceOrigin } : {}),
     ...(options.fetcher ? { fetcher: options.fetcher } : {}),
     headers: {
       accept: 'application/json',
@@ -787,6 +787,19 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     const expression = readKernelExpression(me);
     if (!expression) return '';
 
+    // If the expression already contains a dot, try to interpret it as a full fqdn
+    // (e.g. "suiGn.neurons.me" should not get another constant appended).
+    if (expression.includes('.')) {
+      try {
+        const parsed = parseNamespaceExpression(expression);
+        if (parsed.prefix && parsed.constant) {
+          return composeNamespace(parsed.prefix, parsed.constant);
+        }
+      } catch {
+        // Not a valid namespace expression — fall through to normal path.
+      }
+    }
+
     const constant = resolveSurfaceNamespaceConstant();
     if (!constant) return '';
 
@@ -805,7 +818,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     return uniqueOrigins([
       preferredOrigin,
       spaceOrigin,
-      options.origin,
       ...bootstrapOrigins,
       ...runtimeBootstrap,
       locationSurfaceOrigin,
@@ -832,7 +844,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   function isRemoteTargetExpression(raw: string): boolean {
     const trimmed = String(raw || '').trim();
     if (!trimmed) return false;
-    return trimmed.startsWith('me://') || trimmed.startsWith('nrp://') || trimmed.includes(':');
+    return trimmed.startsWith('me://') || trimmed.includes(':');
   }
 
   function parseRemoteTargetPath(raw: string): string[] | null {
@@ -901,7 +913,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     const base = ['namespaces', namespace, 'registry', 'hosts', host.id];
     writeKernelPath(me, [...base, 'id'], host.id);
     writeKernelPath(me, [...base, 'alias'], host.alias || '');
-    writeKernelPath(me, [...base, 'origin'], host.origin);
+    writeKernelPath(me, [...base, 'space'], host.space);
     writeKernelPath(me, [...base, 'namespace'], host.namespace);
     writeKernelPath(me, [...base, 'status', 'transport'], host.status.transport);
     writeKernelPath(me, [...base, 'status', 'triad'], host.status.triad);
@@ -937,7 +949,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         : [];
       const fallbackOrigins = resolveSurfaceOrigins(runtimeBootstrap);
       fallbackOrigins.forEach((origin) => {
-        const host = toHostRecord({ origin }, namespace);
+        const host = toHostRecord({ space: origin }, namespace);
         if (!host) return;
         hostMap.set(host.id, host);
         persistHostRecord(namespace, host);
@@ -1263,7 +1275,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     for (let i = 0; i < hosts.length; i += 1) {
       const host = hosts[i];
       const start = Date.now();
-      const reachable = await ping(host.origin, timeoutMs, fetcher);
+      const reachable = await ping(host.space, timeoutMs, fetcher);
       host.status.transport = reachable ? 'up' : 'down';
       host.status.latencyMs = Date.now() - start;
       host.status.lastSeen = Date.now();
@@ -1283,14 +1295,14 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       }
 
       transition('opening', cycleId);
-      const opened = await bindRemoteLifecycle(host.origin, namespace, secret, identityHash, timeoutMs, fetcher);
+      const opened = await bindRemoteLifecycle(host.space, namespace, secret, identityHash, timeoutMs, fetcher);
       if (!opened.ok) {
         const errorCode = String(opened.error || 'OPEN_FAILED');
         host.status.triad = errorCode === 'CLAIM_NOT_FOUND' ? 'unverified' : 'failed';
         host.error = errorCode;
         emit('error', {
           code: errorCode,
-          message: `Triad open failed on ${host.origin}`,
+          message: `Triad open failed on ${host.space}`,
           hostId: host.id,
         });
         persistHostRecord(namespace, host);
@@ -1352,7 +1364,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         namespace,
         cycleId,
         sourceHostId: hydratedFromHostId || verifiedHost.id,
-        sourceOrigin: verifiedHost.origin,
+        sourceOrigin: verifiedHost.space,
         identityHash: hydratedIdentityHash,
         timestamp: Date.now(),
         hydratedMemories: hydratedMemoriesCount,
@@ -1440,8 +1452,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
     if (!secret) throw new Error('SECRET_REQUIRED');
 
-    const fetcher = input.fetcher || fetch;
-    const origins = resolveSurfaceOrigins([], input.origin);
+    const fetcher = input.fetcher || options.fetcher || fetch;
+    const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
     let lastError = 'SIGNIN_FAILED';
 
     for (const origin of origins) {
@@ -1485,8 +1497,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
     if (!secret) throw new Error('SECRET_REQUIRED');
 
-    const fetcher = input.fetcher || fetch;
-    const origins = resolveSurfaceOrigins([], input.origin);
+    const fetcher = input.fetcher || options.fetcher || fetch;
+    const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
     let lastError = 'CLAIM_FAILED';
 
     for (const origin of origins) {
@@ -1520,7 +1532,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       namespace: explicitNamespace,
       secret: options.secret,
       identityHash: options.identityHash,
-      origin: options.origin,
+      space: options.space,
       fetcher: options.fetcher,
     }).catch(() => null);
   }

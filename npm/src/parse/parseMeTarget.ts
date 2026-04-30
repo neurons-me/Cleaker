@@ -5,7 +5,6 @@ import {
   CONTEXT_OPEN,
   CONTEXT_CLOSE,
   CONTEXT_VALUE_SEPARATOR,
-  LEGACY_NRP_SCHEME,
   ME_SCHEME,
 } from './grammar';
 import type {
@@ -24,7 +23,6 @@ function normalizeInput(input: string): string {
 
 function stripScheme(raw: string): string {
   if (raw.startsWith(ME_SCHEME)) return raw.slice(ME_SCHEME.length);
-  if (raw.startsWith(LEGACY_NRP_SCHEME)) return raw.slice(LEGACY_NRP_SCHEME.length);
   return raw;
 }
 
