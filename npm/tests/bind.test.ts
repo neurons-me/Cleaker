@@ -14,6 +14,19 @@ function createMockKernel(expression: string) {
   return kernel;
 }
 
+function createReadableKernel(expression: string, values: Record<string, unknown>) {
+  const memories: unknown[] = [];
+  const kernel: any = (path?: string) => {
+    const key = String(path || '').trim();
+    return key ? values[key] : undefined;
+  };
+  kernel[ME_EXPRESSION_SYMBOL] = expression;
+  kernel.learn = (m: unknown) => memories.push(m);
+  kernel.noise = '';
+  kernel._memories = memories;
+  return kernel;
+}
+
 type Fetcher = typeof fetch;
 type Interceptor = (url: string, body: Record<string, unknown>) => Response | null;
 
@@ -127,6 +140,23 @@ void run('Bind: same identity, different spaces → different namespaces', () =>
 
   assert.equal(local.getStatus().activeNamespace, 'suign.sui-desk.local');
   assert.equal(cloud.getStatus().activeNamespace, 'suign.neurons.me');
+});
+
+// The seed/root expression is the trunk. Spaces mount that same truth as
+// distinct contextual branches, but local semantic reads remain the same.
+void run('Bind: same seed truth, different spaces → different contextual branches', () => {
+  const me = createReadableKernel('suiGn', {
+    'profile.name': 'Jose',
+  });
+
+  const neurons = cleaker(me, 'neurons.me');
+  const desk = cleaker(me, 'sui-desk');
+
+  assert.equal(neurons.getStatus().activeNamespace, 'suign.neurons.me');
+  assert.equal(desk.getStatus().activeNamespace, 'suign.sui-desk.local');
+  assert.equal(neurons.profile.name, 'Jose');
+  assert.equal(desk.profile.name, 'Jose');
+  assert.equal(me[ME_EXPRESSION_SYMBOL], 'suiGn');
 });
 
 // Local kernel reads bypass the network

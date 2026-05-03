@@ -12,6 +12,21 @@ But:
 
 `subject = cleaker(me)` This is why **cleaker** appears so early in the stack. It is not a utility. It is the founding operation.
 
+The seed is the whole truth. The space is where that truth is mounted.
+The namespace is the contextual branch that becomes addressable.
+
+```
+root .me seed
+  └── space: neurons.me
+        └── namespace: suign.neurons.me
+
+root .me seed
+  └── space: sui-desk.local
+        └── namespace: suign.sui-desk.local
+```
+
+Wherever you go, state the same seed. The namespace changes by context. The truth does not.
+
 ## Core forms
 
 ```ts
@@ -32,8 +47,8 @@ These are the semantic base forms of Cleaker. They express the core idea directl
 There is also a practical triad form used by the current implementation:
 
 ```
-cleaker(me, { namespace, secret, origin })
-// Opens the vault against the given namespace, hydrates the kernel
+cleaker(me, space)
+// Mounts name + space as a namespace branch, then can signIn
 // from its memory ledger, and returns a ready node.
 ```
 
@@ -79,7 +94,7 @@ await pending.promise; // resolves against the server, then teaches the kernel
 ------
 
 ## Operational triad form — `cleaker(me, { namespace, secret })`
-As a practical implementation form, you can also pass namespace and secret at bind time so the vault opens automatically. No manual `.open()` call required:
+As a practical implementation form, you can also pass namespace and secret at bind time so the node signs in automatically. No manual `.signIn()` call required:
 
 ```ts
 import cleaker from 'cleaker';
@@ -89,7 +104,7 @@ const me = new Me();
 const self = cleaker(me, {
   namespace: 'ana.cleaker.me',
   secret: 'luna',
-  origin: 'http://localhost:8161',
+  space: 'localhost:8161',
 });
 
 await self.ready;
@@ -99,10 +114,10 @@ self.profile.name; // value from remote memory, learned locally
 
 `self.ready` is a `Promise<OpenNodeResult | null>`. It resolves when hydration completes, or rejects silently (`null`) on error.
 
-You can also open explicitly:
+You can also sign in explicitly:
 
 ```ts
-const result = await self.open({ namespace: 'ana.cleaker.me', secret: 'luna' });
+const result = await self.signIn({ namespace: 'ana.cleaker.me', secret: 'luna' });
 // result.status === 'verified'
 // result.memoriesCount === N
 ```

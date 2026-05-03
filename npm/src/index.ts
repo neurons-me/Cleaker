@@ -27,3 +27,10 @@ export type {
   ResolvePointerOptions,
   ResolvePointerResult,
 } from './types/pointer';
+export type {
+  RegisterSurfaceInput,
+  ResolveSurfaceInput,
+  SurfaceEndpoint,
+  SurfaceTransport,
+  TopologyResolver,
+} from './topology/resolver';

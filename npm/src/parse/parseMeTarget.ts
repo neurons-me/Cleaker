@@ -209,6 +209,11 @@ export function stringifyMeTarget(target: Pick<ParsedTarget, 'namespace' | 'oper
   return `${ME_SCHEME}${namespaceToken}:${operation}/${path}`;
 }
 
+/**
+ * @deprecated Compatibility parser for the older `me://namespace:operation/path`
+ * target grammar. New namespace/context work should use
+ * `parseNamespaceExpression()` from `src/namespace/expression.ts`.
+ */
 export function parseMeTarget(input: string, options: ParseTargetOptions = {}): ParsedTarget {
   const raw = normalizeInput(input);
   ensureBalancedContext(raw);
