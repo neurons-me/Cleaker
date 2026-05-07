@@ -1,55 +1,23 @@
-# cleaker
-
-> ***Resolutio ante directionem — nomen ante locum***
-> Resolution before direction. Name before place.
-
-**cleaker** is the contextual namespace binding layer for the neurons.me stack. It fixes where you are, then places identity into that context.
-
 ---
+layout: home
 
-## Installation
+hero:
+  name: "cleaker"
+  text: "Contextual namespace binding"
+  tagline: "Resolutio ante directionem — nomen ante locum"
+  actions:
+    - theme: brand
+      text: The Model
+      link: /The-Model
+    - theme: alt
+      text: API Reference
+      link: /api/
 
-```bash
-npm install cleaker
-```
-
+features:
+  - title: Resolution before direction
+    details: cleaker() fixes the current namespace context. The runtime already knows where it is — cleaker crystallizes it as a root.
+  - title: Identity in context
+    details: cleaker(me) mounts a .me kernel into the namespace tree. Identity exists in relation to something else; there is no meaningful .me floating in the void.
+  - title: Namespace isolation
+    details: Each space produces a fully isolated branch. The same seed, different contexts — suign.neurons.me vs suign.local — same truth, different address.
 ---
-
-## Core forms
-
-```ts
-cleaker()
-// Fixes the current namespace context.
-
-cleaker(me)
-// Mounts a .me kernel into the current namespace tree.
-
-cleaker(me, { namespace, secret, space })
-// Full operational form — binds identity, signs in, hydrates from memory.
-```
-
----
-
-## Quick start
-
-```ts
-import cleaker from 'cleaker';
-import Me from 'this.me';
-
-const me = new Me();
-const self = cleaker(me, {
-  namespace: 'ana.cleaker.me',
-  secret: 'luna',
-  space: 'localhost:8161',
-});
-
-await self.ready;
-self.profile.name; // value from remote memory, learned locally
-```
-
----
-
-- [The Model](./The-Model.md) — identity in context
-- [Cleaker Protocol](./Cleaker.md) — namespace protocol overview
-- [Algebra of Me](./Algebra-of-Me.md) — formal namespace algebra
-- [API Reference](./api/README.md)
