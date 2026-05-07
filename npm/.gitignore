@@ -1,6 +1,5 @@
 # Node modules
 node_modules/
-docs/
 # Logs
 logs/
 *.log
@@ -28,9 +27,6 @@ node_modules/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
-
-# Documentation
-docs/
 
 # Editor settings
 .idea/

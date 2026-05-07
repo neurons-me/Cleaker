@@ -1,0 +1,49 @@
+name: Deploy cleaker Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "npm/docs/**"
+      - "npm/src/**"
+      - "npm/typedoc.json"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Install from repo root — avoids npm/package.json workspace:* deps
+      # that npm cannot resolve (workspace: is pnpm-only syntax).
+      # TypeDoc API markdown (docs/api/) is committed, so no typedoc run needed.
+      - name: Install VitePress
+        run: npm install --no-save vitepress
+
+      - name: Build VitePress
+        run: npx vitepress build npm/docs
+        env:
+          VITEPRESS_BASE: /cleaker/npm/typedocs/
+
+      - name: Add .nojekyll
+        run: mkdir -p npm/typedocs && touch npm/typedocs/.nojekyll
+
+      # Deploys to the gh-pages branch under npm/typedocs/.
+      # GitHub Pages source: Branch: gh-pages  /  Folder: / (root)
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./npm/typedocs
+          destination_dir: npm/typedocs
+          keep_files: true
