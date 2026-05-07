@@ -1,0 +1,1 @@
+import{_ as a,o as i,c as e,ae as n}from"./chunks/framework.CqgG5Y89.js";const d=JSON.parse('{"title":"cleaker","description":"","frontmatter":{},"headers":[],"relativePath":"index.md","filePath":"index.md"}'),l={name:"index.md"};function t(h,s,p,k,r,o){return i(),e("div",null,[...s[0]||(s[0]=[n("",14)])])}const E=a(l,[["render",t]]);export{d as __pageData,E as default};
