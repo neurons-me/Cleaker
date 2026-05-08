@@ -8,7 +8,7 @@
 
 > **composeNamespace**(`prefix`, `constant`): `string`
 
-Defined in: [namespace/expression.ts:309](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/namespace/expression.ts#L309)
+Defined in: [namespace/expression.ts:309](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/namespace/expression.ts#L309)
 
 ## Parameters
 

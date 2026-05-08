@@ -6,7 +6,7 @@
 
 # Interface: RemotePointerDefinition
 
-Defined in: [types/pointer.ts:53](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L53)
+Defined in: [types/pointer.ts:53](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L53)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/pointer.ts:53](https://github.com/neurons-me/cleaker/blob/345
 
 > **\_\_ptr**: `RemotePointerPayload`
 
-Defined in: [types/pointer.ts:54](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L54)
+Defined in: [types/pointer.ts:54](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L54)
 
 ## Methods
 
@@ -22,7 +22,7 @@ Defined in: [types/pointer.ts:54](https://github.com/neurons-me/cleaker/blob/345
 
 > **resolve**(`options?`): `Promise`\<[`ResolvePointerResult`](ResolvePointerResult.md)\>
 
-Defined in: [types/pointer.ts:55](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L55)
+Defined in: [types/pointer.ts:55](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L55)
 
 #### Parameters
 

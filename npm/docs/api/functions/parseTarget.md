@@ -8,7 +8,7 @@
 
 > **parseTarget**(`input`, `options?`): [`ParsedTarget`](../interfaces/ParsedTarget.md)
 
-Defined in: [parse/parseTarget.ts:10](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/parse/parseTarget.ts#L10)
+Defined in: [parse/parseTarget.ts:10](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/parse/parseTarget.ts#L10)
 
 Compatibility wrapper for remote pointer targets.
 

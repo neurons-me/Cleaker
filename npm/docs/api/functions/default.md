@@ -10,7 +10,7 @@
 
 > **default**(`target`, `options?`): [`RemotePointerDefinition`](../interfaces/RemotePointerDefinition.md)
 
-Defined in: [cleaker.ts:24](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/cleaker.ts#L24)
+Defined in: [cleaker.ts:24](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/cleaker.ts#L24)
 
 ### Parameters
 
@@ -30,7 +30,7 @@ Defined in: [cleaker.ts:24](https://github.com/neurons-me/cleaker/blob/345c8e4dd
 
 > **default**(`kernel`, `space`, `options?`): [`CleakerNode`](../interfaces/CleakerNode.md)
 
-Defined in: [cleaker.ts:25](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/cleaker.ts#L25)
+Defined in: [cleaker.ts:25](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/cleaker.ts#L25)
 
 ### Parameters
 
@@ -54,7 +54,7 @@ Defined in: [cleaker.ts:25](https://github.com/neurons-me/cleaker/blob/345c8e4dd
 
 > **default**(`kernel`, `options?`): [`CleakerNode`](../interfaces/CleakerNode.md)
 
-Defined in: [cleaker.ts:26](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/cleaker.ts#L26)
+Defined in: [cleaker.ts:26](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/cleaker.ts#L26)
 
 ### Parameters
 

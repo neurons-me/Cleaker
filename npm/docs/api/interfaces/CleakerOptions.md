@@ -6,7 +6,7 @@
 
 # Interface: CleakerOptions
 
-Defined in: [cleaker.ts:12](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/cleaker.ts#L12)
+Defined in: [cleaker.ts:12](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/cleaker.ts#L12)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [cleaker.ts:12](https://github.com/neurons-me/cleaker/blob/345c8e4dd
 
 > `optional` **bootstrap?**: `string`[]
 
-Defined in: [binder.ts:72](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/binder.ts#L72)
+Defined in: [binder.ts:72](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/binder.ts#L72)
 
 #### Inherited from
 
@@ -30,7 +30,7 @@ Defined in: [binder.ts:72](https://github.com/neurons-me/cleaker/blob/345c8e4dd9
 
 > `optional` **cacheTtl?**: `number`
 
-Defined in: [pointer/remotePointer.ts:12](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/pointer/remotePointer.ts#L12)
+Defined in: [pointer/remotePointer.ts:12](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/pointer/remotePointer.ts#L12)
 
 #### Inherited from
 
@@ -42,7 +42,7 @@ Defined in: [pointer/remotePointer.ts:12](https://github.com/neurons-me/cleaker/
 
 > `optional` **fetcher?**: \{(`input`, `init?`): `Promise`\<`Response`\>; (`input`, `init?`): `Promise`\<`Response`\>; \}
 
-Defined in: [binder.ts:73](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/binder.ts#L73)
+Defined in: [binder.ts:73](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/binder.ts#L73)
 
 #### Call Signature
 
@@ -94,7 +94,7 @@ Defined in: [binder.ts:73](https://github.com/neurons-me/cleaker/blob/345c8e4dd9
 
 > `optional` **identityHash?**: `string`
 
-Defined in: [binder.ts:70](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/binder.ts#L70)
+Defined in: [binder.ts:70](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/binder.ts#L70)
 
 #### Inherited from
 
@@ -106,7 +106,7 @@ Defined in: [binder.ts:70](https://github.com/neurons-me/cleaker/blob/345c8e4dd9
 
 > `optional` **namespace?**: `string`
 
-Defined in: [binder.ts:68](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/binder.ts#L68)
+Defined in: [binder.ts:68](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/binder.ts#L68)
 
 #### Inherited from
 
@@ -118,7 +118,7 @@ Defined in: [binder.ts:68](https://github.com/neurons-me/cleaker/blob/345c8e4dd9
 
 > `optional` **preferredTransport?**: `string`[]
 
-Defined in: [pointer/remotePointer.ts:11](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/pointer/remotePointer.ts#L11)
+Defined in: [pointer/remotePointer.ts:11](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/pointer/remotePointer.ts#L11)
 
 #### Inherited from
 
@@ -130,7 +130,7 @@ Defined in: [pointer/remotePointer.ts:11](https://github.com/neurons-me/cleaker/
 
 > `optional` **resolveLocalTarget?**: (`target`) => `unknown`
 
-Defined in: [pointer/remotePointer.ts:13](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/pointer/remotePointer.ts#L13)
+Defined in: [pointer/remotePointer.ts:13](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/pointer/remotePointer.ts#L13)
 
 #### Parameters
 
@@ -152,7 +152,7 @@ Defined in: [pointer/remotePointer.ts:13](https://github.com/neurons-me/cleaker/
 
 > `optional` **secret?**: `string`
 
-Defined in: [binder.ts:69](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/binder.ts#L69)
+Defined in: [binder.ts:69](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/binder.ts#L69)
 
 #### Inherited from
 
@@ -164,7 +164,7 @@ Defined in: [binder.ts:69](https://github.com/neurons-me/cleaker/blob/345c8e4dd9
 
 > `optional` **space?**: `string`
 
-Defined in: [binder.ts:71](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/binder.ts#L71)
+Defined in: [binder.ts:71](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/binder.ts#L71)
 
 #### Inherited from
 

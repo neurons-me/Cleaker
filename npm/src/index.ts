@@ -8,10 +8,13 @@ export {
 } from './namespace/expression';
 export type {
   CleakerErrorPayload,
+  CleakerEvents,
   CleakerNode,
   CleakerReadyPayload,
   CleakerStatus,
   MeKernel,
+  NamespaceFallbackPayload,
+  NamespaceFailedPayload,
   OpenNodeInput,
   OpenNodeResult,
 } from './types/kernel';

@@ -7,11 +7,14 @@
 ## Interfaces
 
 - [CleakerErrorPayload](interfaces/CleakerErrorPayload.md)
+- [CleakerEvents](interfaces/CleakerEvents.md)
 - [CleakerNode](interfaces/CleakerNode.md)
 - [CleakerOptions](interfaces/CleakerOptions.md)
 - [CleakerReadyPayload](interfaces/CleakerReadyPayload.md)
 - [CleakerStatus](interfaces/CleakerStatus.md)
 - [MeKernel](interfaces/MeKernel.md)
+- [NamespaceFailedPayload](interfaces/NamespaceFailedPayload.md)
+- [NamespaceFallbackPayload](interfaces/NamespaceFallbackPayload.md)
 - [OpenNodeInput](interfaces/OpenNodeInput.md)
 - [OpenNodeResult](interfaces/OpenNodeResult.md)
 - [ParsedNamespaceExpression](interfaces/ParsedNamespaceExpression.md)

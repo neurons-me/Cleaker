@@ -6,7 +6,7 @@
 
 # Interface: RegisterSurfaceInput
 
-Defined in: [topology/resolver.ts:16](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L16)
+Defined in: [topology/resolver.ts:16](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L16)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [topology/resolver.ts:16](https://github.com/neurons-me/cleaker/blob
 
 > **endpoint**: [`SurfaceEndpoint`](SurfaceEndpoint.md)
 
-Defined in: [topology/resolver.ts:19](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L19)
+Defined in: [topology/resolver.ts:19](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L19)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [topology/resolver.ts:19](https://github.com/neurons-me/cleaker/blob
 
 > **namespace**: `string`
 
-Defined in: [topology/resolver.ts:17](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L17)
+Defined in: [topology/resolver.ts:17](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L17)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: [topology/resolver.ts:17](https://github.com/neurons-me/cleaker/blob
 
 > **surface**: `string`
 
-Defined in: [topology/resolver.ts:18](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L18)
+Defined in: [topology/resolver.ts:18](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L18)

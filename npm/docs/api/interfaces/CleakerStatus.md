@@ -6,7 +6,7 @@
 
 # Interface: CleakerStatus
 
-Defined in: [types/kernel.ts:86](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L86)
+Defined in: [types/kernel.ts:86](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L86)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/kernel.ts:86](https://github.com/neurons-me/cleaker/blob/345c
 
 > **activeNamespace**: `string`
 
-Defined in: [types/kernel.ts:90](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L90)
+Defined in: [types/kernel.ts:90](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L90)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types/kernel.ts:90](https://github.com/neurons-me/cleaker/blob/345c
 
 > **cycleId**: `number`
 
-Defined in: [types/kernel.ts:87](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L87)
+Defined in: [types/kernel.ts:87](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L87)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types/kernel.ts:87](https://github.com/neurons-me/cleaker/blob/345c
 
 > **hosts**: `CleakerHostRecord`[]
 
-Defined in: [types/kernel.ts:93](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L93)
+Defined in: [types/kernel.ts:93](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L93)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types/kernel.ts:93](https://github.com/neurons-me/cleaker/blob/345c
 
 > **overall**: `CleakerOverallState`
 
-Defined in: [types/kernel.ts:89](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L89)
+Defined in: [types/kernel.ts:89](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L89)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types/kernel.ts:89](https://github.com/neurons-me/cleaker/blob/345c
 
 > **state**: `CleakerState`
 
-Defined in: [types/kernel.ts:88](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L88)
+Defined in: [types/kernel.ts:88](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L88)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types/kernel.ts:88](https://github.com/neurons-me/cleaker/blob/345c
 
 > **totalHosts**: `number`
 
-Defined in: [types/kernel.ts:91](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L91)
+Defined in: [types/kernel.ts:91](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L91)
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: [types/kernel.ts:91](https://github.com/neurons-me/cleaker/blob/345c
 
 > **verifiedHosts**: `number`
 
-Defined in: [types/kernel.ts:92](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L92)
+Defined in: [types/kernel.ts:92](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L92)

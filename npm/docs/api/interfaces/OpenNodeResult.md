@@ -6,7 +6,7 @@
 
 # Interface: OpenNodeResult
 
-Defined in: [types/kernel.ts:13](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L13)
+Defined in: [types/kernel.ts:13](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L13)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/kernel.ts:13](https://github.com/neurons-me/cleaker/blob/345c
 
 > **identityHash**: `string`
 
-Defined in: [types/kernel.ts:16](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L16)
+Defined in: [types/kernel.ts:16](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L16)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types/kernel.ts:16](https://github.com/neurons-me/cleaker/blob/345c
 
 > **memoriesCount**: `number`
 
-Defined in: [types/kernel.ts:19](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L19)
+Defined in: [types/kernel.ts:19](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L19)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types/kernel.ts:19](https://github.com/neurons-me/cleaker/blob/345c
 
 > **namespace**: `string`
 
-Defined in: [types/kernel.ts:15](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L15)
+Defined in: [types/kernel.ts:15](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L15)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types/kernel.ts:15](https://github.com/neurons-me/cleaker/blob/345c
 
 > **noise**: `string`
 
-Defined in: [types/kernel.ts:17](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L17)
+Defined in: [types/kernel.ts:17](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L17)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types/kernel.ts:17](https://github.com/neurons-me/cleaker/blob/345c
 
 > **openedAt**: `number`
 
-Defined in: [types/kernel.ts:18](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L18)
+Defined in: [types/kernel.ts:18](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L18)
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: [types/kernel.ts:18](https://github.com/neurons-me/cleaker/blob/345c
 
 > **status**: `"verified"`
 
-Defined in: [types/kernel.ts:14](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L14)
+Defined in: [types/kernel.ts:14](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L14)

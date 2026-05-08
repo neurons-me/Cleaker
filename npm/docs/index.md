@@ -4,13 +4,13 @@ layout: home
 hero:
   name: "cleaker(me)"
   text: "Who am I, here?"
-  tagline: "Node.js ⚡ TypeScript Documentation"
+  tagline: "Namespace resolver for sovereign identity · v3.2.0"
   image:
     src: https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png
     alt: cleaker artifact
   actions:
     - theme: brand
-      text: Getting Started
+      text: The Model
       link: /The-Model
     - theme: alt
       text: API Reference
@@ -19,58 +19,81 @@ hero:
 
 <div class="vp-doc" style="max-width:960px;margin:0 auto;padding:2rem 1.5rem">
 
-## Quick Start
-
-**Install from npm:**
+## Install
 
 ```bash
 npm install cleaker
 ```
 
-**Or clone and run locally:**
-
-```bash
-git clone https://github.com/neurons-me/Cleaker
-cd Cleaker/npm
-npm install
-npm run dev
-```
-
-**Basic usage:**
+## Quick Start
 
 ```ts
-import cleaker from 'cleaker';
-import Me from 'this.me';
+import me from 'this.me'
+import cleaker from 'cleaker'
 
-const me = new Me();
-const self = cleaker(me, {
-  namespace: 'ana.cleaker.me',
-  secret: 'luna',
-  space: 'localhost:8161',
-});
+// Sovereign identity — offline, deterministic, no network required
+me('suign', 'secret')
 
-await self.ready;
-console.log(self.profile.name); // resolved from remote memory
+// Project identity into a namespace surface
+const node = cleaker(me, 'cleaker.me')
+
+// Validate surfaces, open triad, hydrate memories into kernel
+const status = await node.validateHosts({
+  namespace: 'suign.cleaker.me',
+  secret: 'secret',
+})
+
+console.log(status.overall)  // 'healthy' | 'degraded' | 'offline'
+
+// Wait until verified
+await node.waitUntilReady()
 ```
 
 ---
 
-## Core concepts
+## Surface fallback & events
 
-**Resolution before direction** — `cleaker()` fixes the current namespace context. The runtime already knows where it is; cleaker crystallizes it as a root.
+```ts
+const node = cleaker(me, 'cleaker.me')
 
-**Identity in context** — `cleaker(me)` mounts a `.me` kernel into the namespace tree. Identity exists in relation to something else; there is no meaningful `.me` floating in the void.
+// Fires when remote fails and local surface is next
+node.on('namespace:fallback', ({ failedOrigin, failedReason, fallbackOrigin, namespace }) => {
+  console.warn(`[${namespace}] ${failedOrigin} (${failedReason}) → ${fallbackOrigin}`)
+})
 
-**Namespace isolation** — Each space produces a fully isolated branch. The same seed, different contexts — `suign.neurons.me` vs `suign.local` — same truth, different address.
+// Fires when ALL surfaces are exhausted — includes full tried list + explain string
+node.on('namespace:failed', ({ namespace, tried, explain }) => {
+  console.error(explain)
+})
+
+// Fires when a surface is verified and memories are hydrated
+node.on('ready', ({ namespace, identityHash, hydratedMemories }) => {
+  console.log(`ready on ${namespace} — ${hydratedMemories} memories hydrated`)
+})
+```
 
 ---
 
-## Philosophy
+## Space resolution
 
-> *Resolutio ante directionem — nomen ante locum.*
-> Resolution before direction. Name before place.
+| Input | Transport | Namespace constant |
+|---|---|---|
+| `cleaker(me)` | `https://cleaker.me` | `cleaker.me` |
+| `cleaker(me, 'neurons.me')` | `https://neurons.me` | `neurons.me` |
+| `cleaker(me, 'sui-desk')` | `http://sui-desk.local:8161` | `sui-desk.local` |
+| `cleaker(me, '192.168.1.5')` | `http://192.168.1.5:8161` | `192.168.1.5` |
 
-Things exist even when no one is looking. `/? ` is how a self enters that reality — not how reality is created.
+---
+
+## Architecture
+
+```
+this.me    → sovereign kernel. (who, secret) → compound seed → identity.
+cleaker    → resolver. projects .me into a namespace. emits fallback events.
+monad.ai   → daemon. exposes namespace over HTTP. runs the mesh.
+```
+
+> *Resolution before direction. Name before place.*
 
 [The Model →](./The-Model) · [Algebra of Me →](./Algebra-of-Me) · [The Flat Universe →](./The-Flat-Universe)
 

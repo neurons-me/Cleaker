@@ -6,7 +6,7 @@
 
 # Interface: CleakerErrorPayload
 
-Defined in: [types/kernel.ts:111](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L111)
+Defined in: [types/kernel.ts:111](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L111)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/kernel.ts:111](https://github.com/neurons-me/cleaker/blob/345
 
 > **code**: `string`
 
-Defined in: [types/kernel.ts:112](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L112)
+Defined in: [types/kernel.ts:112](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L112)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types/kernel.ts:112](https://github.com/neurons-me/cleaker/blob/345
 
 > `optional` **hostId?**: `string`
 
-Defined in: [types/kernel.ts:114](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L114)
+Defined in: [types/kernel.ts:114](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L114)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: [types/kernel.ts:114](https://github.com/neurons-me/cleaker/blob/345
 
 > **message**: `string`
 
-Defined in: [types/kernel.ts:113](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L113)
+Defined in: [types/kernel.ts:113](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L113)

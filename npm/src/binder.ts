@@ -438,6 +438,22 @@ function isLoopbackishHost(raw: string): boolean {
   return /^(localhost|127(?:\.\d{1,3}){3}|0\.0\.0\.0)$/.test(host);
 }
 
+/** Returns true when an origin resolves to a local/LAN surface (loopback, .local, private IP). */
+function isLocalSurface(origin: string): boolean {
+  try {
+    const hostname = new URL(origin).hostname.toLowerCase();
+    return (
+      isLoopbackishHost(hostname) ||
+      hostname.endsWith('.local') ||
+      /^192\.168\./.test(hostname) ||
+      /^10\./.test(hostname) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function readLocationHost(): string {
   if (typeof globalThis === 'undefined') return '';
 
@@ -1271,6 +1287,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     let hydratedFromHostId = '';
     let hydratedIdentityHash = '';
     let hydratedMemoriesCount = 0;
+    const triedOrigins: Array<{ origin: string; reason: string }> = [];
 
     for (let i = 0; i < hosts.length; i += 1) {
       const host = hosts[i];
@@ -1284,6 +1301,17 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         host.status.triad = 'unverified';
         host.error = 'NETWORK_ERROR';
         persistHostRecord(namespace, host);
+        triedOrigins.push({ origin: host.space, reason: 'NETWORK_ERROR' });
+        // Emit fallback notification when a remote surface fails and a local one is next.
+        const nextHost = hosts[i + 1];
+        if (nextHost && !isLocalSurface(host.space) && isLocalSurface(nextHost.space)) {
+          emit('namespace:fallback', {
+            namespace,
+            failedOrigin: host.space,
+            failedReason: 'NETWORK_ERROR',
+            fallbackOrigin: nextHost.space,
+          });
+        }
         continue;
       }
 
@@ -1291,6 +1319,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         host.status.triad = 'unverified';
         host.error = 'SECRET_REQUIRED';
         persistHostRecord(namespace, host);
+        triedOrigins.push({ origin: host.space, reason: 'SECRET_REQUIRED' });
         continue;
       }
 
@@ -1306,6 +1335,17 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
           hostId: host.id,
         });
         persistHostRecord(namespace, host);
+        triedOrigins.push({ origin: host.space, reason: errorCode });
+        // Emit fallback notification when a remote surface fails and a local one is next.
+        const nextHost = hosts[i + 1];
+        if (nextHost && !isLocalSurface(host.space) && isLocalSurface(nextHost.space)) {
+          emit('namespace:fallback', {
+            namespace,
+            failedOrigin: host.space,
+            failedReason: errorCode,
+            fallbackOrigin: nextHost.space,
+          });
+        }
         continue;
       }
 
@@ -1345,6 +1385,17 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
     const verifiedHosts = hosts.filter((host) => host.status.triad === 'verified').length;
     const overall = verifiedHosts > 0 ? 'healthy' : 'degraded';
+
+    // If nothing resolved, emit a single structured failure event with full explain.
+    if (verifiedHosts === 0 && triedOrigins.length > 0) {
+      const lines = triedOrigins.map(
+        (t, idx) => `  [${idx + 1}] ${t.origin} → ${t.reason}`,
+      );
+      const explain =
+        `namespace '${namespace}' failed to resolve. tried ${triedOrigins.length} surface${triedOrigins.length === 1 ? '' : 's'}:\n` +
+        lines.join('\n');
+      emit('namespace:failed', { namespace, tried: triedOrigins, explain });
+    }
     const state: CleakerState = verifiedHosts > 0 ? 'ready' : 'degraded';
 
     transition(state, cycleId);

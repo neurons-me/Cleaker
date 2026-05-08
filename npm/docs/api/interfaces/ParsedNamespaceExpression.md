@@ -6,7 +6,7 @@
 
 # Interface: ParsedNamespaceExpression
 
-Defined in: [types/namespace.ts:38](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L38)
+Defined in: [types/namespace.ts:38](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L38)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/namespace.ts:38](https://github.com/neurons-me/cleaker/blob/3
 
 > **base**: `string`
 
-Defined in: [types/namespace.ts:41](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L41)
+Defined in: [types/namespace.ts:41](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L41)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types/namespace.ts:41](https://github.com/neurons-me/cleaker/blob/3
 
 > **constant**: `string`
 
-Defined in: [types/namespace.ts:44](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L44)
+Defined in: [types/namespace.ts:44](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L44)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types/namespace.ts:44](https://github.com/neurons-me/cleaker/blob/3
 
 > **context**: `NamespaceSelectorSet`
 
-Defined in: [types/namespace.ts:47](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L47)
+Defined in: [types/namespace.ts:47](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L47)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types/namespace.ts:47](https://github.com/neurons-me/cleaker/blob/3
 
 > **contextRaw**: `string` \| `null`
 
-Defined in: [types/namespace.ts:46](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L46)
+Defined in: [types/namespace.ts:46](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L46)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types/namespace.ts:46](https://github.com/neurons-me/cleaker/blob/3
 
 > **expression**: `string`
 
-Defined in: [types/namespace.ts:40](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L40)
+Defined in: [types/namespace.ts:40](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L40)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types/namespace.ts:40](https://github.com/neurons-me/cleaker/blob/3
 
 > **fqdn**: `string`
 
-Defined in: [types/namespace.ts:42](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L42)
+Defined in: [types/namespace.ts:42](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L42)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types/namespace.ts:42](https://github.com/neurons-me/cleaker/blob/3
 
 > **labels**: `string`[]
 
-Defined in: [types/namespace.ts:45](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L45)
+Defined in: [types/namespace.ts:45](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L45)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [types/namespace.ts:45](https://github.com/neurons-me/cleaker/blob/3
 
 > **operation**: `string` \| `null`
 
-Defined in: [types/namespace.ts:48](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L48)
+Defined in: [types/namespace.ts:48](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L48)
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: [types/namespace.ts:48](https://github.com/neurons-me/cleaker/blob/3
 
 > **path**: `string`
 
-Defined in: [types/namespace.ts:49](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L49)
+Defined in: [types/namespace.ts:49](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L49)
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: [types/namespace.ts:49](https://github.com/neurons-me/cleaker/blob/3
 
 > **prefix**: `string` \| `null`
 
-Defined in: [types/namespace.ts:43](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L43)
+Defined in: [types/namespace.ts:43](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L43)
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: [types/namespace.ts:43](https://github.com/neurons-me/cleaker/blob/3
 
 > **raw**: `string`
 
-Defined in: [types/namespace.ts:39](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L39)
+Defined in: [types/namespace.ts:39](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L39)
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: [types/namespace.ts:39](https://github.com/neurons-me/cleaker/blob/3
 
 > **transport**: `object`
 
-Defined in: [types/namespace.ts:50](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/namespace.ts#L50)
+Defined in: [types/namespace.ts:50](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/namespace.ts#L50)
 
 #### host
 

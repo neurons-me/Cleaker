@@ -6,7 +6,7 @@
 
 # Interface: ParseTargetOptions
 
-Defined in: [types/target.ts:33](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/target.ts#L33)
+Defined in: [types/target.ts:33](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/target.ts#L33)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/target.ts:33](https://github.com/neurons-me/cleaker/blob/345c
 
 > `optional` **allowShorthandRead?**: `boolean`
 
-Defined in: [types/target.ts:35](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/target.ts#L35)
+Defined in: [types/target.ts:35](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/target.ts#L35)
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: [types/target.ts:35](https://github.com/neurons-me/cleaker/blob/345c
 
 > `optional` **defaultMode?**: `SelectorMode`
 
-Defined in: [types/target.ts:34](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/target.ts#L34)
+Defined in: [types/target.ts:34](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/target.ts#L34)

@@ -1,6 +1,6 @@
 {
   "name": "cleaker",
-  "version": "3.1.1",
+  "version": "3.2.0-0",
   "description": "Who am I here.",
   "type": "module",
   "main": "dist/cleaker.cjs",
@@ -30,12 +30,13 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "docs:publish": "npm run docs:api && npm run docs:build && mkdir -p typedocs && touch typedocs/.nojekyll",
-    "test": "npm run test:axioms && npm run test:bind && npm run test:namespace && npm run test:me-target && npm run test:space",
+    "test": "npm run test:axioms && npm run test:bind && npm run test:namespace && npm run test:me-target && npm run test:space && npm run test:fallback",
     "test:bind": "tsx tests/bind.test.ts",
     "test:axioms": "tsx tests/axioms.test.ts",
     "test:namespace": "tsx tests/namespace-expression.test.ts",
     "test:me-target": "tsx tests/me-target.test.ts",
-    "test:space": "tsx tests/space.test.ts"
+    "test:space": "tsx tests/space.test.ts",
+    "test:fallback": "tsx tests/namespace-fallback.test.ts"
   },
   "keywords": [
     "cleaker",

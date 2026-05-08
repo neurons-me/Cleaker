@@ -6,7 +6,7 @@
 
 # Interface: CleakerNode
 
-Defined in: [types/kernel.ts:36](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L36)
+Defined in: [types/kernel.ts:36](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L36)
 
 ## Extends
 
@@ -22,7 +22,7 @@ Defined in: [types/kernel.ts:36](https://github.com/neurons-me/cleaker/blob/345c
 
 > **currentCycleId**: `number`
 
-Defined in: [types/kernel.ts:43](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L43)
+Defined in: [types/kernel.ts:43](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L43)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types/kernel.ts:43](https://github.com/neurons-me/cleaker/blob/345c
 
 > **kernel**: [`MeKernel`](MeKernel.md)
 
-Defined in: [types/kernel.ts:37](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L37)
+Defined in: [types/kernel.ts:37](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L37)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types/kernel.ts:37](https://github.com/neurons-me/cleaker/blob/345c
 
 > `optional` **learn?**: (`memory`) => `void`
 
-Defined in: [types/kernel.ts:23](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L23)
+Defined in: [types/kernel.ts:23](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L23)
 
 #### Parameters
 
@@ -60,7 +60,7 @@ Defined in: [types/kernel.ts:23](https://github.com/neurons-me/cleaker/blob/345c
 
 > `optional` **noise?**: `string`
 
-Defined in: [types/kernel.ts:25](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L25)
+Defined in: [types/kernel.ts:25](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L25)
 
 #### Inherited from
 
@@ -72,7 +72,7 @@ Defined in: [types/kernel.ts:25](https://github.com/neurons-me/cleaker/blob/345c
 
 > **ready**: `Promise`\<[`OpenNodeResult`](OpenNodeResult.md) \| `null`\>
 
-Defined in: [types/kernel.ts:38](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L38)
+Defined in: [types/kernel.ts:38](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L38)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [types/kernel.ts:38](https://github.com/neurons-me/cleaker/blob/345c
 
 > `optional` **replayMemories?**: (`memories`) => `void`
 
-Defined in: [types/kernel.ts:24](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L24)
+Defined in: [types/kernel.ts:24](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L24)
 
 #### Parameters
 
@@ -102,7 +102,7 @@ Defined in: [types/kernel.ts:24](https://github.com/neurons-me/cleaker/blob/345c
 
 > **state**: `CleakerState`
 
-Defined in: [types/kernel.ts:42](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L42)
+Defined in: [types/kernel.ts:42](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L42)
 
 ## Methods
 
@@ -110,7 +110,7 @@ Defined in: [types/kernel.ts:42](https://github.com/neurons-me/cleaker/blob/345c
 
 > **claim**(`input`): `Promise`\<[`OpenNodeResult`](OpenNodeResult.md)\>
 
-Defined in: [types/kernel.ts:39](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L39)
+Defined in: [types/kernel.ts:39](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L39)
 
 #### Parameters
 
@@ -128,7 +128,7 @@ Defined in: [types/kernel.ts:39](https://github.com/neurons-me/cleaker/blob/345c
 
 > **discoverHosts**(): `CleakerHostRecord`[]
 
-Defined in: [types/kernel.ts:44](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L44)
+Defined in: [types/kernel.ts:44](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L44)
 
 #### Returns
 
@@ -140,7 +140,7 @@ Defined in: [types/kernel.ts:44](https://github.com/neurons-me/cleaker/blob/345c
 
 > **getStatus**(): [`CleakerStatus`](CleakerStatus.md)
 
-Defined in: [types/kernel.ts:46](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L46)
+Defined in: [types/kernel.ts:46](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L46)
 
 #### Returns
 
@@ -152,13 +152,13 @@ Defined in: [types/kernel.ts:46](https://github.com/neurons-me/cleaker/blob/345c
 
 > **off**\<`E`\>(`eventName`, `handler`): `void`
 
-Defined in: [types/kernel.ts:50](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L50)
+Defined in: [types/kernel.ts:50](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L50)
 
 #### Type Parameters
 
 ##### E
 
-`E` *extends* keyof `CleakerEvents`
+`E` *extends* keyof [`CleakerEvents`](CleakerEvents.md)
 
 #### Parameters
 
@@ -168,7 +168,7 @@ Defined in: [types/kernel.ts:50](https://github.com/neurons-me/cleaker/blob/345c
 
 ##### handler
 
-`CleakerEvents`\[`E`\]
+[`CleakerEvents`](CleakerEvents.md)\[`E`\]
 
 #### Returns
 
@@ -180,13 +180,13 @@ Defined in: [types/kernel.ts:50](https://github.com/neurons-me/cleaker/blob/345c
 
 > **on**\<`E`\>(`eventName`, `handler`): () => `void`
 
-Defined in: [types/kernel.ts:48](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L48)
+Defined in: [types/kernel.ts:48](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L48)
 
 #### Type Parameters
 
 ##### E
 
-`E` *extends* keyof `CleakerEvents`
+`E` *extends* keyof [`CleakerEvents`](CleakerEvents.md)
 
 #### Parameters
 
@@ -196,7 +196,7 @@ Defined in: [types/kernel.ts:48](https://github.com/neurons-me/cleaker/blob/345c
 
 ##### handler
 
-`CleakerEvents`\[`E`\]
+[`CleakerEvents`](CleakerEvents.md)\[`E`\]
 
 #### Returns
 
@@ -208,13 +208,13 @@ Defined in: [types/kernel.ts:48](https://github.com/neurons-me/cleaker/blob/345c
 
 > **once**\<`E`\>(`eventName`, `handler`): () => `void`
 
-Defined in: [types/kernel.ts:49](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L49)
+Defined in: [types/kernel.ts:49](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L49)
 
 #### Type Parameters
 
 ##### E
 
-`E` *extends* keyof `CleakerEvents`
+`E` *extends* keyof [`CleakerEvents`](CleakerEvents.md)
 
 #### Parameters
 
@@ -224,7 +224,7 @@ Defined in: [types/kernel.ts:49](https://github.com/neurons-me/cleaker/blob/345c
 
 ##### handler
 
-`CleakerEvents`\[`E`\]
+[`CleakerEvents`](CleakerEvents.md)\[`E`\]
 
 #### Returns
 
@@ -236,7 +236,7 @@ Defined in: [types/kernel.ts:49](https://github.com/neurons-me/cleaker/blob/345c
 
 > **pointer**(`expression`, `options?`): [`RemotePointerDefinition`](RemotePointerDefinition.md)
 
-Defined in: [types/kernel.ts:41](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L41)
+Defined in: [types/kernel.ts:41](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L41)
 
 #### Parameters
 
@@ -258,7 +258,7 @@ Defined in: [types/kernel.ts:41](https://github.com/neurons-me/cleaker/blob/345c
 
 > **signIn**(`input`): `Promise`\<[`OpenNodeResult`](OpenNodeResult.md)\>
 
-Defined in: [types/kernel.ts:40](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L40)
+Defined in: [types/kernel.ts:40](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L40)
 
 #### Parameters
 
@@ -276,7 +276,7 @@ Defined in: [types/kernel.ts:40](https://github.com/neurons-me/cleaker/blob/345c
 
 > **validateHosts**(`options?`): `Promise`\<[`CleakerStatus`](CleakerStatus.md)\>
 
-Defined in: [types/kernel.ts:45](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L45)
+Defined in: [types/kernel.ts:45](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L45)
 
 #### Parameters
 
@@ -294,7 +294,7 @@ Defined in: [types/kernel.ts:45](https://github.com/neurons-me/cleaker/blob/345c
 
 > **waitUntilReady**(`timeoutMs?`): `Promise`\<[`CleakerReadyPayload`](CleakerReadyPayload.md)\>
 
-Defined in: [types/kernel.ts:47](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/kernel.ts#L47)
+Defined in: [types/kernel.ts:47](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/kernel.ts#L47)
 
 #### Parameters
 

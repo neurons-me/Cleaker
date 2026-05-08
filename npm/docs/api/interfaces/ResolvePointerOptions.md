@@ -6,7 +6,7 @@
 
 # Interface: ResolvePointerOptions
 
-Defined in: [types/pointer.ts:58](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L58)
+Defined in: [types/pointer.ts:58](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L58)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/pointer.ts:58](https://github.com/neurons-me/cleaker/blob/345
 
 > `optional` **fetcher?**: \{(`input`, `init?`): `Promise`\<`Response`\>; (`input`, `init?`): `Promise`\<`Response`\>; \}
 
-Defined in: [types/pointer.ts:62](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L62)
+Defined in: [types/pointer.ts:62](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L62)
 
 #### Call Signature
 
@@ -62,7 +62,7 @@ Defined in: [types/pointer.ts:62](https://github.com/neurons-me/cleaker/blob/345
 
 > `optional` **headers?**: `Record`\<`string`, `string`\>
 
-Defined in: [types/pointer.ts:61](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L61)
+Defined in: [types/pointer.ts:61](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L61)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [types/pointer.ts:61](https://github.com/neurons-me/cleaker/blob/345
 
 > `optional` **host?**: `string`
 
-Defined in: [types/pointer.ts:60](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L60)
+Defined in: [types/pointer.ts:60](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L60)
 
 ***
 
@@ -78,4 +78,4 @@ Defined in: [types/pointer.ts:60](https://github.com/neurons-me/cleaker/blob/345
 
 > `optional` **origin?**: `string`
 
-Defined in: [types/pointer.ts:59](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L59)
+Defined in: [types/pointer.ts:59](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L59)

@@ -6,7 +6,7 @@
 
 # Interface: SurfaceEndpoint
 
-Defined in: [topology/resolver.ts:3](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L3)
+Defined in: [topology/resolver.ts:3](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L3)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [topology/resolver.ts:3](https://github.com/neurons-me/cleaker/blob/
 
 > `optional` **lastSeen?**: `number`
 
-Defined in: [topology/resolver.ts:7](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L7)
+Defined in: [topology/resolver.ts:7](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L7)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [topology/resolver.ts:7](https://github.com/neurons-me/cleaker/blob/
 
 > `optional` **metadata?**: `Record`\<`string`, `unknown`\>
 
-Defined in: [topology/resolver.ts:8](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L8)
+Defined in: [topology/resolver.ts:8](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L8)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [topology/resolver.ts:8](https://github.com/neurons-me/cleaker/blob/
 
 > `optional` **surface?**: `string`
 
-Defined in: [topology/resolver.ts:6](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L6)
+Defined in: [topology/resolver.ts:6](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L6)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [topology/resolver.ts:6](https://github.com/neurons-me/cleaker/blob/
 
 > **transport**: [`SurfaceTransport`](../type-aliases/SurfaceTransport.md)
 
-Defined in: [topology/resolver.ts:5](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L5)
+Defined in: [topology/resolver.ts:5](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L5)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [topology/resolver.ts:5](https://github.com/neurons-me/cleaker/blob/
 
 > **url**: `string`
 
-Defined in: [topology/resolver.ts:4](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L4)
+Defined in: [topology/resolver.ts:4](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L4)

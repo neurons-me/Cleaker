@@ -6,7 +6,7 @@
 
 # Interface: TopologyResolver
 
-Defined in: [topology/resolver.ts:31](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L31)
+Defined in: [topology/resolver.ts:31](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L31)
 
 TopologyResolver is the boundary between Cleaker and the network layer.
 
@@ -22,7 +22,7 @@ ports, tunnels, relays, or WAN state directly.
 
 > `optional` **register**(`input`): `Promise`\<`void`\>
 
-Defined in: [topology/resolver.ts:33](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L33)
+Defined in: [topology/resolver.ts:33](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L33)
 
 #### Parameters
 
@@ -40,7 +40,7 @@ Defined in: [topology/resolver.ts:33](https://github.com/neurons-me/cleaker/blob
 
 > **resolve**(`input`): `Promise`\<[`SurfaceEndpoint`](SurfaceEndpoint.md) \| `null`\>
 
-Defined in: [topology/resolver.ts:32](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/topology/resolver.ts#L32)
+Defined in: [topology/resolver.ts:32](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/topology/resolver.ts#L32)
 
 #### Parameters
 

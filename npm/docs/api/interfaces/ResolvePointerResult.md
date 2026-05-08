@@ -6,7 +6,7 @@
 
 # Interface: ResolvePointerResult
 
-Defined in: [types/pointer.ts:65](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L65)
+Defined in: [types/pointer.ts:65](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L65)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/pointer.ts:65](https://github.com/neurons-me/cleaker/blob/345
 
 > **data**: `unknown`
 
-Defined in: [types/pointer.ts:70](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L70)
+Defined in: [types/pointer.ts:70](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L70)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types/pointer.ts:70](https://github.com/neurons-me/cleaker/blob/345
 
 > **elapsedMs**: `number`
 
-Defined in: [types/pointer.ts:69](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L69)
+Defined in: [types/pointer.ts:69](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L69)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types/pointer.ts:69](https://github.com/neurons-me/cleaker/blob/345
 
 > **endpoint**: `string`
 
-Defined in: [types/pointer.ts:68](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L68)
+Defined in: [types/pointer.ts:68](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L68)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types/pointer.ts:68](https://github.com/neurons-me/cleaker/blob/345
 
 > **ok**: `boolean`
 
-Defined in: [types/pointer.ts:66](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L66)
+Defined in: [types/pointer.ts:66](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L66)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [types/pointer.ts:66](https://github.com/neurons-me/cleaker/blob/345
 
 > **status**: `number`
 
-Defined in: [types/pointer.ts:67](https://github.com/neurons-me/cleaker/blob/345c8e4dd9d2928863ec10b410a8161c579106aa/npm/src/types/pointer.ts#L67)
+Defined in: [types/pointer.ts:67](https://github.com/neurons-me/cleaker/blob/272e583d99fa82ffbbdcffea67131710cd047375/npm/src/types/pointer.ts#L67)
