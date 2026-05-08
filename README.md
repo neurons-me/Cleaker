@@ -9,8 +9,8 @@
 There is only **`.me in context`.**
 
 ```
-cleaker()     → fixes the current namespace context 
-cleaker(me)   → mounts this .me into that context
+me(SEED)
+cleaker(me, where) → mounts this .me into that context
 ```
 
 Not: `identity = user + config`
@@ -36,7 +36,7 @@ Change the space, change the branch. Change the seed, change the universe.
 
 Cleaker mounts truth into a namespace. It does not decide where execution happens.
 
-Once a namespace exists, active Monads can serve or execute inside it:
+Once a namespace exists, active monads can serve or execute inside it:
 
 ```txt
 suign.neurons.me/profile                 semantic path / meaning
@@ -45,13 +45,13 @@ suign.neurons.me/.mesh/monads            internal Monad registry
 suign.neurons.me[monadlisa]/profile      technical execution override
 ```
 
-The normal address has no Monad selector:
+The normal address has no monad selector:
 
 ```txt
 me://suign.neurons.me/profile
 ```
 
-A Monad selector is only for diagnostics, replay, or advanced routing:
+A monad selector is only for diagnostics, replay, or advanced routing:
 
 ```txt
 me://suign.neurons.me[monadlisa]/profile
