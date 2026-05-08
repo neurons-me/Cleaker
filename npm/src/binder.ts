@@ -823,8 +823,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       locationSurfaceOrigin,
       configuredSurfaceOrigin,
       runtimeHostSurfaceOrigin,
-      DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
       DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
+      DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
     ]);
   }
 
