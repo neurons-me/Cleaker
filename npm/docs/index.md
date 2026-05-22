@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "cleaker(me)"
   text: "Who am I, here?"
-  tagline: "Namespace resolver for sovereign identity · v3.2.0"
+  tagline: " Node.js ⚡ TypeScript Documentation"
   image:
     src: https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png
     alt: cleaker artifact
