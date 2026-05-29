@@ -1,3 +1,8 @@
+---
+layout: readme
+title: The Model — cleaker
+---
+
 ## The model
 **Identity exists in relation to something else**. There is no meaningful `.me` floating in the void. There is only **`.me in context`.**
 

@@ -1,3 +1,8 @@
+---
+layout: readme
+title: The Algebra of Me — cleaker
+---
+
 # **The Algebra of** **.Me**
 Let us define the universe of the system:
 > **𝕌 =** the set of all possible namespaces.

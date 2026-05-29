@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["./src/index.ts"],
+  "out": "docs/api",
+  "cleanOutputDir": true,
+  "hostedBaseUrl": "https://neurons-me.github.io/cleaker/Typescript/docs/api/",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "readme": "none",
+  "skipErrorChecking": true
+}

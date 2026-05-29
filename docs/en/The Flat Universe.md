@@ -1,3 +1,8 @@
+---
+layout: readme
+title: The Flat Universe — cleaker
+---
+
 # **The Flat Universe**
 Reality has one primitive: **distinction.**  
 `0 / 1`  

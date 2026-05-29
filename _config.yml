@@ -1,0 +1,37 @@
+title: cleaker
+description: Namespace identity resolver.
+url: https://neurons-me.github.io
+baseurl: "/cleaker"
+
+remote_theme: neurons-me/neurons-me
+
+plugins:
+  - jekyll-remote-theme
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  parse_block_html: true
+  hard_wrap: false
+
+exclude:
+  - Typescript/node_modules
+  - Typescript/dist
+  - Typescript/dist-types
+  - Typescript/src
+  - Typescript/tests
+  - node_modules
+  - "*/node_modules"
+  - vendor
+
+me_theme:
+  brand: cleaker
+  nav:
+    - label: Home
+      url: https://neurons-me.github.io/
+    - label: Docs
+      relative_url: /docs/
+    - label: Github
+      url: https://github.com/neurons-me/cleaker
+    - label: All.This
+      url: https://neurons-me.github.io/all.this/
