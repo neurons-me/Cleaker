@@ -17,6 +17,14 @@ hero:
       link: /api/
 ---
 
+<style>
+.VPHomeHero .image-container img {
+  max-width: 220px !important;
+  width: 220px !important;
+  height: auto !important;
+}
+</style>
+
 <div class="vp-doc" style="max-width:960px;margin:0 auto;padding:2rem 1.5rem">
 
 ## Install
