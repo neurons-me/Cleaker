@@ -21,7 +21,7 @@ Select your language:
 
 | Language    | Source                          | Status            | Documentation                                                |
 | ----------- | ------------------------------- | ----------------- | ------------------------------------------------------------ |
-| **Node.js** | `cd cleaker/npm && npm install` | **Stable 3.6.40** | [node.js Docs ⟡ ](https://neurons-me.github.io/.me/npm/typedocs/) |
+| **Typescript** | `cd cleaker/npm && npm install` | **Stable 3.6.40** | [Typescript Docs ⟡ ](https://neurons-me.github.io/Cleaker/Typescript/docs/) |
 | **Python**  | `cd cleaker/pip/`               | Not Available     |                                                              |
 | **Rust**    | `cd cleaker/crate/`             | Not Available     |                                                              |
 
