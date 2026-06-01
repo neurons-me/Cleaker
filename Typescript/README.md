@@ -5,6 +5,8 @@
 
 # cleaker `3.2.0`
 
+[![npm](https://img.shields.io/npm/v/cleaker)](https://www.npmjs.com/package/cleaker) [![docs](https://img.shields.io/badge/docs-neurons--me.github.io-blue)](https://neurons-me.github.io/Cleaker/docs/)
+
 **Who am I, here.**
 
 `cleaker` binds a sovereign `.me` identity to a namespace surface. It is the resolver — it answers *"where does this identity live in the network?"*
