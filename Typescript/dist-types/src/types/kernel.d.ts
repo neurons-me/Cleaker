@@ -102,10 +102,31 @@ export interface ValidateHostsOptions {
     identityHash?: string;
     bootstrap?: string[];
 }
+/** Emitted when a remote surface fails and resolution is falling back to a local origin. */
+export interface NamespaceFallbackPayload {
+    namespace: string;
+    failedOrigin: string;
+    failedReason: string;
+    fallbackOrigin: string;
+}
+/** Emitted when all surfaces have been tried and the namespace could not be resolved. */
+export interface NamespaceFailedPayload {
+    namespace: string;
+    tried: Array<{
+        origin: string;
+        reason: string;
+    }>;
+    /** Human-readable summary of what was tried and why it failed. */
+    explain: string;
+}
 export interface CleakerEvents {
     'status:change': (status: CleakerStatus) => void;
     ready: (payload: CleakerReadyPayload) => void;
     error: (error: CleakerErrorPayload) => void;
     'host:triad:success': (hostId: string) => void;
+    /** A remote surface failed; resolution is retrying on a local fallback. */
+    'namespace:fallback': (payload: NamespaceFallbackPayload) => void;
+    /** All surfaces failed; namespace resolution is giving up. */
+    'namespace:failed': (payload: NamespaceFailedPayload) => void;
 }
 //# sourceMappingURL=kernel.d.ts.map
