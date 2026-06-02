@@ -24,7 +24,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'The Model', link: '/The-Model' },
       { text: 'Algebra', link: '/Algebra-of-Me' },
-      { text: 'API', link: '/api/' },
+      { text: 'API', link: 'https://neurons-me.github.io/Cleaker/Typescript/docs/api/' },
     ],
     sidebar: [
       {
@@ -45,7 +45,7 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
-          { text: 'Overview', link: '/api/' },
+          { text: 'Overview', link: 'https://neurons-me.github.io/Cleaker/Typescript/docs/api/' },
         ],
       },
     ],
