@@ -1,31 +1,10 @@
+# cleaker `3.2.1`
+
+> Who am I, here.
+
+`cleaker` binds a sovereign `.me` identity to a namespace surface — the resolver that answers *"where does this identity live in the network?"*
+
 ---
-layout: home
-
-hero:
-  name: "cleaker(me)"
-  text: "Who am I, here?"
-  tagline: " Node.js ⚡ TypeScript Documentation"
-  image:
-    src: https://res.cloudinary.com/dkwnxf6gm/image/upload/v1773198145/cleaker_hpxk2f.png
-    alt: cleaker artifact
-  actions:
-    - theme: brand
-      text: The Model
-      link: /The-Model
-    - theme: alt
-      text: API Reference
-      link: /api/
----
-
-<style>
-.VPHomeHero .image-container img {
-  max-width: 220px !important;
-  width: 220px !important;
-  height: auto !important;
-}
-</style>
-
-<div class="vp-doc" style="max-width:960px;margin:0 auto;padding:2rem 1.5rem">
 
 ## Install
 
@@ -64,17 +43,14 @@ await node.waitUntilReady()
 ```ts
 const node = cleaker(me, 'cleaker.me')
 
-// Fires when remote fails and local surface is next
 node.on('namespace:fallback', ({ failedOrigin, failedReason, fallbackOrigin, namespace }) => {
   console.warn(`[${namespace}] ${failedOrigin} (${failedReason}) → ${fallbackOrigin}`)
 })
 
-// Fires when ALL surfaces are exhausted — includes full tried list + explain string
 node.on('namespace:failed', ({ namespace, tried, explain }) => {
   console.error(explain)
 })
 
-// Fires when a surface is verified and memories are hydrated
 node.on('ready', ({ namespace, identityHash, hydratedMemories }) => {
   console.log(`ready on ${namespace} — ${hydratedMemories} memories hydrated`)
 })
@@ -104,5 +80,3 @@ monad.ai   → daemon. exposes namespace over HTTP. runs the mesh.
 > *Resolution before direction. Name before place.*
 
 [The Model →](./The-Model) · [Algebra of Me →](./Algebra-of-Me) · [The Flat Universe →](./The-Flat-Universe)
-
-</div>
