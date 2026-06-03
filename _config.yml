@@ -16,6 +16,8 @@ kramdown:
 
 exclude:
   - Typescript/node_modules
+  - Python/__pycache__
+  - Rust/target
   - Typescript/dist
   - Typescript/dist-types
   - Typescript/src
