@@ -19,9 +19,9 @@ Select your language:
 
 | Language    | Source                          | Status            | Documentation                                                |
 | ----------- | ------------------------------- | ----------------- | ------------------------------------------------------------ |
-| **Typescript** | `cd cleaker/npm && npm install` | **Stable 3.6.40** | [Typescript Docs ⟡ ](https://neurons-me.github.io/Cleaker/Typescript/docs/) |
-| **Python**  | `cd cleaker/pip/`               | Not Available     |                                                              |
-| **Rust**    | `cd cleaker/crate/`             | Not Available     |                                                              |
+| **Typescript** | `cd cleaker/Typescript && npm install` | [![npm](https://img.shields.io/npm/v/cleaker/latest?label=latest)](https://www.npmjs.com/package/cleaker) | [Typescript Docs ⟡](https://neurons-me.github.io/Cleaker/Typescript/docs/) |
+| **Python**  | `cd cleaker/Python/`               | Not Available     | [Python Docs](https://neurons-me.github.io/Cleaker/Python/) |
+| **Rust**    | `cd cleaker/Rust/`                 | Not Available     | [Rust Docs](https://neurons-me.github.io/Cleaker/Rust/)     |
 
 ```typescript
 import cleaker from 'cleaker';
