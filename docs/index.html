@@ -26,6 +26,14 @@
       .card:hover { border-color: #4fd1c5; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
       .card-icon { background: rgba(79,209,197,0.12); }
     }
+
+    .lang-nav { display: flex; gap: 8px; margin-bottom: 40px; }
+    .lang-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(15,23,32,0.15); font-size: 0.8rem; font-weight: 600; text-decoration: none; color: inherit; transition: background 120ms, border-color 120ms; }
+    .lang-nav a:hover { background: rgba(15,106,120,0.08); border-color: #0f6a78; }
+    @media (prefers-color-scheme: dark) {
+      .lang-nav a { border-color: rgba(232,237,237,0.15); }
+      .lang-nav a:hover { background: rgba(79,209,197,0.10); border-color: #4fd1c5; }
+    }
   </style>
 <link rel="icon" type="image/png" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1778177581/ChatGPT_Image_May_7_2026_12_12_28_PM_xzkwtc.png"></head>
 <body>
@@ -33,6 +41,13 @@
     <p class="kicker">cleaker</p>
     <h1>cleaker Docs</h1>
     <p class="subtitle">Namespace identity resolver.</p>
+
+
+    <nav class="lang-nav">
+      <a href="../Typescript/">🟦 TypeScript</a>
+      <a href="../Python/">🐍 Python</a>
+      <a href="../Rust/">🦀 Rust</a>
+    </nav>
 
     <div class="grid">
 
