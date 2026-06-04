@@ -36,7 +36,8 @@
     "test:namespace": "tsx tests/namespace-expression.test.ts",
     "test:me-target": "tsx tests/me-target.test.ts",
     "test:space": "tsx tests/space.test.ts",
-    "test:fallback": "tsx tests/namespace-fallback.test.ts"
+    "test:fallback": "tsx tests/namespace-fallback.test.ts",
+    "prebuild": "npm test"
   },
   "keywords": [
     "cleaker",
