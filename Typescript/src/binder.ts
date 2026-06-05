@@ -838,7 +838,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       ...runtimeBootstrap,
       locationSurfaceOrigin,
       configuredSurfaceOrigin,
-      runtimeHostSurfaceOrigin,
+      // Only inject the machine's runtime hostname when no explicit space was given.
+      // If space is set (e.g. 'cleaker.me'), the runtime host must not sneak in between
+      // the configured surface and localhost — it would corrupt the fallback event ordering.
+      options.space ? '' : runtimeHostSurfaceOrigin,
       DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
       DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
     ]);
