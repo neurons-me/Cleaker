@@ -4,7 +4,7 @@
 > *Resolution before direction. Name before place.*
 
 **Identity exists in relation to something else.**
-There is no meaningful `.me` floating in the void. There is only **`.me in context`.**
+There is no meaningful [`.me`](https://neurons-me.github.io/.me/) floating in the void. There is only **`.me in context`.**
 
 ```typescript
 me(SEED);
@@ -51,7 +51,7 @@ await ptr.promise; // resolves remotely and teaches the local kernel
 
 > Change the space, change the branch. Change the seed, change the universe.
 
-Once a **namespace** exists, serve or execute it:
+Once a [**namespace**](https://neurons-me.github.io/.me/Typescript/typedocs/Namespace-Resolution-Protocol.html) exists, serve or execute it:
 
 ```txt
 suign.neurons.me/profile                 semantic path / meaning
@@ -60,13 +60,13 @@ suign.neurons.me/.mesh/monads            internal Monad registry
 suign.neurons.me[monadlisa]/profile      technical execution override
 ```
 
-The normal address has no monad selector:
+The normal address has no [monad](https://neurons-me.github.io/monad/) selector:
 
 ```txt
 me://suign.neurons.me/profile
 ```
 
-A monad selector is only for diagnostics, replay, or advanced routing:
+A [monad](https://neurons-me.github.io/monad/) selector is only for diagnostics, replay, or advanced routing:
 
 ```txt
 me://suign.neurons.me[monadlisa]/profile
@@ -75,7 +75,9 @@ me://suign.neurons.me[worker-a]/profile
 
 All target `suign.neurons.me/profile`. The selector only changes execution, not meaning.
 
-Netget decides where a monad physically runs: laptop, iPhone, Raspberry Pi, VM, relay, or localhost. Cleaker keeps the semantic mount clean.
+[Netget](https://neurons-me.github.io/netget/) decides where a [monad](https://neurons-me.github.io/monad/) physically **runs on a laptop, iPhone, Raspberry Pi, VM, relay, or localhost.** 
+
+**Cleaker** keeps the semantic mount clean.
 
 ## Core Forms
 
@@ -107,16 +109,19 @@ cleaker(me, space) // Mounts name + space as a namespace branch.
 
 <img src="https://suign.github.io/assets/imgs/neurons_me_logo.png" alt="neurons.me logo" width="89">
 
-**Cleaker** does **not** mutate **.me** internals.
+**Cleaker** does **not** mutate [**.me**](https://neurons-me.github.io/.me/) internals.
 
-It operates as a contextual lens over the kernel.
+It operates as a contextual lens over [the kernel.](https://neurons-me.github.io/.me/Typescript/typedocs/kernel/Core.html)
 
-The kernel learns. **Cleaker** does not reach inside.
+[The kernel](https://neurons-me.github.io/.me/Typescript/typedocs/kernel/Core.html) learns. **Cleaker** does not reach inside.
 
-**Cleaker** does not create identity. It mounts truth.
+**Cleaker** does not create identity. 
+
+It mounts it:
 
 **Who am I here.**
 
 ###### [neurons.me](https://neurons.me)
 **MIT License.**
+
 ###### suiGn
