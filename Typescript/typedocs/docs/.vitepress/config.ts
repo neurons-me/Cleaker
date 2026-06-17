@@ -6,7 +6,7 @@ export default defineConfig({
   title: 'cleaker',
   description: 'Contextual namespace binding for the neurons.me stack. Resolution before direction; name before place.',
   base,
-  outDir: '../typedocs',
+  outDir: '..',
   appearance: 'force-dark',
   head: [
     ['meta', { name: 'author', content: 'neurons.me' }],
@@ -24,7 +24,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'The Model', link: '/The-Model' },
       { text: 'Algebra', link: '/Algebra-of-Me' },
-      { text: 'API', link: 'https://neurons-me.github.io/Cleaker/Typescript/docs/api/' },
+      { text: 'API', link: 'https://neurons-me.github.io/Cleaker/Typescript/typedocs/api/' },
     ],
     sidebar: [
       {
@@ -45,7 +45,7 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
-          { text: 'Overview', link: 'https://neurons-me.github.io/Cleaker/Typescript/docs/api/' },
+          { text: 'Overview', link: 'https://neurons-me.github.io/Cleaker/Typescript/typedocs/api/' },
         ],
       },
     ],
