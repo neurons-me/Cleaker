@@ -3,6 +3,10 @@ layout: readme
 title: El Universo Es Plano — cleaker
 ---
 
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+
+---
+
 ### **El Universo Plano**
 En el nivel más básico de la realidad solo existen dos direcciones. Todo lo demás es composición de esas dos.
 
@@ -93,3 +97,7 @@ Lo único fundamental es: **la distinción.**
 Todo lo demás es paisaje.  
 
 `distinción → información → geometría`
+
+---
+
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)

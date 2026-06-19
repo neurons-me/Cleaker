@@ -3,6 +3,10 @@ layout: readme
 title: Cleaker — cleaker
 ---
 
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+
+---
+
 # CLEAKER
 > ***Resolutio ante directionem; nomen ante locum.***
 > **שם קודם למקום**
@@ -37,3 +41,7 @@ And precisely because of that:
 
 > **Your presence is not demanded.**
 > **It is chosen.**
+
+---
+
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)

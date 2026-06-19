@@ -3,6 +3,10 @@ layout: readme
 title: The Model — cleaker
 ---
 
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+
+---
+
 ## The model
 **Identity exists in relation to something else**. There is no meaningful `.me` floating in the void. There is only **`.me in context`.**
 
@@ -126,3 +130,7 @@ const result = await self.signIn({ namespace: 'ana.cleaker.me', secret: 'luna' }
 // result.status === 'verified'
 // result.memoriesCount === N
 ```
+
+---
+
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)

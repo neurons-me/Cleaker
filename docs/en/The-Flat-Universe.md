@@ -3,6 +3,10 @@ layout: readme
 title: The Flat Universe — cleaker
 ---
 
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+
+---
+
 # **The Flat Universe**
 Reality has one primitive: **distinction.**  
 `0 / 1`  
@@ -24,4 +28,6 @@ Only one rule: **allow distinction.**
 
 `distinction → information → geometry → landscape`
 
+---
 
+[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
