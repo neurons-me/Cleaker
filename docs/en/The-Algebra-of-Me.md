@@ -3,7 +3,7 @@ layout: readme
 title: The Algebra of Me — cleaker
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
 
 ---
 
@@ -104,4 +104,4 @@ This algebraic framework provides a structured way to understand and manipulate 
 
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)

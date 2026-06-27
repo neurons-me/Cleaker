@@ -3,7 +3,7 @@ layout: readme
 title: Cleaker — cleaker
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
 
 ---
 
@@ -44,4 +44,4 @@ And precisely because of that:
 
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)

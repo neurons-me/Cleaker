@@ -3,7 +3,7 @@ layout: readme
 title: The Flat Universe — cleaker
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
 
 ---
 
@@ -30,4 +30,4 @@ Only one rule: **allow distinction.**
 
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)

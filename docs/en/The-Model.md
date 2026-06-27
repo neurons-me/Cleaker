@@ -3,7 +3,7 @@ layout: readme
 title: The Model — cleaker
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
 
 ---
 
@@ -133,4 +133,4 @@ const result = await self.signIn({ namespace: 'ana.cleaker.me', secret: 'luna' }
 
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)

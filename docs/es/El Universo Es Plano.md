@@ -3,7 +3,7 @@ layout: readme
 title: El Universo Es Plano — cleaker
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
 
 ---
 
@@ -100,4 +100,4 @@ Todo lo demás es paisaje.
 
 ---
 
-[← Back to cleaker Docs](https://neurons-me.github.io/cleaker/docs/)
+[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
