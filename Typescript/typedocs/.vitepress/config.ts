@@ -1,13 +1,16 @@
 import { defineConfig } from 'vitepress';
 
-const base = process.env.VITEPRESS_BASE || '/cleaker/npm/typedocs/';
+const base = process.env.VITEPRESS_BASE || '/Cleaker/Typescript/typedocs/';
 
 export default defineConfig({
   title: 'cleaker',
   description: 'Contextual namespace binding for the neurons.me stack. Resolution before direction; name before place.',
   base,
-  outDir: '..',
+  outDir: '.',
   appearance: 'force-dark',
+  // Source .md files and built .html output live side by side in this folder.
+  // Never let VitePress empty outDir — that would delete the .md source on every build.
+  vite: { build: { emptyOutDir: false } },
   head: [
     ['meta', { name: 'author', content: 'neurons.me' }],
     ['meta', { name: 'keywords', content: 'cleaker, namespace, me://, contextual binding, semantic mounting, monad.ai, neurons.me' }],

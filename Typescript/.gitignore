@@ -49,3 +49,7 @@ coverage/
 
 # Local debug files
 debug/
+
+# VitePress build cache (typedocs/ source+output build in place)
+typedocs/.vitepress/cache
+typedocs/.vitepress/dist

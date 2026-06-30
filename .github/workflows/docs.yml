@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "Typescript/docs/**"
+      - "Typescript/typedocs/**"
       - "Typescript/src/**"
       - "Typescript/typedoc.json"
       - ".github/workflows/docs.yml"
@@ -29,8 +29,10 @@ jobs:
       - name: Install VitePress
         run: npm install --no-save vitepress
 
+      # Source .md and built .html live side by side in Typescript/typedocs/ —
+      # outDir: '.' + emptyOutDir: false in .vitepress/config.ts builds in place.
       - name: Build VitePress
-        run: npx vitepress build Typescript/docs
+        run: npx vitepress build Typescript/typedocs
         env:
           VITEPRESS_BASE: /Cleaker/Typescript/typedocs/
 
