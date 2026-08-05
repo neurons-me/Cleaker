@@ -5,16 +5,12 @@ title: cleaker — Rust
 
 # cleaker · Rust 🦀
 
-> **Status: In development**
+> **Not ready yet.** The working implementation is in
+> [cleaker · Typescript](../Typescript/) — start there.
 
-The Rust implementation of `cleaker` is currently in development.
-
-## Install
-
-```bash
-cargo add cleaker
-```
+Status: in development. `cargo add cleaker` is the reserved package name for
+when this lands; there is no functional code here yet.
 
 ---
 
-→ Back to [cleaker](../)
+→ [cleaker · Typescript (working implementation)](../Typescript/) · [back to cleaker](../)
