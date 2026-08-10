@@ -1,11 +1,12 @@
-export { default } from './cleaker';
-export type { CleakerOptions } from './cleaker';
-export { parseTarget } from './parse/parseTarget';
+export { default } from './cleaker.js';
+export type { CleakerOptions } from './cleaker.js';
+export { parseTarget } from './parse/parseTarget.js';
 export {
   composeNamespace,
   parseNamespaceExpression,
   stringifyNamespaceExpression,
-} from './namespace/expression';
+} from './namespace/expression.js';
+export { parseNrpTarget } from './namespace/nrpTarget.js';
 export type {
   CleakerErrorPayload,
   CleakerEvents,
@@ -17,23 +18,23 @@ export type {
   NamespaceFailedPayload,
   OpenNodeInput,
   OpenNodeResult,
-} from './types/kernel';
+} from './types/kernel.js';
 export type {
   ParsedNamespaceExpression,
-} from './types/namespace';
+} from './types/namespace.js';
 export type {
   ParseTargetOptions,
   ParsedTarget,
-} from './types/target';
+} from './types/target.js';
 export type {
   RemotePointerDefinition,
   ResolvePointerOptions,
   ResolvePointerResult,
-} from './types/pointer';
+} from './types/pointer.js';
 export type {
   RegisterSurfaceInput,
   ResolveSurfaceInput,
   SurfaceEndpoint,
   SurfaceTransport,
   TopologyResolver,
-} from './topology/resolver';
+} from './topology/resolver.js';
