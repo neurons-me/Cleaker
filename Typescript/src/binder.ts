@@ -252,6 +252,22 @@ function normalizeOrigin(origin: string): string {
   }
 }
 
+// Like normalizeOrigin, but PRESERVES any path segment — required for
+// request-URL construction against a mesh-proxied bootstrap target (e.g.
+// "http://local.cleaker/apps/netget"). normalizeOrigin's url.origin always
+// discards the path, which silently rewrites that mesh address down to
+// "http://local.cleaker" (a different, unrelated route on the same host —
+// confirmed live: that bare-root route 405s). Only used where the result
+// feeds directly into a fetch() URL; host-identity call sites (hashing,
+// scoring, space parsing) correctly keep using normalizeOrigin, since a
+// bootstrap path isn't part of a host's identity.
+function normalizeBaseUrl(origin: string): string {
+  const raw = String(origin || '').trim();
+  if (!raw) return '';
+  const withScheme = raw.includes('://') ? raw : `http://${raw}`;
+  return withScheme.replace(/\/+$/, '');
+}
+
 function normalizeExpression(value: unknown): string | null {
   const normalized = typeof value === 'string' ? value.trim() : '';
   return normalized || null;
@@ -319,6 +335,23 @@ function readKernelExpression(me: MeKernel): string | null {
   }
 
   return null;
+}
+
+// Reads the root namespace a caller bound onto this kernel via
+// ME.bindNamespace(root) (me/Typescript/src/me.ts) — written as a plain
+// profile.rootNamespace path value, same convention createThisMe()'s
+// configureIdentity() already uses for the same field. No dedicated symbol
+// exists for this (unlike expression/identityHash above), so it's read the
+// same way any other stored value is: calling the kernel proxy with the
+// path string directly.
+function readKernelRootNamespace(me: MeKernel): string | null {
+  try {
+    const value = (me as any)('profile.rootNamespace');
+    return typeof value === 'string' && value.trim() ? value.trim() : null;
+  } catch {
+    // Kernels that were never bound to a namespace simply have nothing here.
+    return null;
+  }
 }
 
 function readKernelIdentityHash(me: MeKernel): string | null {
@@ -572,12 +605,17 @@ function deriveNamespaceConstant(input: string): string {
   }
 }
 
+// Used exclusively by resolveSurfaceOrigins() to build the final candidate
+// list handed to signIn()/claim()'s request loop — must preserve any
+// mesh-proxy path (normalizeBaseUrl), not collapse to normalizeOrigin's bare
+// origin, or a path-bearing bootstrap entry silently loses its path here
+// even after bootstrapOrigins itself was fixed to keep it.
 function uniqueOrigins(origins: Array<string | null | undefined>): string[] {
   const seen = new Set<string>();
   const output: string[] = [];
 
   for (const origin of origins) {
-    const normalized = normalizeOrigin(String(origin || ''));
+    const normalized = normalizeBaseUrl(String(origin || ''));
     if (!normalized || seen.has(normalized)) continue;
     seen.add(normalized);
     output.push(normalized);
@@ -752,7 +790,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const defaultSecret = String(options.secret || '');
   const explicitIdentityHash = normalizeIdentityHash(options.identityHash);
   const bootstrapOrigins = Array.isArray(options.bootstrap)
-    ? options.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
+    ? options.bootstrap.map((origin) => normalizeBaseUrl(origin)).filter(Boolean)
     : [];
   const resolvedSpaceOrigin = options.space ? normalizeSpaceOrigin(options.space) : '';
   const pointerResolveOptions: ResolvePointerOptions = {
@@ -792,6 +830,16 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '')
       : '';
     if (envNamespaceRoot) return deriveNamespaceConstant(envNamespaceRoot);
+
+    // A caller may have already bound this exact kernel to a root via
+    // ME.bindNamespace(root) before calling cleaker(me, ...) — e.g.
+    // `Me(username, secret).bindNamespace('local.cleaker')`. Purely
+    // additive: only reached when none of the above (explicit space,
+    // browser location, env var) resolved anything, so it can't change
+    // behavior for any existing caller (cleakerKernel.ts, GatewayIdentity.ts)
+    // that never calls bindNamespace.
+    const kernelBoundRoot = readKernelRootNamespace(me);
+    if (kernelBoundRoot) return deriveNamespaceConstant(kernelBoundRoot);
 
     return deriveNamespaceConstant(DEFAULT_CLEAKER_NAMESPACE_ORIGIN);
   }
@@ -964,7 +1012,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
     if (hostMap.size === 0) {
       const runtimeBootstrap = Array.isArray(input.bootstrap)
-        ? input.bootstrap.map((origin) => normalizeOrigin(origin)).filter(Boolean)
+        ? input.bootstrap.map((origin) => normalizeBaseUrl(origin)).filter(Boolean)
         : [];
       const fallbackOrigins = resolveSurfaceOrigins(runtimeBootstrap);
       fallbackOrigins.forEach((origin) => {
@@ -982,7 +1030,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
     try {
-      const response = await fetcher(`${normalizeOrigin(origin)}/__bootstrap`, {
+      const response = await fetcher(`${normalizeBaseUrl(origin)}/__bootstrap`, {
         method: 'GET',
         cache: 'no-store',
         signal: controller?.signal,
@@ -1102,7 +1150,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     const body = { namespace, secret, ...(identityHash ? { identityHash } : {}) };
 
     // Primary: POST /claims/signIn
-    const primary = await postJson(`${normalizeOrigin(origin)}/claims/signIn`, body, timeoutMs, fetcher, headers);
+    const primary = await postJson(`${normalizeBaseUrl(origin)}/claims/signIn`, body, timeoutMs, fetcher, headers);
     if (primary.ok && primary.data) return normalizeSignInResponse(primary.data, namespace, identityHash);
 
     const primaryError = String(primary.error || 'OPEN_FAILED');
@@ -1111,7 +1159,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // Fallback: legacy POST / with operation:"open" (pre-Fase3 nodes)
     if (primary.status === 404) {
       const legacy = await postJson(
-        `${normalizeOrigin(origin)}/`,
+        `${normalizeBaseUrl(origin)}/`,
         { operation: 'open', ...body },
         timeoutMs,
         fetcher,
@@ -1144,7 +1192,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
     // Primary: POST /me/kernel:claim/<namespace>
     const claimed = await postJson(
-      `${normalizeOrigin(origin)}/me/kernel:claim/${encodeURIComponent(namespace)}`,
+      `${normalizeBaseUrl(origin)}/me/kernel:claim/${encodeURIComponent(namespace)}`,
       { namespace, secret, proof },
       timeoutMs,
       fetcher,
@@ -1158,7 +1206,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // Fallback: legacy POST / with operation:"claim" (older nodes without /me/kernel:claim/*)
     if (claimed.status === 404 || claimed.status === 405) {
       const legacy = await postJson(
-        `${normalizeOrigin(origin)}/`,
+        `${normalizeBaseUrl(origin)}/`,
         { operation: 'claim', namespace, secret, proof },
         timeoutMs,
         fetcher,

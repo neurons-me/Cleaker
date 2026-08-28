@@ -30,7 +30,7 @@
     "docs:build": "vitepress build typedocs",
     "docs:preview": "vitepress preview typedocs",
     "docs:publish": "npm run docs:api && npm run docs:build",
-    "test": "npm run test:axioms && npm run test:bind && npm run test:namespace && npm run test:nrp-target && npm run test:me-target && npm run test:space && npm run test:fallback",
+    "test": "npm run test:axioms && npm run test:bind && npm run test:namespace && npm run test:nrp-target && npm run test:me-target && npm run test:space && npm run test:fallback && npm run test:namespace-constant",
     "test:bind": "tsx tests/bind.test.ts",
     "test:axioms": "tsx tests/axioms.test.ts",
     "test:namespace": "tsx tests/namespace-expression.test.ts",
@@ -38,6 +38,7 @@
     "test:me-target": "tsx tests/me-target.test.ts",
     "test:space": "tsx tests/space.test.ts",
     "test:fallback": "tsx tests/namespace-fallback.test.ts",
+    "test:namespace-constant": "tsx tests/namespace-constant-resolution.test.ts",
     "prebuild": "npm test"
   },
   "keywords": [
