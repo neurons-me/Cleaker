@@ -102,5 +102,7 @@ This means NRP expressions and `me://` URIs share the same leaf grammar.
 ## See Also
 
 - [The Cleaker Model](./The-Model.md)
+- [Namespace Is Context](./Namespace-Is-Context.md) — which of the forms this grammar parses are
+  a designated namespace vs. a host-routing convenience alias
 - [NRP Expression Parser](../../../neurons-me.github.io/docs/NRP/NRPExpression-Parser.md)
 - [.me Kernel Role in NRP](../../me/Typescript/typedocs/NRP-Kernel-Role.md)
