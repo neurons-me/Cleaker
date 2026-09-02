@@ -38,3 +38,12 @@ export type {
   SurfaceTransport,
   TopologyResolver,
 } from './topology/resolver.js';
+export {
+  canBootstrap,
+  hasScope,
+  isAdmin,
+  isMember,
+  isOwner,
+  roleOf,
+} from './group/group.js';
+export type { GroupRecord, GroupRole } from './group/types.js';
