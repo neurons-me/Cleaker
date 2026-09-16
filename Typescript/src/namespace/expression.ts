@@ -220,6 +220,31 @@ function deriveConstantAndPrefix(base: string): {
   };
 }
 
+const DNS_LABEL_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i;
+
+/**
+ * Pure shape check: does this namespace look like a real FQDN (2+ dot-
+ * separated, DNS-label-shaped segments)? This is the "derives" gate for NRP
+ * resolution, not a claim/write gate — a namespace can still be claimed and
+ * written to `.me` when this returns false (the kernel has always treated
+ * namespace as an opaque string; `normalizeBaseToken`/`deriveConstantAndPrefix`
+ * stay fully permissive on purpose). A shape-invalid namespace simply never
+ * resolves through NRP — it stays an isolated, unreachable branch instead of
+ * a rejected write. Single-label namespaces (no dot) are shape-invalid: NRP
+ * resolution requires the real `x.y` FQDN form. Never throws.
+ */
+export function isValidDomainShape(namespace: string): boolean {
+  let host: string;
+  try {
+    host = normalizeBaseToken(String(namespace ?? '')).host;
+  } catch {
+    return false;
+  }
+  const labels = host.split('.').filter(Boolean);
+  if (labels.length < 2) return false;
+  return labels.every((label) => DNS_LABEL_RE.test(label));
+}
+
 function isLocalishHost(host: string): boolean {
   const normalized = String(host || '').trim().toLowerCase();
   return /^(localhost|127(?:\.\d{1,3}){3}|0\.0\.0\.0)$/.test(normalized) || /\.local$/.test(normalized);

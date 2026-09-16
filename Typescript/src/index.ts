@@ -3,6 +3,7 @@ export type { CleakerOptions } from './cleaker.js';
 export { parseTarget } from './parse/parseTarget.js';
 export {
   composeNamespace,
+  isValidDomainShape,
   parseNamespaceExpression,
   stringifyNamespaceExpression,
 } from './namespace/expression.js';
