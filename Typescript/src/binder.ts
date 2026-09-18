@@ -763,6 +763,23 @@ function defaultMapToExpression(inputPath: string[]): string | null {
   return null;
 }
 
+// The remote namespace's OWN dot-path for a proxy path this kernel just
+// walked -- the same "rest" defaultMapToExpression computes internally to
+// build its `<prefix>.cleaker:read/<rest>` expression, exposed here too
+// because the live channel needs to subscribe/match on that bare path
+// (e.g. "bio"), never this proxy's own local key (e.g. "pushtest.cleaker.bio")
+// -- the server's own live-update messages carry the former, not the
+// latter. Returns null for exactly the same inputs defaultMapToExpression
+// itself would refuse (no "cleaker" segment in a valid position).
+function remoteSubscriptionPath(inputPath: string[]): string | null {
+  const path = inputPath.map((x) => String(x || '').trim()).filter(Boolean);
+  const cleakerIx = path.findIndex((segment) => segment.toLowerCase() === 'cleaker');
+  if (cleakerIx > 0 && cleakerIx < path.length - 1) {
+    return path.slice(cleakerIx + 1).join('.') || 'profile';
+  }
+  return null;
+}
+
 function unwrapResolvedValue(data: unknown): unknown {
   if (!data || typeof data !== 'object') return data;
   const record = data as Record<string, unknown>;
@@ -808,6 +825,13 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const remoteSlots = new Map<string, RemoteSlot>();
   const listeners = new Map<keyof CleakerEvents, Set<(...args: unknown[]) => void>>();
   let liveChannel: LiveChannel | null = null;
+  // The server's own live-update messages carry the REMOTE namespace's own
+  // dot-path (e.g. "bio") -- never this proxy's local `key` (e.g.
+  // "pushtest.cleaker.bio", the full property chain a caller walked to
+  // get here). This maps one to the other so an incoming push can find
+  // its RemoteSlot; populated in getOrCreateRemoteSlot, read in
+  // ensureLiveChannel's onUpdate handler below.
+  const remoteSubscriptionKeys = new Map<string, string>();
   const explicitNamespace = String(options.namespace || '').trim();
   const defaultSecret = String(options.secret || '');
   const explicitIdentityHash = normalizeIdentityHash(options.identityHash);
@@ -1699,13 +1723,14 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       transportOrigin: httpOrigin,
       namespace,
     });
-    channel.onUpdate((path, value) => {
-      const slot = remoteSlots.get(path);
+    channel.onUpdate((serverPath, value) => {
+      const key = remoteSubscriptionKeys.get(serverPath);
+      const slot = key ? remoteSlots.get(key) : undefined;
       if (!slot) return; // Nothing local is tracking this path -- ignore.
-      remoteOverlay.set(path, value);
+      remoteOverlay.set(slot.key, value);
       const learnedMemory = createLearnedMemory(slot.path, value);
       if (learnedMemory) hydrateMemory(learnedMemory);
-      emit('value:changed', { path, value });
+      emit('value:changed', { path: slot.key, value });
     });
     liveChannel = channel;
     return channel;
@@ -1753,7 +1778,15 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // current from here on; one that didn't (or whose namespace/bootstrap
     // isn't resolvable yet) still has the fetch-once result above -- this
     // never blocks or changes what the slot's own promise resolves to.
-    ensureLiveChannel()?.subscribe(key);
+    // Subscribes on the REMOTE namespace's own bare path (matching what
+    // the server's push messages carry), not this proxy's local `key` --
+    // remoteSubscriptionKeys lets the onUpdate handler above map back from
+    // one to the other.
+    const subscriptionPath = remoteSubscriptionPath(path);
+    if (subscriptionPath) {
+      remoteSubscriptionKeys.set(subscriptionPath, key);
+      ensureLiveChannel()?.subscribe(subscriptionPath);
+    }
     return slot;
   }
 
