@@ -19,6 +19,7 @@ export interface CleakerOptions
       | 'space'
       | 'bootstrap'
       | 'fetcher'
+      | 'live'
     > {}
 
 export function cleaker(target: string, options?: CleakerOptions): RemotePointerDefinition;

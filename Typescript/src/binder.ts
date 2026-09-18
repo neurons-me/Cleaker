@@ -1,5 +1,6 @@
 import { parseTarget } from './parse/parseTarget';
 import { createRemotePointer } from './pointer/remotePointer';
+import { createLiveChannel, type LiveChannel } from './live/liveChannel';
 import {
   DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN,
   DEFAULT_CLEAKER_LAN_PORT,
@@ -30,6 +31,11 @@ const ME_IDENTITY_SYMBOL = Symbol.for('me.identity');
 type SignInResponse = {
   ok: boolean;
   error?: string;
+  // Only set on the ok:false branch — the HTTP status a real server
+  // answered with, 0 for a request that never reached one (network/CORS/
+  // timeout). Distinguishes "unreachable, try the next origin" from "reached
+  // the right server, got a definitive answer" in signIn()'s origin loop.
+  status?: number;
   namespace?: string;
   identityHash?: string;
   noise?: string;
@@ -54,6 +60,8 @@ type ClaimProof = {
 type ClaimResponse = {
   ok: boolean;
   error?: string;
+  // Same meaning as SignInResponse.status — see that field's comment.
+  status?: number;
   namespace?: string | { me?: string; host?: string };
   identityHash?: string;
   publicKey?: string;
@@ -71,6 +79,19 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
   space?: string;
   bootstrap?: string[];
   fetcher?: typeof fetch;
+  /**
+   * Opt-in: keep every RemoteSlot this kernel creates live over the
+   * monad's own /nrp WebSocket channel (live/liveChannel.ts), instead of
+   * the default fetch-once-and-cache behavior. Off by default -- a caller
+   * that never reads a remote path pays nothing, and one that reads a few
+   * paths without needing live updates isn't forced into holding an open
+   * socket. Requires `bootstrap` (the live channel derives its ws(s):// URL
+   * from the first bootstrap origin) and a resolvable namespace at the
+   * point a slot is first created; silently stays fetch-once otherwise
+   * (see ensureLiveChannel()) rather than throwing -- a caller that opted
+   * in too early just gets ordinary behavior, not a broken session.
+   */
+  live?: boolean;
 }
 
 type RemoteSlot = {
@@ -786,6 +807,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   const remoteOverlay = new Map<string, unknown>();
   const remoteSlots = new Map<string, RemoteSlot>();
   const listeners = new Map<keyof CleakerEvents, Set<(...args: unknown[]) => void>>();
+  let liveChannel: LiveChannel | null = null;
   const explicitNamespace = String(options.namespace || '').trim();
   const defaultSecret = String(options.secret || '');
   const explicitIdentityHash = normalizeIdentityHash(options.identityHash);
@@ -793,8 +815,30 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     ? options.bootstrap.map((origin) => normalizeBaseUrl(origin)).filter(Boolean)
     : [];
   const resolvedSpaceOrigin = options.space ? normalizeSpaceOrigin(options.space) : '';
+  // The one HTTP-origin resolution for everything in this bindKernel() that
+  // isn't claim()/signIn() (those already resolve through bootstrapOrigins
+  // via resolveSurfaceOrigins, unrelated to this). Before this, pointer()/
+  // RemoteSlot (and now this file's own live channel) fell straight to
+  // remotePointer.ts's own DEFAULT_CLEAKER_NAMESPACE_ORIGIN (the public
+  // cleaker.me) whenever `space` was omitted -- exactly what
+  // createCleakerSession.ts's own comment on NOT passing `space` here
+  // means happens on purpose today (`space` would ALSO get used for
+  // claim/signIn's own origin resolution, which breaks against a
+  // gateway-mesh-proxied origin like local.cleaker -- a real 405,
+  // confirmed live). That left a real, live-confirmed split: claim/signIn
+  // reach the caller's actual monad; a remote pointer read (or, now, a
+  // live-channel subscribe) silently reached the wrong, unrelated public
+  // server instead. `space` is a deliberate surface override and still
+  // wins outright when given; bootstrapOrigins[0] is the same "this
+  // session's own monad" answer claim/signIn already trust, used here only
+  // as a fallback, never overriding an explicit `space`. Only when NEITHER
+  // is configured does this fall through to remotePointer.ts's own public
+  // default, unchanged from before.
+  function resolveHttpOrigin(): string {
+    return resolvedSpaceOrigin || bootstrapOrigins[0] || '';
+  }
   const pointerResolveOptions: ResolvePointerOptions = {
-    ...(resolvedSpaceOrigin ? { origin: resolvedSpaceOrigin } : {}),
+    ...(resolveHttpOrigin() ? { origin: resolveHttpOrigin() } : {}),
     ...(options.fetcher ? { fetcher: options.fetcher } : {}),
     headers: {
       accept: 'application/json',
@@ -1146,7 +1190,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     timeoutMs: number,
     fetcher: typeof fetch,
     headers: Record<string, string> = {},
-  ): Promise<SignInResponse | { ok: false; error: string }> {
+  ): Promise<SignInResponse | { ok: false; error: string; status: number }> {
     const body = { namespace, secret, ...(identityHash ? { identityHash } : {}) };
 
     // Primary: POST /claims/signIn
@@ -1154,7 +1198,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (primary.ok && primary.data) return normalizeSignInResponse(primary.data, namespace, identityHash);
 
     const primaryError = String(primary.error || 'OPEN_FAILED');
-    if (primaryError === 'CLAIM_NOT_FOUND') return { ok: false, error: primaryError };
+    if (primaryError === 'CLAIM_NOT_FOUND') return { ok: false, error: primaryError, status: primary.status };
 
     // Fallback: legacy POST / with operation:"open" (pre-Fase3 nodes)
     if (primary.status === 404) {
@@ -1166,10 +1210,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         { 'x-forwarded-host': namespace, ...headers },
       );
       if (legacy.ok && legacy.data) return normalizeSignInResponse(legacy.data, namespace, identityHash);
-      return { ok: false, error: String(legacy.error || primaryError) };
+      return { ok: false, error: String(legacy.error || primaryError), status: legacy.status };
     }
 
-    return { ok: false, error: primaryError };
+    return { ok: false, error: primaryError, status: primary.status };
   }
 
   async function claimRemote(
@@ -1179,7 +1223,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     timeoutMs: number,
     fetcher: typeof fetch,
     headers: Record<string, string> = {},
-  ): Promise<ClaimResponse | { ok: false; error: string }> {
+  ): Promise<ClaimResponse | { ok: false; error: string; status: number }> {
     let proof: ClaimProof;
     try {
       proof = await proveKernelNamespace(me, namespace);
@@ -1187,6 +1231,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       return {
         ok: false,
         error: error instanceof Error ? error.message : 'PROOF_INVALID',
+        // Not a network failure — proof construction happened locally, before
+        // any request was sent. Treated as a definitive local failure so the
+        // origin loop doesn't waste time retrying other surfaces for it.
+        status: -1,
       };
     }
 
@@ -1217,44 +1265,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         return normalizeClaimResponse(legacy.data, namespace, proof.identityHash);
       }
 
-      return { ok: false, error: String(legacy.error || claimed.error || 'CLAIM_FAILED') };
+      return { ok: false, error: String(legacy.error || claimed.error || 'CLAIM_FAILED'), status: legacy.status };
     }
 
-    return { ok: false, error: String(claimed.error || 'CLAIM_FAILED') };
-  }
-
-  async function bindRemoteLifecycle(
-    origin: string,
-    namespace: string,
-    secret: string,
-    identityHash: string,
-    timeoutMs: number,
-    fetcher: typeof fetch,
-    headers: Record<string, string> = {},
-  ): Promise<SignInResponse | { ok: false; error: string }> {
-    const opened = await signInRemote(origin, namespace, secret, identityHash, timeoutMs, fetcher, headers);
-    if (opened.ok || opened.error !== 'CLAIM_NOT_FOUND') {
-      return opened;
-    }
-
-    const claimed = await claimRemote(origin, namespace, secret, timeoutMs, fetcher, headers);
-    if (!claimed.ok) {
-      return {
-        ok: false,
-        error: String(claimed.error || 'CLAIM_FAILED'),
-      };
-    }
-
-    const reopenedIdentityHash = normalizeIdentityHash(claimed.identityHash) || identityHash;
-    return signInRemote(
-      origin,
-      resolveEnvelopeNamespace(claimed, namespace),
-      secret,
-      reopenedIdentityHash,
-      timeoutMs,
-      fetcher,
-      headers,
-    );
+    return { ok: false, error: String(claimed.error || 'CLAIM_FAILED'), status: claimed.status };
   }
 
   function getStatus(): CleakerStatus {
@@ -1375,7 +1389,13 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       }
 
       transition('opening', cycleId);
-      const opened = await bindRemoteLifecycle(host.space, namespace, secret, identityHash, timeoutMs, fetcher);
+      // signInRemote() directly — no longer auto-claims on CLAIM_NOT_FOUND
+      // (see signIn()'s own identical comment below). host.status.triad
+      // below already anticipates this ('unverified', not 'failed') —
+      // before this fix it was effectively dead: signInRemote's
+      // CLAIM_NOT_FOUND was always silently absorbed into a real claim
+      // first, so this branch never actually saw it.
+      const opened = await signInRemote(host.space, namespace, secret, identityHash, timeoutMs, fetcher);
       if (!opened.ok) {
         const errorCode = String(opened.error || 'OPEN_FAILED');
         host.status.triad = errorCode === 'CLAIM_NOT_FOUND' ? 'unverified' : 'failed';
@@ -1559,7 +1579,15 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     let lastError = 'SIGNIN_FAILED';
 
     for (const origin of origins) {
-      const opened = await bindRemoteLifecycle(
+      // signInRemote() directly — signIn() must not silently create a
+      // namespace that doesn't exist yet (removed per explicit product
+      // decision: claiming is a deliberate, separate "Register User"
+      // action, never a side effect of signing in with an unrecognized or
+      // mistyped username — see this.gui's SeedSessionProvider.tsx,
+      // openExistingNamespace's identical comment, for the caller-side half
+      // of this same fix). CLAIM_NOT_FOUND now propagates like any other
+      // definitive rejection.
+      const opened = await signInRemote(
         origin,
         namespace,
         secret,
@@ -1571,6 +1599,16 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
       if (!opened.ok) {
         lastError = String(opened.error || 'SIGNIN_FAILED');
+        // status === 0 means the origin itself was unreachable (fetch threw —
+        // DNS, CORS, timeout, connection refused): keep trying the next
+        // candidate. A non-zero status means a real server answered with a
+        // definitive rejection (wrong secret, identity mismatch, etc.) —
+        // stop here and surface THAT error, rather than letting an
+        // unrelated, further-down fallback origin's unreachability (e.g. the
+        // public cleaker.me, CORS-blocked from a dev origin) overwrite a
+        // real, meaningful answer from the right server with a generic
+        // NETWORK_ERROR.
+        if (opened.status !== 0) break;
         continue;
       }
 
@@ -1608,6 +1646,9 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
       if (!result.ok) {
         lastError = String(result.error || 'CLAIM_FAILED');
+        // See the identical status-vs-unreachable distinction in signIn()'s
+        // loop above — same reasoning applies to claim().
+        if (result.status !== 0) break;
         continue;
       }
 
@@ -1637,6 +1678,37 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       space: options.space,
       fetcher: options.fetcher,
     }).catch(() => null);
+  }
+
+  // Lazy on purpose: the namespace is often not resolvable yet at bind
+  // time (before claim()/signIn() ever runs), and this is only ever
+  // needed once a RemoteSlot is actually about to be created -- the same
+  // moment resolveNamespace() has its best chance of already having a
+  // real answer. Returns null (never throws) when live wasn't requested,
+  // there's nowhere to connect to, or no namespace is known yet; callers
+  // treat that identically to "stay fetch-once for now."
+  function ensureLiveChannel(): LiveChannel | null {
+    if (!options.live) return null;
+    if (liveChannel) return liveChannel;
+    const httpOrigin = resolveHttpOrigin();
+    if (!httpOrigin) return null;
+    const namespace = resolveNamespace();
+    if (!namespace) return null;
+
+    const channel = createLiveChannel({
+      transportOrigin: httpOrigin,
+      namespace,
+    });
+    channel.onUpdate((path, value) => {
+      const slot = remoteSlots.get(path);
+      if (!slot) return; // Nothing local is tracking this path -- ignore.
+      remoteOverlay.set(path, value);
+      const learnedMemory = createLearnedMemory(slot.path, value);
+      if (learnedMemory) hydrateMemory(learnedMemory);
+      emit('value:changed', { path, value });
+    });
+    liveChannel = channel;
+    return channel;
   }
 
   function getOrCreateRemoteSlot(path: string[]): RemoteSlot | undefined {
@@ -1677,6 +1749,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     });
 
     remoteSlots.set(key, slot);
+    // Best-effort: a caller that opted into `live` gets this path kept
+    // current from here on; one that didn't (or whose namespace/bootstrap
+    // isn't resolvable yet) still has the fetch-once result above -- this
+    // never blocks or changes what the slot's own promise resolves to.
+    ensureLiveChannel()?.subscribe(key);
     return slot;
   }
 
