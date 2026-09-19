@@ -780,6 +780,21 @@ function remoteSubscriptionPath(inputPath: string[]): string | null {
   return null;
 }
 
+// The <owner> half of the same <owner>.cleaker.<path> convention --
+// exposed separately from remoteSubscriptionPath because the CALLER
+// (getOrCreateRemoteSlot) needs it for a completely different reason:
+// composing the REAL Host to send over HTTP, since the owner alone is
+// never a real, resolvable namespace by itself (see that call site's own
+// comment on why parseTarget's own `fqdn` is wrong for this).
+function remoteSubscriptionOwner(inputPath: string[]): string | null {
+  const path = inputPath.map((x) => String(x || '').trim()).filter(Boolean);
+  const cleakerIx = path.findIndex((segment) => segment.toLowerCase() === 'cleaker');
+  if (cleakerIx > 0 && cleakerIx < path.length - 1) {
+    return path[cleakerIx - 1] || null;
+  }
+  return null;
+}
+
 function unwrapResolvedValue(data: unknown): unknown {
   if (!data || typeof data !== 'object') return data;
   const record = data as Record<string, unknown>;
@@ -1761,7 +1776,25 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       } as ResolvePointerResult),
     };
 
-    slot.promise = remotePointer.resolve(pointerResolveOptions).then((resolved) => {
+    // parseTarget's own `target.namespace.fqdn` for a `<owner>.cleaker:read/
+    // <rest>` expression is "<owner>.cleaker" -- it takes the literal
+    // "cleaker" marker AS IF it were the real root, because parseTarget has
+    // no idea that word means "use cleaker's own resolution here", not "the
+    // domain is literally cleaker". remotePointer.ts would fall back to
+    // exactly that wrong value for its Host header unless overridden here:
+    // the REAL root this session actually resolves to (resolveSurfaceNamespaceConstant,
+    // the same one claim()/signIn() already trust), composed with the same
+    // owner. Confirmed live: without this, a fetch-once read for a brand
+    // new owner landed on this monad's OWN root namespace instead (or
+    // "unknown" once the header itself started reaching the server) --
+    // never the owner's real one.
+    const owner = remoteSubscriptionOwner(path);
+    const realHost = owner ? composeNamespace(owner, resolveSurfaceNamespaceConstant()) : undefined;
+    const resolveOptionsForSlot: ResolvePointerOptions = realHost
+      ? { ...pointerResolveOptions, host: realHost }
+      : pointerResolveOptions;
+
+    slot.promise = remotePointer.resolve(resolveOptionsForSlot).then((resolved) => {
       slot.lastResult = resolved;
       if (resolved.ok) {
         const learnedValue = unwrapResolvedValue(resolved.data);

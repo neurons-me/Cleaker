@@ -110,8 +110,22 @@ export function createRemotePointer(
     const headers: Record<string, string> = {
       ...(resolveOptions.headers || {}),
     };
+    // `Host` is a forbidden header name in every real fetch implementation
+    // (browsers refuse to let a caller set it at all; Node's own fetch/
+    // undici silently drops it too -- confirmed live this session: a GET
+    // with headers.host set here still resolved against the ORIGIN's own
+    // physical host, i.e. this monad's root namespace, never the caller's
+    // actual target). monad.ai's own resolveHostNamespace() already checks
+    // for exactly this and reads x-forwarded-host FIRST, before the real
+    // Host header (see modules/monad's http/namespace.ts) -- so that's set
+    // here too, same as the disposable-infra test that first caught this.
+    // headers.host is left in as well: harmless where it's honored, a
+    // no-op everywhere it silently isn't.
     if (host && !headers.host && !headers.Host) {
       headers.host = host;
+    }
+    if (host && !headers['x-forwarded-host'] && !headers['X-Forwarded-Host']) {
+      headers['x-forwarded-host'] = host;
     }
 
     try {
