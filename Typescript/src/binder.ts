@@ -927,6 +927,21 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     return deriveNamespaceConstant(DEFAULT_CLEAKER_NAMESPACE_ORIGIN);
   }
 
+  // The server's own answer from the last successful claim()/signIn(),
+  // never this client's own guess. Exists because resolveNamespace() below
+  // (used for claim/signIn's OWN request, before either has ever
+  // succeeded) reads readLocationHost() -- window.location's own
+  // hostname -- with HIGHER priority than the kernel-bound root, so in a
+  // real browser it can genuinely disagree with what the server actually
+  // confirmed (live-confirmed: signing in from a page at "localhost"
+  // claimed/opened "someuser.local.cleaker" server-side via its own
+  // loopback-alias resolution, but resolveNamespace() kept answering
+  // "someuser.localhost" afterward -- a live channel subscribed under
+  // THAT wrong namespace never matches anything the server notifies for).
+  // ensureLiveChannel() below must never use resolveNamespace()'s own
+  // guess once this is available.
+  let confirmedNamespace: string | null = null;
+
   function resolveNamespace(inputNamespace?: string): string {
     const explicit = String(inputNamespace || explicitNamespace || '').trim();
     if (explicit) return explicit;
@@ -1655,10 +1670,15 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       const memories = allMemories.filter((memory) => hydrateMemory(memory));
 
       me.noise = String(opened.noise || '');
+      // See confirmedNamespace's own doc comment (near its declaration,
+      // above resolveNamespace) -- the server's own answer, not this
+      // client's guess, and the only thing ensureLiveChannel below should
+      // ever trust.
+      confirmedNamespace = String(opened.namespace || namespace);
 
       return {
         status: 'verified',
-        namespace: String(opened.namespace || namespace),
+        namespace: confirmedNamespace,
         identityHash: String(opened.identityHash || identityHash || ''),
         noise: String(opened.noise || ''),
         openedAt: Number(opened.openedAt || Date.now()),
@@ -1691,9 +1711,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         continue;
       }
 
+      confirmedNamespace = String(resolveEnvelopeNamespace(result, namespace));
+
       return {
         status: 'verified',
-        namespace: String(resolveEnvelopeNamespace(result, namespace)),
+        namespace: confirmedNamespace,
         identityHash: String(result.identityHash || ''),
         noise: '',
         openedAt: Number(result.createdAt || Date.now()),
@@ -1731,7 +1753,13 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (liveChannel) return liveChannel;
     const httpOrigin = resolveHttpOrigin();
     if (!httpOrigin) return null;
-    const namespace = resolveNamespace();
+    // confirmedNamespace (this session's own claim()/signIn() result)
+    // wins outright when it exists -- see its own doc comment for exactly
+    // why resolveNamespace()'s guess can't be trusted here. Falling back
+    // to resolveNamespace() only covers a caller that enabled `live`
+    // without ever actually opening a session through this same node
+    // (unusual, but not a reason to refuse the channel outright).
+    const namespace = confirmedNamespace || resolveNamespace();
     if (!namespace) return null;
 
     const channel = createLiveChannel({
