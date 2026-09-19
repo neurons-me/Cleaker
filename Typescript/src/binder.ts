@@ -1818,8 +1818,22 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // never the owner's real one.
     const owner = remoteSubscriptionOwner(path);
     const realHost = owner ? composeNamespace(owner, resolveSurfaceNamespaceConstant()) : undefined;
+    // pointerResolveOptions.origin comes from resolveHttpOrigin(), which
+    // deliberately PRESERVES any mesh-proxy path (e.g.
+    // "https://local.cleaker/apps/netget") -- correct for claim()/signIn()
+    // and for reading things scoped to THIS caller's own app (netget's own
+    // sidebar composition, no Host override involved). But once `realHost`
+    // is set, this read is no longer "my own app's mesh-proxied address" --
+    // it's "the bare gateway, Host-routed to somebody else's namespace."
+    // Keeping the mesh-proxy path there double-scopes the request (fetches
+    // "<gateway>/apps/netget/<path>" as jabellae.local.cleaker, a route
+    // netget's own monad has no reason to recognize -- confirmed live: a
+    // real 404 against local.cleaker's actual production deployment, never
+    // caught by any disposable-infra test since those always used a bare
+    // origin with no app-path suffix to begin with). Strip to the bare
+    // origin (normalizeOrigin) whenever a Host override is in play.
     const resolveOptionsForSlot: ResolvePointerOptions = realHost
-      ? { ...pointerResolveOptions, host: realHost }
+      ? { ...pointerResolveOptions, origin: normalizeOrigin(resolveHttpOrigin()) || pointerResolveOptions.origin, host: realHost }
       : pointerResolveOptions;
 
     slot.promise = remotePointer.resolve(resolveOptionsForSlot).then((resolved) => {
