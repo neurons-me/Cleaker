@@ -62,21 +62,28 @@ export function createLiveChannel(options: LiveChannelOptions): LiveChannel {
 
   let ws: WebSocket | null = null;
   let connecting = false;
+  // True only from the moment this connection's 'resolved' reply has been
+  // processed until it closes. Confirmed server-side (modules/monad's
+  // nrpHandler.ts handleSubscribe): a subscribe for a path already
+  // registered on this connection skips re-registering the live listener
+  // but still sends back an immediate 'data' reply -- so sending subscribe
+  // for the same path twice, even once resolved, double-fires an initial
+  // value push (though never a duplicate future 'stream' push, since that
+  // listener itself is deduplicated). Gating every send on `resolved`
+  // (rather than only on `ws.readyState === OPEN`, which turns true
+  // BEFORE 'resolved' arrives) means the only place subscribe messages
+  // are ever actually sent is the loop in the 'resolved' handler below --
+  // exactly once per path in activePaths, however many times subscribe()
+  // itself was called before that point.
+  let resolved = false;
   let channelId: string | null = null;
   const queuedOutbound: string[] = [];
   const activePaths = new Set<string>();
   const updateHandlers = new Set<(path: string, value: unknown) => void>();
 
-  function flushQueue(): void {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    while (queuedOutbound.length) {
-      ws.send(queuedOutbound.shift()!);
-    }
-  }
-
   function sendOrQueue(msg: Record<string, unknown>): void {
     const raw = JSON.stringify(msg);
-    if (ws && ws.readyState === WebSocket.OPEN) {
+    if (ws && ws.readyState === WebSocket.OPEN && resolved) {
       ws.send(raw);
     } else {
       queuedOutbound.push(raw);
@@ -111,7 +118,17 @@ export function createLiveChannel(options: LiveChannelOptions): LiveChannel {
       }
       if (msg.type === 'resolved') {
         channelId = typeof msg.channelId === 'string' ? msg.channelId : null;
-        flushQueue();
+        resolved = true;
+        // Discard whatever queued up before this resolved -- every message
+        // ever queued here is a subscribe/unsubscribe for a path in (or
+        // removed from) activePaths, so activePaths is already the full,
+        // current, deduplicated truth of what this channel should be
+        // subscribed to. The loop below is the ONE place that ever sends a
+        // subscribe for this fresh connection; sending the queued messages
+        // too (as this used to) meant every path subscribed before
+        // 'resolved' arrived got subscribed twice -- two 'data' replies
+        // per path, the duplicate value:changed this was found from.
+        queuedOutbound.length = 0;
         // Re-subscribe every currently-active path on this fresh channel --
         // covers the initial connect and any reconnect after a drop.
         for (const path of activePaths) {
@@ -134,6 +151,7 @@ export function createLiveChannel(options: LiveChannelOptions): LiveChannel {
     socket.addEventListener('close', () => {
       ws = null;
       channelId = null;
+      resolved = false;
       connecting = false;
     });
     socket.addEventListener('error', () => {
