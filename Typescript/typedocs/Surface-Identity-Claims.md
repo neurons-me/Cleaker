@@ -271,7 +271,10 @@ this paragraph makes that assumption an explicit, named requirement rather than 
 
 ### 7.7 `.netget.delegates`: shape, and the write-path gaps it depends on closing first
 
-**Status: DESIGN, blocked on prerequisites below — do not implement the shape without them.**
+**Status: prerequisites CLOSED (2026-09-24, monad commits `71126411`, `909f170e`, `6ab01be0`; GUI
+commit `7522bea8`) — see §7.8 for what the closure work actually found, including one gap that
+remains open. The `.netget.delegates` shape below is still not implemented; only the write-path
+gaps it depends on are closed.**
 Everything in this section was checked directly against `handlers/commandHandler.ts`'s
 `rootCommandHandler` (the generic namespace-write surface every plain write, including a future
 `.netget.delegates` write, goes through). Three real gaps were found there, not hypothesized —
@@ -357,13 +360,72 @@ indistinguishable from stealth on the wire). Public keys reveal nothing sensitiv
 `"mothership-1"` can reveal real infrastructure topology. Needs its own decision before this ships,
 not an assumption baked into the shape.
 
-**Closes the loop on §7.6's earlier verifiability discussion.** Once every write binds to its
-namespace's chain head (prerequisite 2), that signed head stops being just a replay guard — it
-becomes a genuine, checkable state commitment for that one namespace: "at this state, this name
-resolved to this" becomes literally true, provable by replaying that namespace's own memory chain
-from genesis. Not a Merkle tree — it can't prove a single path without replaying the whole chain —
-but real, where the earlier draft's claim of "signed commits" for this was aspirational, not yet
-built.
+**Closes the loop on §7.6's earlier verifiability discussion — corrected, not as first written.**
+Verified directly in `memoryStore.ts`: the `.me` kernel's `hash`/`prevHash` fields are a single
+**global** chain (`getKernel().memories`, one sequence for the whole kernel, axiom A8's own
+"hash-chain integrity across all memories" phrasing was literal) — not one chain per namespace.
+`getNamespaceChainHead()` (§7.8) constructs its own namespace-*projected* view (the last entry
+whose path resolves under that namespace, filtered from the global list) to get a value that
+changes exactly when that namespace's own data changes — which is the real property replay
+protection needs — but the entry actually written by that signed request does **not** carry that
+projected value as its own literal `prevHash` (its real `prevHash` links to whatever else was
+globally most recent, possibly a different namespace's write). So: the anti-replay mechanism is
+correct and live-verified (§7.8's tests), but "this signed head is a state commitment, provable by
+replaying the namespace's own chain from genesis" overstated it — there is no literal namespace-
+scoped chain to replay; there is a projection this function recomputes fresh each time. A real
+per-namespace, replayable state commitment is a design this doc doesn't claim to have built.
+
+### 7.8 Closing the two prerequisites — what the actual implementation found
+
+**Status: CLOSED for the scope below; one gap explicitly left open, not silently accepted.**
+monad commits `71126411` (prerequisite 1, netget.* reserved-path guard), `909f170e`
+(prerequisite 2, chain-head binding on `rootCommandHandler`), `6ab01be0` (both, ported to
+`commitHandler` after review found it was the only write path checked); GUI commit `7522bea8`
+(the one real production signer, `createCleakerSession.ts`'s `signAndWrite`, updated to match).
+
+**Every other write entry point was audited, not assumed safe.** `appendSemanticMemory()`'s own
+callers were grepped exhaustively: `session.ts`, `claims.ts`, `usageLedger.ts`,
+`hostTelemetryLedger.ts`, `Blockchain/users.ts`, `keychain.ts`, `records.ts`,
+`claimSemantics.ts`, `semanticBootstrap.ts` all write to hardcoded or internally-derived paths,
+never an attacker-chosen one — none share the exposure. `commitHandler` (`POST /api/v1/commit`)
+was the one real exception: it already had the keychain/gateway-authority/routing-record guards,
+but neither the netget.* guard nor chain-head binding, and was fixed to match.
+
+**A real, live-reproducible bug was found while testing this, not a test-harness quirk.**
+`getNamespaceChainHead()`'s first version was contaminated by `hostTelemetryLedger.ts`/
+`usageLedger.ts`, which write `surface.host.*`/`surface.usage.*` into the monad's own namespace on
+an interval/per-request basis. When a claimed namespace IS the monad's own self identity — the
+exact `netget.site` self-claim case §7.3 describes as the target shape — this telemetry noise
+moved that namespace's chain head out from under a legitimate signed write between the client's
+read and its write landing, producing a spurious `STALE_HEAD` reliably, not rarely. Fixed by
+excluding the `surface.` prefix from the head computation.
+
+**Left open, deliberately, not silently:** `expectedHeadHash` binds to the *caller's own*
+claimed namespace. A commit whose event targets a *different* namespace — `commitHandler`'s own
+shared-group-root case, where a caller writes into a namespace nobody individually owns — never
+moves the caller's own head, so replaying such a commit is not yet rejected. A test
+(`commitGate.test.ts`, "KNOWN GAP") asserts today's actual behavior and says explicitly to invert
+the assertion once this is closed, rather than passing silently. Closing it needs per-event or
+joint-namespace-set head binding — a harder design than this pass attempted.
+
+**Two decisions surfaced, not made unilaterally:**
+- The single-process assumption: `rootCommandHandler`'s check-then-write has no `await` between
+  reading the head and writing, so two concurrent requests can't interleave — but this is a
+  single-Node-process guarantee only. If the monad ever runs as a cluster or multiple instances
+  over shared storage, two writes against the same head could both land. Not resolved here;
+  recorded as an explicit assumption. The alternative, if it's ever needed, is a storage-level
+  unique constraint on `(namespace, prevHash)` rather than an application-level check.
+- `GET /api/v1/write-head` is unauthenticated and public: anyone can observe *that* a namespace's
+  state just changed (a changing hash), never *what* changed. Left as-is for now — narrower than
+  the existing public `namespace-owner` endpoint already discloses — but worth naming as a choice
+  rather than an oversight.
+
+**Corrected roadmap.** The original §7.4 gap — `meshAnnounce.ts`'s `isNamespaceUsableByIdentity()`
+comparing `identityHash` (a public, non-secret fingerprint) instead of the signing `public_key` —
+is still open and does not depend on `.netget.delegates` existing. Next, in order: (1) the
+`meshAnnounce.ts` `publicKey` fix, (2) the commit-handler multi-namespace head-binding gap above,
+if it becomes load-bearing before WS edge nodes ship, (3) `.netget.delegates` itself, last, once
+its write surface has nothing else left unverified underneath it.
 
 ## See also
 
@@ -390,3 +452,14 @@ built.
 - `modules/monad/Typescript/src/handlers/commandHandler.ts` — `rootCommandHandler` (§7.7), the
   generic namespace-write surface with the two real, verified gaps (unclaimed-namespace bypass,
   no replay/namespace binding) that block implementing `.netget.delegates` as specified.
+- `modules/monad/Typescript/src/handlers/syncHandler.ts` — `commitHandler` (§7.8), the second
+  write path found to share both gaps, with its own remaining multi-namespace-event limitation.
+- `modules/monad/Typescript/src/claim/netget.ts` — `isNetgetReservedPath()` (§7.8), extracted from
+  `commandHandler.ts` once `commitHandler` needed the identical check.
+- `modules/monad/Typescript/src/resources/hostTelemetryLedger.ts`,
+  `src/resources/usageLedger.ts` (§7.8) — the `surface.*` writers whose interval/per-request
+  traffic into a monad's own namespace was found to spuriously invalidate that namespace's own
+  chain head before `getNamespaceChainHead()` excluded them.
+- `modules/monad/Typescript/tests/commitGate.test.ts`, `chainHeadWriteAuthorization.test.ts`,
+  `netgetReservedPathAuthorization.test.ts` (§7.8) — the live-verified guarantees and the one
+  test that documents the still-open multi-namespace-event gap on purpose.
