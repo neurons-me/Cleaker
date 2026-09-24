@@ -120,9 +120,117 @@ when this specific scenario, run live, rejects instead of warns.
 5. The §5 spoof test, run live against a real gateway, both before and after step 4, to
    demonstrate the actual behavior change (warn → reject).
 
-Nothing past step 2 is built. This document is the boundary marker between "we understand the
-gap" and "we've closed it" — do not read §3's claim shape as implemented; it's the target §3
-was written to build toward.
+Nothing past step 2 is built **in the specific shape this document proposes** (a surface
+self-claiming its own namespace via its own persistent keypair, §3, then `surface_proxy.lua`
+enforcing that at routing time, §4). Do not read §3's claim shape as implemented.
+
+A related but distinct piece of progress happened 2026-09-12, worth naming precisely so it
+isn't confused with §3-5 above: netget's gateway-setup claim flow (`gatewaySetupSession.ts`'s
+`commitSignedClaim`) now verifies a real, currently-active keychain key + Ed25519 signature
+against the namespace an *operator* is signed into, before trusting them as that gateway's
+administrator — real cryptographic verification, not just trust-tier ranking. But this is
+netget consulting an external operator's claim, not a surface claiming its own namespace as
+this doc's §3 describes, and it does nothing for §4's routing-time enforcement gap (still
+open, still gated the same way — see `CLAUDE.md`'s "Known architectural gaps" #2, updated
+2026-09-12 to say exactly this). This document's own Phases table is otherwise unchanged.
+
+## 7. Addendum — 2026-09-24: netget is a pointer, not an installation
+
+**Status: DESIGN.** Nothing below is implemented, except where explicitly marked verified. This
+addendum grew out of a long design conversation working forward from §1-6 above, and corrects one
+real overreach that conversation initially made (§9) before arriving at the shape below.
+
+### 7.1 The engine is liminal; the config is per-namespace
+
+Two things kept getting conflated under the one word "netget": the **engine** — the OpenResty/Lua
+process that physically holds sockets, certs, and the nginx worker, and does subtractive-synthesis
+routing across every namespace currently anchored to this host (`monadIndex.ts`,
+`meshSelect.ts`) — and the **declared configuration** a namespace wants that engine to act on
+(which domain, which port, which cert). The engine is genuinely cross-namespace by necessity — it
+has to see all anchored trees to route at all, the same reason a host-owner view (`monads` CLI,
+subtractive synthesis) is legitimately different from a single participant's view. The
+configuration is not — it is ordinary data belonging to one namespace, exactly like any other
+branch that namespace already owns.
+
+**Target shape:** `<namespace>.netget.*` (domains, ports, cert requests, the app registry) is
+plain tree data under that namespace's own root, governed by the *same* write-authorization every
+other write to that namespace already requires —
+`isNamespaceWriteAuthorized()` against `getClaim(namespace)` (`replay.ts` / `records.ts`), nothing
+new. The engine reads across every namespace's `.netget` branch the same way it already reads
+across every entry in the mesh index — it was never "inside" one namespace's tree to begin with,
+so nothing about scoping configuration this way changes what the engine can see.
+
+### 7.2 Doors are pointers, not separate installations
+
+`netget.site`, `cleaker.me`, `local.cleaker`, `local.host` are not four different kinds of thing —
+each is a namespace, and which namespace currently *answers* as a given door is a `__ptr`
+resolution, the same operator already documented as `.me` operator #1 (`isPointerCall`,
+`Typescript/typedocs/Operators.md`) and already proven live elsewhere in this exact codebase:
+`records.ts`'s `materializeProjectedNamespaceClaim()` already writes
+`{ __ptr: namespace }` at `daemon.users.<host>.<username>` to resolve a handle to its full
+namespace. A door pointer is the identical shape, one level up: `netget.main.server -> <namespace
+currently serving as the main door>`. Reading `netget.site.domains` and reading through the
+pointer both land on the same node — not two systems that happen to agree, one node reached two
+ways. Repointing a door is one signed `__ptr` write by whoever holds the pointer's containing
+branch, never a data migration and never a manual nginx edit.
+
+**Verified, not proposed:** this is not a new idea invented in this addendum. Branch
+`migration/main-server-doors` (`modules/netget/Typescript`, commit `a7595e3`, 2026-09-20 —
+committed locally, not yet pushed/deployed) already implements exactly this: domain records carry
+a `namespaceId`, `namespaceIdentity.ts` and `lua/lib/main_server.lua` resolve a door by identity
+rather than by hostname, and an older door registered without an identity is pointed at one — "no
+hostname defines the namespace; the state names it by `{id, label}`." This addendum's §7.2 is a
+restatement of already-committed work, not a new proposal — it's included here because it's the
+piece that makes §7.1 and §3-4 consistent with each other (see §7.3).
+
+### 7.3 Why this replaces the free-floating `gatewayId`
+
+§3-4 above and this session's earlier design pass both reached for a *separate* ledger keyed
+independently of any namespace — `gatewayAuthority.ts`'s `GatewayAuthorityRecord`, keyed by a
+free-standing `gatewayId` string, and (in-conversation only, never written to this doc) a proposed
+`ServeDelegationRecord` with the same shape. Both repeat the same mistake: a `gatewayId` (or a
+delegation record) that is *related to* a namespace via a guard function
+(`isNamespaceLocalToThisInstallation`) instead of *being* that namespace's own branch invites the
+two drifting apart — two ids resolving to one namespace, or a guard that must never be wrong
+instead of a structural impossibility.
+
+Once doors are pointers (§7.2) and configuration is namespace-scoped (§7.1), the reason
+`gatewayAuthority.ts` gives for its separate storage — "a gateway's authority belongs to the
+INSTALLATION... transferring ownership must never require moving state into a different user's
+personal branch" — still deserves an answer, but not a parallel ledger: a namespace's claim is
+today single-owner/all-or-nothing (`records.ts` has no multi-admin or transfer concept), and that
+gap is real. The fix is a `<namespace>.netget.delegates` branch — same vigencia/autorización split
+`gatewayAuthority.ts` already proved out (`getKeychainKey(...).authorization === "active"` +
+membership check against the branch's own state, signed via `isNamespaceWriteAuthorized`, nonce
+anti-replay) — but keyed by the namespace itself, not by an independent id. Multi-admin and
+delegation become a capability every namespace has, not a netget-specific side-ledger.
+
+### 7.4 The concrete, small fix — still first in line
+
+Independent of §7.1-7.3, `meshAnnounce.ts:166`'s `isNamespaceUsableByIdentity()` compares the
+announced `identityHash` — documented in three places in this codebase as a public, non-secret
+fingerprint — against `claim.identityHash`, when what the signature actually proves possession of
+is `public_key`. `ClaimRecord.publicKey` already exists (`records.ts:249`) and is never
+cross-checked here. Binding the check to `claim.publicKey === entry.public_key` (ownership case)
+or membership in `<namespace>.netget.delegates` (delegated-serve case, §7.3) closes a real,
+presently-exploitable gap in shipped code with no new storage and no new crypto primitive — this
+remains the first implementation step, unchanged from the order agreed earlier in this
+conversation: (1) this fix, (2) the `.netget.delegates` write shape, (3) the same check ported to
+the local `/apps/report` path and to a WS edge node's first connect, (4) the `/netget` window
+gated by resolving the main-server pointer (§7.2) to a namespace and checking that namespace's own
+claim/delegates, (5) WS tunnel multiplexing at the mothership, last, on top of an already-verified
+claim — never before it.
+
+### 7.5 Closing framing
+
+Under this shape, `.me` is closer to a semantic programming language than a database: a path is
+resolved, not looked up, and everything — a door, `netget`, an endpoint, a device — is a name that
+means only what it currently points to or claims. `netget` is not a privileged keyword; it is one
+more name that happens, today, to point at a namespace running an OpenResty/Lua engine, the same
+way `->` lets any other name point at any other tree. Naming a path *is* the only interface to
+whatever structure materializes it — a monad process, cleaker's namespace resolution, an
+OpenResty worker — nothing about the language changes to reach any of them; only what the name
+currently resolves to does.
 
 ## See also
 
@@ -131,8 +239,18 @@ was written to build toward.
 - `modules/monad/Typescript/src/http/selfMapping.ts` — `ensureCleakerIdentityConfig()`, the
   already-solid keypair persistence this doc builds on.
 - `modules/monad/Typescript/src/claim/records.ts` — `claimNamespace()`, the mechanism §3 proposes
-  reusing rather than duplicating.
+  reusing rather than duplicating; `materializeProjectedNamespaceClaim()`, the live precedent §7.2
+  generalizes.
 - `modules/netget/Typescript/src/modules/NetGetX/OpenResty/lua/handlers/surface_proxy.lua` — the
   trust-tier code §4 distinguishes from real verification, and where §4's enforcement would land.
+- `modules/monad/Typescript/src/http/meshAnnounce.ts` — `isNamespaceUsableByIdentity()` (§7.4),
+  already-shipped cross-host claim-conflict checking that §4 did not know existed when first
+  written.
+- `modules/monad/Typescript/src/claim/gatewayAuthority.ts` — the vigencia/autorización split §7.3
+  reuses; its free-standing `gatewayId` is what §7.3 argues against keeping as a separate ledger.
+- Branch `migration/main-server-doors` (`modules/netget/Typescript`, commit `a7595e3`) —
+  already-committed, not-yet-deployed implementation of door-as-pointer (§7.2).
+- `Typescript/typedocs/Operators.md` (`.me` kernel repo) — operator #1, `isPointerCall`, the
+  primitive §7.2 and §7.5 rest on.
 - `CLAUDE.md`'s "Known architectural gaps" — gap #1 and #2, corrected 2026-08-28 to match what
   this doc found by reading the actual code, rather than the older, now-stale description.
