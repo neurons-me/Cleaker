@@ -420,12 +420,55 @@ joint-namespace-set head binding — a harder design than this pass attempted.
   the existing public `namespace-owner` endpoint already discloses — but worth naming as a choice
   rather than an oversight.
 
+### 7.9 Two more real gaps a review surfaced, both closed; two host-visibility precisions
+
+**Status: CLOSED (monad commit `70d964f7`).**
+
+**The `surface.*` exclusion (§7.8) created a new replay hole.** Anything the head computation
+excludes also never moves the head an external caller's signature could be checked against — so a
+signed write to `surface.*` would have stayed valid to replay indefinitely, the same class of gap
+as the multi-namespace one, except this one was introduced by the fix itself rather than pre-
+existing. Closed by reserving `surface.*` to internal callers only (`isSurfaceTelemetryReservedPath`
++ the existing internal-token check, same pattern as `isGatewayRoutingRecordPath`) in both write
+paths. **General rule, worth keeping:** any prefix excluded from head computation must also be
+write-restricted to internal callers — the exclusion alone is never sufficient by itself.
+
+**A genuinely more severe, previously-unexamined vulnerability**, found by asking what a root-
+claim-signed write with `path: "users.alice.profile.email"` actually does. The monad's own root
+namespace resolves to an *empty* kernel prefix (`namespaceToKernelPrefix`), so such a write is
+never further prefixed — the literal path lands at the exact kernel location Alice's own claim
+resolves to. Confirmed live, not reasoned about: a real claim + real signature + real HTTP round
+trip overwrote Alice's real `profile.email` with a forged value, using only the root's own
+signature. `isForeignUsersPrefixWrite()` (`kernel/manager.ts`) now rejects this in both write
+paths as `CANNOT_WRITE_ANOTHER_NAMESPACES_STORAGE`.
+
+**Host-owner visibility (§7.1/§7.8) needed two precisions, not assumptions:**
+- *"Sees what exists, not its content" is a property of the resolver, not the machine.*
+  `memoriesForPrefix("")` filtering out `users.<label>.<deeper path>` is a read-side filter. The
+  underlying storage is one file on one disk; whoever controls that disk can read it directly,
+  outside the resolver entirely. Only genuinely *encrypted* data (the identity-vault design's
+  secrets) is actually safe against a host with physical/filesystem access — unencrypted data is
+  not, regardless of what the resolution interface chooses to expose. State this precisely: the
+  host owner sees what exists by design, and could read unencrypted content via physical access —
+  not the same claim as "sees nothing."
+- *That the host owner sees the list of anchored namespaces at all is a decision, not an accident.*
+  It's information about who uses that machine. Almost certainly the intended shape (§7.1's whole
+  point), but naming it as a chosen tradeoff rather than a side effect, the same way the public
+  `write-head` endpoint (§7.8) is named as one.
+
 **Corrected roadmap.** The original §7.4 gap — `meshAnnounce.ts`'s `isNamespaceUsableByIdentity()`
 comparing `identityHash` (a public, non-secret fingerprint) instead of the signing `public_key` —
-is still open and does not depend on `.netget.delegates` existing. Next, in order: (1) the
-`meshAnnounce.ts` `publicKey` fix, (2) the commit-handler multi-namespace head-binding gap above,
-if it becomes load-bearing before WS edge nodes ship, (3) `.netget.delegates` itself, last, once
-its write surface has nothing else left unverified underneath it.
+is still open and does not depend on `.netget.delegates` existing, and nothing above blocks it
+either. Next, in order: (1) the `meshAnnounce.ts` `publicKey` fix, (2) the commit-handler multi-
+namespace head-binding gap (§7.8, tracked live via an `it.todo()` in `commitGate.test.ts`, not a
+silently-green test), if it becomes load-bearing before WS edge nodes ship, (3) `.netget.delegates`
+itself, last, once its write surface has nothing else left unverified underneath it.
+
+**Noted, not urgent:** telemetry writing into the same semantic memory chain as user data (rather
+than its own, separate store) is why the `surface.*` exclusion was needed in the first place, and
+makes the global chain grow without bound on every request. Moving telemetry out of the semantic
+chain entirely would make the exclusion (and this whole class of gap) unnecessary — a real
+simplification, but a bigger change than this pass attempted.
 
 ## See also
 
@@ -463,3 +506,11 @@ its write surface has nothing else left unverified underneath it.
 - `modules/monad/Typescript/tests/commitGate.test.ts`, `chainHeadWriteAuthorization.test.ts`,
   `netgetReservedPathAuthorization.test.ts` (§7.8) — the live-verified guarantees and the one
   test that documents the still-open multi-namespace-event gap on purpose.
+- `modules/monad/Typescript/src/http/internalToken.ts` — `isSurfaceTelemetryReservedPath()` (§7.9),
+  reserving `surface.*` to internal callers, the same pattern `isGatewayRoutingRecordPath()` already
+  used for the gateway's own routing records.
+- `modules/monad/Typescript/src/kernel/manager.ts` — `isForeignUsersPrefixWrite()` (§7.9), the fix
+  for the root-claim-into-`users.<other>.*` forgery; sits beside `isForeignNamespaceCollapsingToRoot()`,
+  the mirror-image gap it was written to close.
+- `modules/monad/Typescript/tests/rootWriteDirectionCheck.test.ts` (§7.9) — the live-confirmed proof
+  of the forgery, and the regression guard now closing it.
