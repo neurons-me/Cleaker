@@ -269,6 +269,102 @@ the race a signed first-claim (§3, tightened by the note above) exists to preve
 implementation order already assumes this gets resolved before step 3 (WS first-connect) ships;
 this paragraph makes that assumption an explicit, named requirement rather than an implicit one.
 
+### 7.7 `.netget.delegates`: shape, and the write-path gaps it depends on closing first
+
+**Status: DESIGN, blocked on prerequisites below — do not implement the shape without them.**
+Everything in this section was checked directly against `handlers/commandHandler.ts`'s
+`rootCommandHandler` (the generic namespace-write surface every plain write, including a future
+`.netget.delegates` write, goes through). Three real gaps were found there, not hypothesized —
+without closing them first, this shape would be actively unsafe, not just incomplete.
+
+**Purpose**, unchanged from the shape sketched earlier in this conversation: `<namespace>.netget.
+delegates` answers "who besides the namespace's own claim holder may serve this namespace's
+traffic, or write its `.netget.*` config, without holding the claim's own private key?" — read by
+`meshAnnounce.ts`'s `isNamespaceUsableByIdentity()` fix (§7.4) and by any future delegate-authored
+write to `<namespace>.netget.*`.
+
+**Prerequisite 1 — the unclaimed-namespace bypass is real, not theoretical.**
+`rootCommandHandler` (`commandHandler.ts:226`) reads `const claim = getClaim(namespace)`, then
+gates the signature check behind `if (claim) { ... }` — for a namespace with no claim, that whole
+block is skipped and the write proceeds using `body.identityHash` taken **unverified, straight
+from the caller** (`commandHandler.ts:239-241`). Nothing stops a write to `netget.delegates` for
+an unclaimed namespace today, and `meshAnnounce.ts` would read it as a real delegation. The fix has
+an exact precedent two guards above it in the same function: `isKeychainReservedPath()` and
+`isGatewayAuthorityReservedPath()` (`commandHandler.ts:204-216`) already reserve certain paths so
+they 403 unconditionally, before the `if (claim)` gate, rather than falling through it. `netget.
+delegates` (arguably all of `<namespace>.netget.*`) needs the identical reserved-path treatment —
+copy the pattern, don't invent a new one.
+
+**Prerequisite 2 — `isNamespaceWriteAuthorized()` has no replay or namespace binding.**
+Verified directly in `replay.ts`: the function signs `toStableJson(stripWriteAuthFields(body))` —
+no nonce, no timestamp, and `namespace` is never part of the signed payload (it comes from
+`resolveNamespace(req)`, outside the signature entirely). Two consequences, both real: (a) a
+previously-valid signed grant can be replayed at any later time — including *after* a revoke, since
+§7's original design deleted the delegate entry on revoke but never made the grant's own signature
+single-use, so replaying the old grant body silently restores a revoked delegate; "a repeated grant
+is harmless" (this doc's own earlier framing) is wrong for exactly this reason, corrected here. (b)
+if one key holds claims on two different namespaces, a signed write meant for one could be replayed
+against the other, since nothing in the signature ties it to a specific namespace.
+
+Fix: bind the signed payload to `{ ...fields, namespace, expectedHeadHash }`, where
+`expectedHeadHash` is the signing moment's own read of that namespace's current chain head (the
+latest entry's `.hash` from `getMemoriesForNamespace(namespace)`, already real, already
+hash-chained per axiom A8). The server rejects the write if the chain has moved since. This makes
+every signature valid for exactly one write, in one namespace, at one moment — no nonce cache to
+maintain. Tradeoff worth stating plainly: a legitimate concurrent writer racing another write to
+the same namespace gets a stale-head rejection too and must re-sign against the new head — acceptable
+given a claim has exactly one owner, so genuine concurrent writers are rare by construction, not
+absent.
+
+**Prerequisite 3 — delegates must not be able to grant delegates.**
+The second use case (§7's own purpose) requires `isNamespaceWriteAuthorized`'s caller to eventually
+accept a *delegate's* key, not just the claim holder's, for writes under `<namespace>.netget.*`.
+`netget.delegates` is itself under that prefix — without an explicit carve-out, a delegate holding
+any write-shaped scope could grant itself (or anyone) more delegates, escalating past whatever scope
+it was actually given. `netget.delegates` must stay owner-key-only, unconditionally, enforced as an
+allowlist ("only these exact paths accept a delegate signature at all; everything else denied") —
+never a blocklist that only excludes what someone thought to name.
+
+**The corrected shape**, incorporating all three fixes plus two smaller corrections:
+
+```ts
+interface NetgetDelegateEntry {
+  publicKey: string;   // SPKI DER→PEM, same conversion convention as records.ts's
+                        // rawEd25519PublicKeyToPem() (prefix 302a300506032b6570032100) —
+                        // reused for consistency, not reinvented.
+  scopes: string[];     // opaque, same convention as gatewayAuthority.ts's grants.
+  grantedAt: number;
+  grantedBy: string;    // identityHash of the claim holder at grant time — informational audit
+                         // trail only; authority is always re-derived from getClaim() at check
+                         // time, never cached from this field.
+  label?: string;       // human-readable, informational.
+}
+
+// Map key: sha256 hex of the SPKI DER bytes (not the PEM text — whitespace/newline variance
+// would make the same key hash differently). Server recomputes this from `publicKey` on every
+// write (rejecting a mismatched map key) and on every read (never trusts the stored key blindly).
+type NetgetDelegates = Record<string, NetgetDelegateEntry>;
+```
+
+Dropped the earlier `namespace` field from the record entirely — it only ever repeated what the
+kernel path already encodes unambiguously, and a namespace that disagreed with its own storage
+location would just be a bug with no principled way to pick a winner.
+
+**Left open, not decided here:** what `me://<namespace>/netget/delegates` discloses to an
+unauthenticated reader through the same public/closed envelope `pathResolver.ts` already
+implements (three classifications — `public`, `closed`, `not_found`; `closed` deliberately
+indistinguishable from stealth on the wire). Public keys reveal nothing sensitive; a `label` like
+`"mothership-1"` can reveal real infrastructure topology. Needs its own decision before this ships,
+not an assumption baked into the shape.
+
+**Closes the loop on §7.6's earlier verifiability discussion.** Once every write binds to its
+namespace's chain head (prerequisite 2), that signed head stops being just a replay guard — it
+becomes a genuine, checkable state commitment for that one namespace: "at this state, this name
+resolved to this" becomes literally true, provable by replaying that namespace's own memory chain
+from genesis. Not a Merkle tree — it can't prove a single path without replaying the whole chain —
+but real, where the earlier draft's claim of "signed commits" for this was aspirational, not yet
+built.
+
 ## See also
 
 - [Namespace-Is-Context.md](./Namespace-Is-Context.md) — §4 (claim ledger) and §5 (anchored vs.
@@ -291,3 +387,6 @@ this paragraph makes that assumption an explicit, named requirement rather than 
   primitive §7.2 and §7.5 rest on.
 - `CLAUDE.md`'s "Known architectural gaps" — gap #1 and #2, corrected 2026-08-28 to match what
   this doc found by reading the actual code, rather than the older, now-stale description.
+- `modules/monad/Typescript/src/handlers/commandHandler.ts` — `rootCommandHandler` (§7.7), the
+  generic namespace-write surface with the two real, verified gaps (unclaimed-namespace bypass,
+  no replay/namespace binding) that block implementing `.netget.delegates` as specified.
