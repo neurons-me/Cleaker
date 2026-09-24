@@ -43,6 +43,9 @@ export default defineConfig({
         items: [
           { text: 'Algebra of Me', link: '/Algebra-of-Me' },
           { text: 'The Flat Universe', link: '/The-Flat-Universe' },
+          { text: 'Namespace Is Context', link: '/Namespace-Is-Context' },
+          { text: 'Surface Identity Claims (design)', link: '/Surface-Identity-Claims' },
+          { text: 'NRP Namespace Grammar', link: '/NRP-Namespaces' },
         ],
       },
       {
