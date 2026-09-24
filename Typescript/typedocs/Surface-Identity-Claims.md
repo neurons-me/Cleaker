@@ -61,8 +61,17 @@ The only thing that changes is *who* is doing the claiming.
 ```
 surface:   netget.site
 identity:  <surface's own persistent identityHash, from §1's keypair>
-claim:     netget.site  ↔  cleaker.me        (surface → designated namespace)
+claim:     netget.site  ↔  <surface's own identity>        (surface → its own namespace)
 ```
+
+**Note, added 2026-09-24 (see §7.3):** the line above was originally written as
+`netget.site ↔ cleaker.me`, implying a surface could self-claim a namespace *other* than its own.
+That's wrong and now corrected here directly, not just annotated — this mechanism (self-claim via
+`claimNamespace()`) only ever covers a surface's **own** designated namespace. A surface serving a
+*different*, already-claimed namespace (the `netget.site` ↔ `cleaker.me` case this example used to
+show) is never a self-claim — it requires the `cleaker.me` claim holder to have delegated that
+right, per §7.3. Do not read this section as licensing a surface to claim a namespace it doesn't
+already own.
 
 This is the same shape as [Namespace-Is-Context.md](./Namespace-Is-Context.md) §4's claim ledger
 — "this `.me` reclaimed this namespace, with this proof, at this moment, from this surface" —
@@ -231,6 +240,34 @@ way `->` lets any other name point at any other tree. Naming a path *is* the onl
 whatever structure materializes it — a monad process, cleaker's namespace resolution, an
 OpenResty worker — nothing about the language changes to reach any of them; only what the name
 currently resolves to does.
+
+### 7.6 Risks carried forward, not yet resolved
+
+Three things the shape above does not itself solve — named so they aren't lost between this
+addendum and whoever implements it:
+
+**Two ledgers at once.** For as long as `daemon.gateways.<gatewayId>` (`gatewayAuthority.ts`) and
+`<namespace>.netget.delegates` (§7.3) both exist, something will keep writing to the old one out
+of habit or unfamiliarity with this addendum. §7.3 argues the old ledger should stop being used
+for new installs; it does not yet say what happens to an *already-bootstrapped* `gatewayId` record,
+and that migration/deprecation path — not indefinite coexistence — needs its own design pass before
+implementation starts, not after.
+
+**Liminal is not the same as public.** The engine (§7.1) can see every namespace's `.netget`
+branch because it has to, to route at all — that is a *capability*, not a *license*. Reading
+`<namespace>.netget.*` through the `/netget` window, or relaying it to a WS mothership client
+(§4/§7.4's future work), still has to go through the same disclosure contract every other read of
+that namespace does (`pathResolver.ts`'s public/closed envelope) — the engine's structural
+position outside every namespace's tree does not exempt it from that namespace's own privacy
+rules.
+
+**Unclaimed namespaces need a harder rule off loopback.** `isNamespaceUsableByIdentity()`'s
+`if (!claim) return true` (§7.4) is fine on the local, loopback-only path — physical access to the
+machine already implies a trust boundary. On an open remote/WS registration endpoint it is not:
+without a stated policy, "whoever announces an unclaimed namespace first, wins" becomes exactly
+the race a signed first-claim (§3, tightened by the note above) exists to prevent. §7.4's
+implementation order already assumes this gets resolved before step 3 (WS first-connect) ships;
+this paragraph makes that assumption an explicit, named requirement rather than an implicit one.
 
 ## See also
 
