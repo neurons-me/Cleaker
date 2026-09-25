@@ -470,6 +470,52 @@ makes the global chain grow without bound on every request. Moving telemetry out
 chain entirely would make the exclusion (and this whole class of gap) unnecessary — a real
 simplification, but a bigger change than this pass attempted.
 
+### 7.10 Four more questions, checked before touching `meshAnnounce.ts`
+
+**Status: CLOSED for three; one left as an explicit, unresolved decision (monad commit `764ea739`).**
+
+1. **The read side, verified live, not assumed safe by symmetry with the write fix.** Does
+   `GET users.alice.profile.email` through the root host also leak Alice's data? Traced and
+   tested — it does **not**, today, but only as a side effect of `memoryToRow()` rewriting a
+   matched row's own `path` field (stripping the owning namespace's prefix) before the branch tree
+   a read builds from it — never a guard written for this purpose. §7.9's own "sees what exists,
+   not content" claim was correct on this specific point, but by accident, not by design. Made
+   structural instead of incidental: `pathResolver.ts` now calls the same `isForeignUsersPrefixWrite()`
+   the write side uses, so this no longer depends on an unrelated function's internals staying the
+   same for an unrelated reason.
+2. **The guard generalized**, not left as a hardcoded `"users."` string. `namespaceToKernelPrefix()`
+   only ever produces two shapes — `""` or `"<label>.<prefix>"` — so a literal check was a complete
+   enumeration, not a guess, but `isForeignUsersPrefixWrite()` now builds from the exact same
+   `NON_ROOT_KERNEL_PREFIX_LABEL` constant `namespaceToKernelPrefix()` itself uses, so the two
+   structurally cannot drift apart later. Also surfaced a real, separate gap while doing this:
+   `commitHandler`'s per-event guards (keychain/gateway-authority/netget/surface, and the new
+   forgery guard) never canonicalized paths at all — the same slash-vs-dot bypass already closed on
+   `POST /` was still open on `POST /api/v1/commit`. One shared `canonicalizeWritePath()`
+   (`replay.ts`) now backs every guard in both files.
+3. **Malformed paths rejected outright.** New `isMalformedWritePath()` rejects a `scheme://` prefix,
+   a percent-encoded segment, and any run of 2+ separator characters (`..`, `//`, a leading or
+   trailing separator) with `400 MALFORMED_WRITE_PATH` — checked on the RAW path, deliberately
+   before `canonicalizeWritePath()`'s own filter step could silently drop the same shape (the
+   actual kernel write path has no such filter; what the underlying `.me` kernel's own URI parsing
+   does with a resulting empty segment was unverified, not confirmed safe). Runs before every other
+   guard, in both write paths.
+4. **The one-off test flake got a name, not a shrug.** `providerBootRoot.test.ts` and
+   `requestedNamespace.test.ts` shared the literal root namespace `"acme.test"`, and the latter
+   mutates `process.env.ME_NAMESPACE` globally in its own `beforeAll` (restored after, but real
+   shared process state for the window in between) — vitest's module isolation resets each file's
+   own module graph, never `process.env`. Renamed the shared namespace away; confirmed stable
+   across 8 consecutive full-suite runs afterward (0 failures), against roughly 1-in-10 before.
+
+**Left open, on purpose:** what the root claim is allowed to do to `groups.*` today. Groups live
+under the shared root namespace itself, which the root claim already legitimately owns — so unlike
+the `users.<label>.*` case, the root overwriting or deleting group data with its own signature may
+be exactly the intended authority relationship, not a bug. The same question as §7.9's `users.*`
+finding, but not the same answer by default; deciding it either way was out of scope for this pass.
+Related and already tracked: while the multi-namespace-event replay gap (above, `it.todo()`) stays
+open, group writes specifically are replayable through it (e.g. re-adding a member who was just
+removed) — real groups usage raises that gap's priority, ahead of WS edge nodes, independent of
+whatever `groups.*`'s root-authority question resolves to.
+
 ## See also
 
 - [Namespace-Is-Context.md](./Namespace-Is-Context.md) — §4 (claim ledger) and §5 (anchored vs.
