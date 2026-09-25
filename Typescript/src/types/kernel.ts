@@ -3,7 +3,6 @@ import type { RemotePointerDefinition, ResolvePointerResult } from './pointer';
 
 export interface OpenNodeInput {
   namespace: string;
-  secret: string;
   identityHash?: string;
   space?: string;
   headers?: Record<string, string>;
@@ -14,7 +13,6 @@ export interface OpenNodeResult {
   status: 'verified';
   namespace: string;
   identityHash: string;
-  noise: string;
   openedAt: number;
   memoriesCount: number;
 }
@@ -22,7 +20,6 @@ export interface OpenNodeResult {
 export interface MeKernel {
   learn?: (memory: unknown) => void;
   replayMemories?: (memories: unknown[]) => void;
-  noise?: string;
   [key: string]: unknown;
 }
 
@@ -118,7 +115,6 @@ export interface ValidateHostsOptions {
   triadStrategy?: 'first-success' | 'all';
   timeoutMs?: number;
   namespace?: string;
-  secret?: string;
   identityHash?: string;
   bootstrap?: string[];
 }

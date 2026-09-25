@@ -38,7 +38,6 @@ type SignInResponse = {
   status?: number;
   namespace?: string;
   identityHash?: string;
-  noise?: string;
   memories?: unknown[];
   openedAt?: number;
   target?: {
@@ -74,7 +73,6 @@ type ClaimResponse = {
 
 export interface BindKernelOptions extends CreateRemotePointerOptions {
   namespace?: string;
-  secret?: string;
   identityHash?: string;
   space?: string;
   bootstrap?: string[];
@@ -457,7 +455,16 @@ function resolveProofRootNamespace(namespace: string): string {
   }
 }
 
-async function proveKernelNamespace(me: MeKernel, namespace: string): Promise<ClaimProof> {
+// `challenge` defaults to null (claimNamespace()'s own shape -- a claim
+// only ever happens once, so it needs no anti-replay value of its own).
+// signIn() below passes a real per-open nonce instead: the monad's
+// openNamespace() verifies through the exact same ClaimProof pipeline as a
+// claim, distinguished only by challenge being present -- see that
+// function's own header comment (modules/monad's claim/records.ts) for why
+// this shape is reused rather than a bespoke one, and how rootNamespace
+// doubles as the audience binding that stops a signature made for one
+// monad being replayed against a different one serving the same namespace.
+async function proveKernelNamespace(me: MeKernel, namespace: string, challenge: string | null = null): Promise<ClaimProof> {
   const prove = readKernelRuntimeMethod<(input: { rootNamespace: string; challenge?: string | null }) => Promise<unknown>>(
     me,
     'prove',
@@ -471,7 +478,7 @@ async function proveKernelNamespace(me: MeKernel, namespace: string): Promise<Cl
     throw new Error('ROOT_NAMESPACE_REQUIRED');
   }
 
-  const proof = await prove({ rootNamespace, challenge: null });
+  const proof = await prove({ rootNamespace, challenge });
   if (!proof || typeof proof !== 'object') {
     throw new Error('PROOF_INVALID');
   }
@@ -485,6 +492,17 @@ async function proveKernelNamespace(me: MeKernel, namespace: string): Promise<Cl
   }
 
   return proof as ClaimProof;
+}
+
+// A fresh random nonce for a single open's anti-replay challenge -- one
+// per signIn() call, never reused. crypto.randomUUID() is available in
+// every runtime this package targets (browser + Node 16.7+).
+function generateOpenNonce(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
 }
 
 function isLoopbackishHost(raw: string): boolean {
@@ -848,7 +866,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   // ensureLiveChannel's onUpdate handler below.
   const remoteSubscriptionKeys = new Map<string, string>();
   const explicitNamespace = String(options.namespace || '').trim();
-  const defaultSecret = String(options.secret || '');
   const explicitIdentityHash = normalizeIdentityHash(options.identityHash);
   const bootstrapOrigins = Array.isArray(options.bootstrap)
     ? options.bootstrap.map((origin) => normalizeBaseUrl(origin)).filter(Boolean)
@@ -1209,7 +1226,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       ok: true,
       namespace: resolveEnvelopeNamespace(data, namespace),
       identityHash: normalizeIdentityHash(data.identityHash) || identityHash,
-      noise: String(data.noise || ''),
       memories: Array.isArray(data.memories) ? data.memories : [],
       openedAt: Number(data.openedAt || Date.now()),
       target: data.target && typeof data.target === 'object'
@@ -1239,13 +1255,26 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   async function signInRemote(
     origin: string,
     namespace: string,
-    secret: string,
     identityHash: string,
     timeoutMs: number,
     fetcher: typeof fetch,
     headers: Record<string, string> = {},
   ): Promise<SignInResponse | { ok: false; error: string; status: number }> {
-    const body = { namespace, secret, ...(identityHash ? { identityHash } : {}) };
+    let proof: ClaimProof;
+    try {
+      // A fresh nonce every call -- this IS the open's own anti-replay
+      // challenge (monad's openNamespace() rejects a repeated one). Never
+      // cached or reused across signIn() calls.
+      proof = await proveKernelNamespace(me, namespace, generateOpenNonce());
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : 'PROOF_INVALID',
+        status: -1,
+      };
+    }
+
+    const body = { namespace, proof };
 
     // Primary: POST /claims/signIn
     const primary = await postJson(`${normalizeBaseUrl(origin)}/claims/signIn`, body, timeoutMs, fetcher, headers);
@@ -1273,7 +1302,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   async function claimRemote(
     origin: string,
     namespace: string,
-    secret: string,
     timeoutMs: number,
     fetcher: typeof fetch,
     headers: Record<string, string> = {},
@@ -1295,7 +1323,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // Primary: POST /me/kernel:claim/<namespace>
     const claimed = await postJson(
       `${normalizeBaseUrl(origin)}/me/kernel:claim/${encodeURIComponent(namespace)}`,
-      { namespace, secret, proof },
+      { namespace, proof },
       timeoutMs,
       fetcher,
       headers,
@@ -1309,7 +1337,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (claimed.status === 404 || claimed.status === 405) {
       const legacy = await postJson(
         `${normalizeBaseUrl(origin)}/`,
-        { operation: 'claim', namespace, secret, proof },
+        { operation: 'claim', namespace, proof },
         timeoutMs,
         fetcher,
         { 'x-forwarded-host': namespace, ...headers },
@@ -1352,7 +1380,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
   async function validateHosts(input: ValidateHostsOptions = {}): Promise<CleakerStatus> {
     const namespace = resolveNamespace(input.namespace);
-    const secret = String(input.secret !== undefined ? input.secret : defaultSecret);
     const identityHash = resolveIdentityHash(input.identityHash);
     const strategy = input.triadStrategy || 'first-success';
     const timeoutMs = Number(input.timeoutMs || 5000);
@@ -1434,11 +1461,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         continue;
       }
 
-      if (!secret) {
+      if (!readKernelExpression(me)) {
         host.status.triad = 'unverified';
-        host.error = 'SECRET_REQUIRED';
+        host.error = 'PROVE_UNSUPPORTED';
         persistHostRecord(namespace, host);
-        triedOrigins.push({ origin: host.space, reason: 'SECRET_REQUIRED' });
+        triedOrigins.push({ origin: host.space, reason: 'PROVE_UNSUPPORTED' });
         continue;
       }
 
@@ -1449,7 +1476,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       // before this fix it was effectively dead: signInRemote's
       // CLAIM_NOT_FOUND was always silently absorbed into a real claim
       // first, so this branch never actually saw it.
-      const opened = await signInRemote(host.space, namespace, secret, identityHash, timeoutMs, fetcher);
+      const opened = await signInRemote(host.space, namespace, identityHash, timeoutMs, fetcher);
       if (!opened.ok) {
         const errorCode = String(opened.error || 'OPEN_FAILED');
         host.status.triad = errorCode === 'CLAIM_NOT_FOUND' ? 'unverified' : 'failed';
@@ -1488,10 +1515,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         hydrateMemory(memory);
       });
       hydratedMemoriesCount += Math.max(0, hydratedMemoryHashes.size - learnedCountBefore);
-
-      if (opened.noise !== undefined) {
-        me.noise = String(opened.noise || '');
-      }
 
       hydratedFromHostId = host.id;
       hydratedIdentityHash = String(opened.identityHash || '');
@@ -1622,11 +1645,9 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
   async function signIn(input: OpenNodeInput): Promise<OpenNodeResult> {
     const namespace = resolveNamespace(input.namespace);
-    const secret = String(input.secret || '');
     const identityHash = resolveIdentityHash(input.identityHash);
 
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
-    if (!secret) throw new Error('SECRET_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
     const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
@@ -1644,7 +1665,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       const opened = await signInRemote(
         origin,
         namespace,
-        secret,
         identityHash,
         5000,
         fetcher,
@@ -1656,11 +1676,11 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         // status === 0 means the origin itself was unreachable (fetch threw —
         // DNS, CORS, timeout, connection refused): keep trying the next
         // candidate. A non-zero status means a real server answered with a
-        // definitive rejection (wrong secret, identity mismatch, etc.) —
-        // stop here and surface THAT error, rather than letting an
-        // unrelated, further-down fallback origin's unreachability (e.g. the
-        // public cleaker.me, CORS-blocked from a dev origin) overwrite a
-        // real, meaningful answer from the right server with a generic
+        // definitive rejection (invalid/wrong-key proof, etc.) — stop here
+        // and surface THAT error, rather than letting an unrelated,
+        // further-down fallback origin's unreachability (e.g. the public
+        // cleaker.me, CORS-blocked from a dev origin) overwrite a real,
+        // meaningful answer from the right server with a generic
         // NETWORK_ERROR.
         if (opened.status !== 0) break;
         continue;
@@ -1669,7 +1689,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       const allMemories = Array.isArray(opened.memories) ? opened.memories : [];
       const memories = allMemories.filter((memory) => hydrateMemory(memory));
 
-      me.noise = String(opened.noise || '');
       // See confirmedNamespace's own doc comment (near its declaration,
       // above resolveNamespace) -- the server's own answer, not this
       // client's guess, and the only thing ensureLiveChannel below should
@@ -1680,7 +1699,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         status: 'verified',
         namespace: confirmedNamespace,
         identityHash: String(opened.identityHash || identityHash || ''),
-        noise: String(opened.noise || ''),
         openedAt: Number(opened.openedAt || Date.now()),
         memoriesCount: memories.length,
       };
@@ -1691,17 +1709,15 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
   async function claim(input: OpenNodeInput): Promise<OpenNodeResult> {
     const namespace = resolveNamespace(input.namespace);
-    const secret = String(input.secret || '');
 
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
-    if (!secret) throw new Error('SECRET_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
     const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
     let lastError = 'CLAIM_FAILED';
 
     for (const origin of origins) {
-      const result = await claimRemote(origin, namespace, secret, 5000, fetcher, input.headers || {});
+      const result = await claimRemote(origin, namespace, 5000, fetcher, input.headers || {});
 
       if (!result.ok) {
         lastError = String(result.error || 'CLAIM_FAILED');
@@ -1717,7 +1733,6 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
         status: 'verified',
         namespace: confirmedNamespace,
         identityHash: String(result.identityHash || ''),
-        noise: '',
         openedAt: Number(result.createdAt || Date.now()),
         memoriesCount: 0,
       };
@@ -1730,11 +1745,15 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     discoverHosts({ namespace: explicitNamespace });
   }
 
-  // Triad: auto-signIn if secret is provided and namespace can be resolved from context.
-  if (options.secret) {
+  // Triad: auto-signIn if `me` can actually prove() (constructed via the
+  // 2-arg (who, secret) form, so #activeExpression is set) and a namespace
+  // can be resolved from context. Used to trigger off `options.secret`
+  // being truthy -- that was only ever a proxy for "this kernel can sign",
+  // which readKernelExpression checks directly now that signIn() itself
+  // needs a real proof, not a shared secret.
+  if (readKernelExpression(me)) {
     _ready = signIn({
       namespace: explicitNamespace,
-      secret: options.secret,
       identityHash: options.identityHash,
       space: options.space,
       fetcher: options.fetcher,

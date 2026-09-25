@@ -9,7 +9,6 @@ function createMockKernel(expression: string) {
   const kernel: any = () => undefined;
   kernel[ME_EXPRESSION_SYMBOL] = expression;
   kernel.learn = (m: unknown) => memories.push(m);
-  kernel.noise = '';
   kernel._memories = memories;
   return kernel;
 }
@@ -22,7 +21,6 @@ function createReadableKernel(expression: string, values: Record<string, unknown
   };
   kernel[ME_EXPRESSION_SYMBOL] = expression;
   kernel.learn = (m: unknown) => memories.push(m);
-  kernel.noise = '';
   kernel._memories = memories;
   return kernel;
 }
@@ -54,21 +52,40 @@ function ok(data: Record<string, unknown>): Response {
 // me["@"]("suiGn")
 // cleaker(me, "neurons.me")
 // → namespace: suign.neurons.me
-// → node.signIn({ secret }) → POST /claims/signIn → hydrates memories into me
+// → node.signIn({ namespace }) → POST /claims/signIn with a real proof
+//   (no more shared secret on the wire — see monad's claim/records.ts
+//   openNamespace() for why: a "secret" leaked key-deriving material,
+//   since it was the same material the signing key itself derives from)
+//   → hydrates memories into me
 void run('Bind: signIn → POST /claims/signIn → memories hydrated into kernel', async () => {
   const me = createMockKernel('suiGn');
   const calls: string[] = [];
+
+  // signIn() now needs a real proof (the same shape claim() already mocks below).
+  me['!'] = {
+    prove: async ({ rootNamespace, challenge }: { rootNamespace: string; challenge?: string | null }) => ({
+      identityHash: 'abc123',
+      expression: 'suign',
+      namespace: 'suign.neurons.me',
+      rootNamespace,
+      challenge: challenge ?? null,
+      publicKey: 'pubkey',
+      message: 'msg',
+      signature: 'sig',
+      timestamp: Date.now(),
+    }),
+  };
 
   const node = cleaker(me, 'neurons.me', {
     fetcher: mockFetcher((url, body) => {
       calls.push(url);
       if (url === 'https://neurons.me/claims/signIn') {
         assert.equal(body.namespace, 'suign.neurons.me');
-        assert.equal(body.secret, 'test-secret');
+        assert.ok(body.proof, 'signIn must send a proof, not a secret');
+        assert.equal((body as any).secret, undefined, 'no shared secret on the wire');
         return ok({
           namespace: 'suign.neurons.me',
           identityHash: 'abc123',
-          noise: 'noise-xyz',
           memories: [
             { path: 'profile.name', operator: '=', expression: 'SuiGn', value: 'SuiGn', timestamp: 1 },
           ],
@@ -81,7 +98,7 @@ void run('Bind: signIn → POST /claims/signIn → memories hydrated into kernel
 
   assert.equal(node.getStatus().activeNamespace, 'suign.neurons.me');
 
-  const result = await node.signIn({ namespace: 'suign.neurons.me', secret: 'test-secret' });
+  const result = await node.signIn({ namespace: 'suign.neurons.me' });
 
   assert.equal(result.status, 'verified');
   assert.equal(result.namespace, 'suign.neurons.me');
@@ -90,7 +107,7 @@ void run('Bind: signIn → POST /claims/signIn → memories hydrated into kernel
   assert.equal(me._memories.length, 1);
 });
 
-// node.claim({ secret }) → POST /me/kernel:claim/<namespace> → registered
+// node.claim({ namespace }) → POST /me/kernel:claim/<namespace> → registered
 void run('Bind: claim → POST /me/kernel:claim/<namespace>', async () => {
   const me = createMockKernel('suiGn');
   const calls: string[] = [];
@@ -124,7 +141,7 @@ void run('Bind: claim → POST /me/kernel:claim/<namespace>', async () => {
     }),
   });
 
-  const result = await node.claim({ namespace: 'suign.neurons.me', secret: 'test-secret' });
+  const result = await node.claim({ namespace: 'suign.neurons.me' });
 
   assert.equal(result.status, 'verified');
   assert.equal(result.namespace, 'suign.neurons.me');

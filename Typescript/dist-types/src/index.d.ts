@@ -1,7 +1,7 @@
 export { default } from './cleaker.js';
 export type { CleakerOptions } from './cleaker.js';
 export { parseTarget } from './parse/parseTarget.js';
-export { composeNamespace, parseNamespaceExpression, stringifyNamespaceExpression, } from './namespace/expression.js';
+export { composeNamespace, isValidDomainShape, parseNamespaceExpression, stringifyNamespaceExpression, } from './namespace/expression.js';
 export { parseNrpTarget } from './namespace/nrpTarget.js';
 export type { CleakerErrorPayload, CleakerEvents, CleakerNode, CleakerReadyPayload, CleakerStatus, MeKernel, NamespaceFallbackPayload, NamespaceFailedPayload, OpenNodeInput, OpenNodeResult, } from './types/kernel.js';
 export type { ParsedNamespaceExpression, } from './types/namespace.js';

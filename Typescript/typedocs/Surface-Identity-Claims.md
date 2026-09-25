@@ -516,6 +516,34 @@ open, group writes specifically are replayable through it (e.g. re-adding a memb
 removed) — real groups usage raises that gap's priority, ahead of WS edge nodes, independent of
 whatever `groups.*`'s root-authority question resolves to.
 
+### 7.11 A sign-up fix surfaced a sharper version of §2's claim-secret question — one item left explicitly Open
+
+Fixing a real bug (the sign-up flow wrote profile data unsigned to an unclaimed namespace instead of
+calling the monad's own `POST /claims`) led to checking whether "the claim secret never leaves the
+browser" actually holds. It does not, in the sense that matters: for the real browser path
+(`deriveCleakerNode()` → `ME_RESEED(username, password)`), the `secret` a claim/open request sends to
+the monad is the *same* `(username, password)` pair `deriveCompoundSeed()` turns into the compound
+seed the Ed25519 signing key derives from — not merely "a credential the server happens to see," but
+the seed material itself. `createSeedSession.ts`'s pre-existing `claim()`/`open()` do the same thing
+more directly, sending the raw kernel seed. Full trace, the real local claims this affects, and the
+proposed domain-separated-verifier fix are written up in
+[`Identity-Namespace-Recovery-Audit.md` §12, item 7](../../../../typedocs/Architecture/Identity-Namespace-Recovery-Audit.md)
+(monad repo) — not duplicated here since it's one finding, not two.
+
+**Left Open, deliberately not touched by that fix:** `deriveCompoundSeed()` itself
+(`me.ts:152-154`, `keccak256("me.seed/compound:v1::" + who + "::" + secret)`) is a single fast hash,
+with no slow KDF (scrypt/Argon2) and no per-installation salt beyond the fixed, public domain string.
+Two consequences, both already true today, independent of any claim-secret fix:
+
+- Anyone who knows (or guesses) `who` — often a public username or handle — has an offline
+  password-guessing target with no per-installation salt slowing them down: try a candidate
+  `secret`, recompute the seed, check it against the one public thing every claim already publishes,
+  the identity's `publicKey`. The public key is the oracle.
+- Moving to a slow KDF changes every existing identity's derived seed — it is not a drop-in swap next
+  to the domain-separated-verifier fix above; it invalidates keys, not just re-derives a side value.
+  A separate decision, on a separate timeline, from the claim-secret question this section otherwise
+  tracks.
+
 ## See also
 
 - [Namespace-Is-Context.md](./Namespace-Is-Context.md) — §4 (claim ledger) and §5 (anchored vs.

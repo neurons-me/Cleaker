@@ -2,7 +2,6 @@ import type { ResolvePointerOptions } from './pointer';
 import type { RemotePointerDefinition, ResolvePointerResult } from './pointer';
 export interface OpenNodeInput {
     namespace: string;
-    secret: string;
     identityHash?: string;
     space?: string;
     headers?: Record<string, string>;
@@ -12,14 +11,12 @@ export interface OpenNodeResult {
     status: 'verified';
     namespace: string;
     identityHash: string;
-    noise: string;
     openedAt: number;
     memoriesCount: number;
 }
 export interface MeKernel {
     learn?: (memory: unknown) => void;
     replayMemories?: (memories: unknown[]) => void;
-    noise?: string;
     [key: string]: unknown;
 }
 export interface KernelPendingResolution {
@@ -98,7 +95,6 @@ export interface ValidateHostsOptions {
     triadStrategy?: 'first-success' | 'all';
     timeoutMs?: number;
     namespace?: string;
-    secret?: string;
     identityHash?: string;
     bootstrap?: string[];
 }
@@ -128,5 +124,18 @@ export interface CleakerEvents {
     'namespace:fallback': (payload: NamespaceFallbackPayload) => void;
     /** All surfaces failed; namespace resolution is giving up. */
     'namespace:failed': (payload: NamespaceFailedPayload) => void;
+    /**
+     * A remote value this kernel is tracking (via a RemoteSlot -- something
+     * was actually read through the path proxy at least once) changed on the
+     * server, pushed live over the `live: true` WebSocket channel rather than
+     * from this session's own write. `path` is the same dot-path key
+     * RemoteSlot uses (e.g. "profile.name"). Fires AFTER the kernel's own
+     * memory has already been updated (hydrateMemory) -- a listener reading
+     * `me` synchronously here sees the new value, not the old one.
+     */
+    'value:changed': (payload: {
+        path: string;
+        value: unknown;
+    }) => void;
 }
 //# sourceMappingURL=kernel.d.ts.map

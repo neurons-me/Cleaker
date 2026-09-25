@@ -8,7 +8,22 @@ function createMockKernel(expression: string | null = null) {
   const kernel: any = (path?: string) => undefined;
   kernel[ME_EXPRESSION_SYMBOL] = expression;
   kernel.learn = () => {};
-  kernel.noise = '';
+  // signIn()/claim() need a real proof now -- these tests only care about
+  // which origin URL gets hit, so a minimal, always-succeeding prove() is
+  // enough to get past that step and reach the (mocked, 404ing) fetcher.
+  kernel['!'] = {
+    prove: async ({ rootNamespace, challenge }: { rootNamespace: string; challenge?: string | null }) => ({
+      identityHash: 'mock-identity',
+      expression: String(expression || ''),
+      namespace: `${String(expression || '').toLowerCase()}.${rootNamespace}`,
+      rootNamespace,
+      challenge: challenge ?? null,
+      publicKey: 'mock-pubkey',
+      message: 'mock-message',
+      signature: 'mock-signature',
+      timestamp: Date.now(),
+    }),
+  };
   return kernel;
 }
 
@@ -29,40 +44,40 @@ function captureUrls(): { urls: string[]; fetcher: typeof fetch } {
 void run('Space: public domain → https with no port', async () => {
   const { urls, fetcher } = captureUrls();
   const me = createMockKernel('suiGn');
-  const node = cleaker(me, 'neurons.me', { secret: 'x', fetcher });
-  try { await node.signIn({ namespace: 'suiGn.neurons.me', secret: 'x' }); } catch {}
+  const node = cleaker(me, 'neurons.me', { fetcher });
+  try { await node.signIn({ namespace: 'suiGn.neurons.me' }); } catch {}
   assert.ok(urls.some(u => u.startsWith('https://neurons.me')), `Expected https://neurons.me, got: ${urls[0]}`);
 });
 
 void run('Space: bare hostname (no dot) → http + .local + port 8161', async () => {
   const { urls, fetcher } = captureUrls();
   const me = createMockKernel('suiGn');
-  const node = cleaker(me, 'sui-desk', { secret: 'x', fetcher });
-  try { await node.signIn({ namespace: 'suiGn.sui-desk.local', secret: 'x' }); } catch {}
+  const node = cleaker(me, 'sui-desk', { fetcher });
+  try { await node.signIn({ namespace: 'suiGn.sui-desk.local' }); } catch {}
   assert.ok(urls.some(u => u.startsWith('http://sui-desk.local:8161')), `Expected http://sui-desk.local:8161, got: ${urls[0]}`);
 });
 
 void run('Space: bare hostname with custom port → http + .local + that port', async () => {
   const { urls, fetcher } = captureUrls();
   const me = createMockKernel('suiGn');
-  const node = cleaker(me, 'sui-desk:9000', { secret: 'x', fetcher });
-  try { await node.signIn({ namespace: 'suiGn.sui-desk.local', secret: 'x' }); } catch {}
+  const node = cleaker(me, 'sui-desk:9000', { fetcher });
+  try { await node.signIn({ namespace: 'suiGn.sui-desk.local' }); } catch {}
   assert.ok(urls.some(u => u.startsWith('http://sui-desk.local:9000')), `Expected http://sui-desk.local:9000, got: ${urls[0]}`);
 });
 
 void run('Space: IP address → http + port 8161', async () => {
   const { urls, fetcher } = captureUrls();
   const me = createMockKernel('suiGn');
-  const node = cleaker(me, '192.168.1.5', { secret: 'x', fetcher });
-  try { await node.signIn({ namespace: 'suiGn.192.168.1.5', secret: 'x' }); } catch {}
+  const node = cleaker(me, '192.168.1.5', { fetcher });
+  try { await node.signIn({ namespace: 'suiGn.192.168.1.5' }); } catch {}
   assert.ok(urls.some(u => u.startsWith('http://192.168.1.5:8161')), `Expected http://192.168.1.5:8161, got: ${urls[0]}`);
 });
 
 void run('Space: IP address with explicit port → http + that port', async () => {
   const { urls, fetcher } = captureUrls();
   const me = createMockKernel('suiGn');
-  const node = cleaker(me, '192.168.1.5:8181', { secret: 'x', fetcher });
-  try { await node.signIn({ namespace: 'suiGn.192.168.1.5', secret: 'x' }); } catch {}
+  const node = cleaker(me, '192.168.1.5:8181', { fetcher });
+  try { await node.signIn({ namespace: 'suiGn.192.168.1.5' }); } catch {}
   assert.ok(urls.some(u => u.startsWith('http://192.168.1.5:8181')), `Expected http://192.168.1.5:8181, got: ${urls[0]}`);
 });
 
@@ -103,8 +118,8 @@ void run('Form 2: fqdn in expression, cleaker(me) reads it', async () => {
 void run('signIn: primary endpoint is /claims/signIn', async () => {
   const { urls, fetcher } = captureUrls();
   const me = createMockKernel('suiGn');
-  const node = cleaker(me, 'neurons.me', { secret: 'x', fetcher });
-  try { await node.signIn({ namespace: 'suiGn.neurons.me', secret: 'x' }); } catch {}
+  const node = cleaker(me, 'neurons.me', { fetcher });
+  try { await node.signIn({ namespace: 'suiGn.neurons.me' }); } catch {}
   assert.ok(
     urls.some(u => u.includes('/claims/signIn')),
     `Expected /claims/signIn in URLs, got: ${JSON.stringify(urls)}`,

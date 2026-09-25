@@ -30,7 +30,23 @@ function createMockKernelWithBoundNamespace(expression: string, boundRootNamespa
   };
   kernel[ME_EXPRESSION_SYMBOL] = expression;
   kernel.learn = () => {};
-  kernel.noise = '';
+  // signIn() needs a real proof now -- these tests only care about which
+  // namespace ends up in the request body, so a minimal, always-succeeding
+  // prove() (echoing the SAME expression this mock is bound to) is enough
+  // to reach the (mocked, 404ing) fetcher.
+  kernel['!'] = {
+    prove: async ({ rootNamespace, challenge }: { rootNamespace: string; challenge?: string | null }) => ({
+      identityHash: 'mock-identity',
+      expression,
+      namespace: `${expression.toLowerCase()}.${rootNamespace}`,
+      rootNamespace,
+      challenge: challenge ?? null,
+      publicKey: 'mock-pubkey',
+      message: 'mock-message',
+      signature: 'mock-signature',
+      timestamp: Date.now(),
+    }),
+  };
   return kernel;
 }
 
@@ -58,8 +74,8 @@ void run('Namespace constant: falls back to kernel-bound root when nothing else 
   // browser `location` (Node test env), no env vars set — every
   // higher-priority source is absent, so this should reach the new
   // kernel-bound-root fallback and compose "jabellae.local.cleaker".
-  const node = cleaker(me, { secret: 'x', fetcher });
-  try { await node.signIn({ secret: 'x' }); } catch { /* expected: mock 404s */ }
+  const node = cleaker(me, { fetcher });
+  try { await node.signIn({} as any); } catch { /* expected: mock 404s */ }
   assert.ok(
     namespaces.some(ns => ns === 'jabellae.local.cleaker'),
     `Expected a request with namespace "jabellae.local.cleaker", got: ${JSON.stringify(namespaces)}`,
@@ -69,8 +85,8 @@ void run('Namespace constant: falls back to kernel-bound root when nothing else 
 void run('Namespace constant: explicit space still wins over kernel-bound root', async () => {
   const { namespaces, fetcher } = captureRequestNamespaces();
   const me = createMockKernelWithBoundNamespace('jabellae', 'local.cleaker');
-  const node = cleaker(me, 'cleaker.me', { secret: 'x', fetcher });
-  try { await node.signIn({ secret: 'x' }); } catch { /* expected: mock 404s */ }
+  const node = cleaker(me, 'cleaker.me', { fetcher });
+  try { await node.signIn({} as any); } catch { /* expected: mock 404s */ }
   assert.ok(
     namespaces.some(ns => ns === 'jabellae.cleaker.me'),
     `Expected explicit space to produce "jabellae.cleaker.me", got: ${JSON.stringify(namespaces)}`,
@@ -84,8 +100,8 @@ void run('Namespace constant: explicit space still wins over kernel-bound root',
 void run('Namespace constant: no kernel-bound root, nothing else resolves → hardcoded default', async () => {
   const { namespaces, fetcher } = captureRequestNamespaces();
   const me = createMockKernelWithBoundNamespace('anon', null); // never bound to a namespace
-  const node = cleaker(me, { secret: 'x', fetcher });
-  try { await node.signIn({ secret: 'x' }); } catch { /* expected: mock 404s */ }
+  const node = cleaker(me, { fetcher });
+  try { await node.signIn({} as any); } catch { /* expected: mock 404s */ }
   assert.ok(
     namespaces.length > 0 && !namespaces.some(ns => ns.includes('local.cleaker')),
     `Expected a namespace using the hardcoded default (not local.cleaker), got: ${JSON.stringify(namespaces)}`,

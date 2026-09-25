@@ -28,7 +28,22 @@ function createMockKernel(expression: string) {
   const kernel: any = () => undefined;
   kernel[ME_EXPRESSION_SYMBOL] = expression;
   kernel.learn = () => undefined;
-  kernel.noise = '';
+  // signIn() (called internally by validateHosts()) needs a real proof now
+  // -- these tests only care about fallback/failure event sequencing, so a
+  // minimal, always-succeeding prove() is enough to reach the mocked fetcher.
+  kernel['!'] = {
+    prove: async ({ rootNamespace, challenge }: { rootNamespace: string; challenge?: string | null }) => ({
+      identityHash: 'mock-identity',
+      expression,
+      namespace: `${expression.toLowerCase()}.${rootNamespace}`,
+      rootNamespace,
+      challenge: challenge ?? null,
+      publicKey: 'mock-pubkey',
+      message: 'mock-message',
+      signature: 'mock-signature',
+      timestamp: Date.now(),
+    }),
+  };
   return kernel;
 }
 
@@ -78,13 +93,13 @@ void run("namespace:fallback emitted when remote surface fails and local is next
   const node = cleaker(me, 'cleaker.me', {
     fetcher: mockFetcher(
       ['http://localhost'],  // only localhost reachable
-      { namespace: 'suign.cleaker.me', identityHash: 'abc', noise: '', memories: [], openedAt: Date.now() },
+      { namespace: 'suign.cleaker.me', identityHash: 'abc', memories: [], openedAt: Date.now() },
     ),
   });
 
   node.on('namespace:fallback', (payload) => fallbacks.push(payload));
 
-  await node.validateHosts({ namespace: 'suign.cleaker.me', secret: 'test-secret' });
+  await node.validateHosts({ namespace: 'suign.cleaker.me' });
 
   assert.ok(fallbacks.length >= 1, 'expected at least one namespace:fallback event');
   const first = fallbacks[0];
@@ -105,7 +120,7 @@ void run("namespace:failed emitted with full explain when all surfaces fail", as
 
   node.on('namespace:failed', (payload) => failures.push(payload));
 
-  await node.validateHosts({ namespace: 'suign.cleaker.me', secret: 'test-secret' });
+  await node.validateHosts({ namespace: 'suign.cleaker.me' });
 
   assert.ok(failures.length >= 1, 'expected namespace:failed event');
   const f = failures[0];
@@ -124,13 +139,13 @@ void run("no namespace:failed emitted when primary surface resolves successfully
   const node = cleaker(me, 'neurons.me', {
     fetcher: mockFetcher(
       ['https://neurons.me'],
-      { namespace: 'suign.neurons.me', identityHash: 'xyz', noise: '', memories: [], openedAt: Date.now() },
+      { namespace: 'suign.neurons.me', identityHash: 'xyz', memories: [], openedAt: Date.now() },
     ),
   });
 
   node.on('namespace:failed', (payload) => failures.push(payload));
 
-  await node.validateHosts({ namespace: 'suign.neurons.me', secret: 'test-secret' });
+  await node.validateHosts({ namespace: 'suign.neurons.me' });
 
   assert.equal(failures.length, 0, 'namespace:failed should not fire on success');
 });

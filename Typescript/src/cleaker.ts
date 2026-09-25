@@ -14,7 +14,6 @@ export interface CleakerOptions
     Pick<
       BindKernelOptions,
       | 'namespace'
-      | 'secret'
       | 'identityHash'
       | 'space'
       | 'bootstrap'
