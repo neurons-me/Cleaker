@@ -497,12 +497,25 @@ async function proveKernelNamespace(me: MeKernel, namespace: string, challenge: 
 // A fresh random nonce for a single open's anti-replay challenge -- one
 // per signIn() call, never reused. crypto.randomUUID() is available in
 // every runtime this package targets (browser + Node 16.7+).
+// "open:" prefixed on purpose -- monad's openNamespace() requires this
+// exact prefix on a proof's `challenge` field before treating it as an
+// open nonce at all. Without it, a captured CLAIM proof (claimRemote()'s
+// own proveKernelNamespace(me, namespace) call, or any other real caller
+// that signs a non-null challenge for its own reasons -- proveKernelNamespace's
+// `challenge: null` default is not a guarantee every caller keeps) would be
+// indistinguishable from a real open proof: identical message shape,
+// identical verification, and its own challenge string would trivially
+// satisfy "looks like an unused nonce" within the 60s window. See monad's
+// claim/records.ts openNamespace() for the full reasoning.
 function generateOpenNonce(): string {
-  try {
-    return crypto.randomUUID();
-  } catch {
-    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  }
+  const random = (() => {
+    try {
+      return crypto.randomUUID();
+    } catch {
+      return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  })();
+  return `open:${random}`;
 }
 
 function isLoopbackishHost(raw: string): boolean {
