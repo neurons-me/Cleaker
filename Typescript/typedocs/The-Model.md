@@ -88,16 +88,15 @@ await pending.promise; // resolves against the server, then teaches the kernel
 
 **Cleaker** does not mutate `.me` internals. It calls the public `me.learn(memory)` interface exactly once per remote resolution. The kernel learns. Cleaker does not reach inside.
 
-## Operational triad — `cleaker(me, { namespace, secret })`
+## Operational triad — `cleaker(me, { namespace })`
 
 ```ts
 import cleaker from 'cleaker';
-import Me from 'this.me';
+import me from 'this.me';
 
-const me = new Me();
-const self = cleaker(me, {
+const identity = me('ana', 'luna');
+const self = cleaker(identity, {
   namespace: 'ana.cleaker.me',
-  secret: 'luna',
   space: 'localhost:8161',
 });
 

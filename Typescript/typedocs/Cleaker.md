@@ -45,12 +45,14 @@ import cleaker from 'cleaker';
 cleaker();
 
 // Mount a .me identity into the namespace tree
-import Me from 'this.me';
-const me = new Me();
-const node = cleaker(me, {
+import me from 'this.me';
+const identity = me('suign', 'my-secret');
+const node = cleaker(identity, {
   namespace: 'suign.neurons.me',
-  secret: 'my-secret',
 });
 
 await node.ready;
 ```
+
+No `secret` on the wire: `node.ready` resolves once cleaker has signed a
+real proof for `identity` and the server has verified it.

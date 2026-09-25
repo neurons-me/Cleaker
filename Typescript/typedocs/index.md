@@ -1,4 +1,4 @@
-# cleaker `3.2.1`
+# cleaker `4.0.0`
 
 > Who am I, here.
 
@@ -19,15 +19,15 @@ import me from 'this.me'
 import cleaker from 'cleaker'
 
 // Sovereign identity — offline, deterministic, no network required
-me('suign', 'secret')
+const identity = me('suign', 'secret')
 
 // Project identity into a namespace surface
-const node = cleaker(me, 'cleaker.me')
+const node = cleaker(identity, 'cleaker.me')
 
-// Validate surfaces, open triad, hydrate memories into kernel
+// Validate surfaces, open triad, hydrate memories into kernel — no
+// secret on the wire: cleaker signs a real proof for you internally.
 const status = await node.validateHosts({
   namespace: 'suign.cleaker.me',
-  secret: 'secret',
 })
 
 console.log(status.overall)  // 'healthy' | 'degraded' | 'offline'
