@@ -173,11 +173,23 @@ function normalizeSurfaceOrigin(input: string): string {
     const protocol = parsed.protocol.toLowerCase();
     const hostname = String(parsed.hostname || '').trim().toLowerCase();
     if (!protocol || !hostname) return '';
-    return `${protocol}//${hostname}`;
+    // Keep an explicit port when the input carried one -- dropping it
+    // unconditionally (as this used to) silently rewrites e.g.
+    // `http://localhost:6006` to `http://localhost`, which can resolve to
+    // a completely different, unrelated service (confirmed live
+    // 2026-10-02: a Storybook dev server's own origin fell through this
+    // function and the port-less result landed on the real ambient
+    // netget/nginx gateway listening on :80, not Storybook itself).
+    const port = String(parsed.port || '').trim();
+    return port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
   } catch {
-    const host = stripPort(raw.replace(/^https?:\/\//i, '').split('/')[0] || '');
+    const withoutScheme = raw.replace(/^https?:\/\//i, '').split('/')[0] || '';
+    const host = stripPort(withoutScheme);
     if (!host) return '';
-    return `${isLoopbackishHost(host) ? 'http' : 'https'}://${host}`;
+    const portMatch = withoutScheme.match(/:(\d+)$/);
+    const port = portMatch ? portMatch[1] : '';
+    const protocol = isLoopbackishHost(host) ? 'http' : 'https';
+    return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
   }
 }
 
