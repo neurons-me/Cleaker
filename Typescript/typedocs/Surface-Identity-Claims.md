@@ -527,8 +527,8 @@ seed the Ed25519 signing key derives from — not merely "a credential the serve
 the seed material itself. `createSeedSession.ts`'s pre-existing `claim()`/`open()` do the same thing
 more directly, sending the raw kernel seed. Full trace, the real local claims this affects, and the
 proposed domain-separated-verifier fix are written up in
-[`Identity-Namespace-Recovery-Audit.md` §12, item 7](../../../../typedocs/Architecture/Identity-Namespace-Recovery-Audit.md)
-(monad repo) — not duplicated here since it's one finding, not two.
+[`Identity-Namespace-Recovery-Audit.md` §12, item 7](https://neurons-me.github.io/all.this/typedocs/Architecture/Identity-Namespace-Recovery-Audit.html#12-questions-that-need-the-owners-decision-not-decidable-from-code-alone)
+(all.this repo) — not duplicated here since it's one finding, not two.
 
 **Left Open, deliberately not touched by that fix:** `deriveCompoundSeed()` itself
 (`me.ts:152-154`, `keccak256("me.seed/compound:v1::" + who + "::" + secret)`) is a single fast hash,
