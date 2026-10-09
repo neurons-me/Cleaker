@@ -1,119 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/index.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/index.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/hierarchy.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/hierarchy.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/CleakerErrorPayload.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/CleakerErrorPayload.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/CleakerEvents.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/CleakerEvents.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/CleakerNode.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/CleakerNode.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/CleakerOptions.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/CleakerOptions.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/CleakerReadyPayload.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/CleakerReadyPayload.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/CleakerStatus.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/CleakerStatus.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/MeKernel.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/GroupRecord.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/NamespaceFailedPayload.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/MeKernel.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/NamespaceFallbackPayload.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/NamespaceFailedPayload.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/OpenNodeInput.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/NamespaceFallbackPayload.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/OpenNodeResult.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/OpenNodeInput.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/ParsedNamespaceExpression.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/OpenNodeResult.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/ParsedTarget.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/ParsedNamespaceExpression.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/ParseTargetOptions.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/ParsedTarget.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/RegisterSurfaceInput.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/ParseTargetOptions.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/RemotePointerDefinition.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/RegisterSurfaceInput.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/ResolvePointerOptions.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/RemotePointerDefinition.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/ResolvePointerResult.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/ResolvePointerOptions.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/ResolveSurfaceInput.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/ResolvePointerResult.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/SurfaceEndpoint.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/ResolveSurfaceInput.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/interfaces/TopologyResolver.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/SurfaceEndpoint.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/types/SurfaceTransport.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/interfaces/TopologyResolver.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/functions/composeNamespace.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/types/GroupRole.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/functions/default.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/types/SurfaceTransport.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/functions/parseNamespaceExpression.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/canBootstrap.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/functions/parseTarget.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/composeNamespace.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 	<url>
-		<loc>https://neurons-me.github.io/cleaker/Typescript/docs/api/functions/stringifyNamespaceExpression.html</loc>
-		<lastmod>2026-05-29T20:11:06.294Z</lastmod>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/default.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/hasScope.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/isAdmin.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/isMember.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/isOwner.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/isValidDomainShape.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/parseNamespaceExpression.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/parseNrpTarget.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/parseTarget.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/roleOf.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
+	</url>
+	<url>
+		<loc>https://neurons-me.github.io/cleaker/Typescript/typedocs/api/functions/stringifyNamespaceExpression.html</loc>
+		<lastmod>2026-09-25T05:22:51.598Z</lastmod>
 	</url>
 </urlset>

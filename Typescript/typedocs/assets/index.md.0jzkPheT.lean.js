@@ -1,0 +1,1 @@
+import{_ as i,o as a,c as e,a0 as n}from"./chunks/framework.xN4chThJ.js";const c=JSON.parse('{"title":"cleaker 4.0.0","description":"","frontmatter":{},"headers":[],"relativePath":"index.md","filePath":"index.md"}'),t={name:"index.md"};function l(h,s,k,p,r,d){return a(),e("div",null,[...s[0]||(s[0]=[n("",19)])])}const o=i(t,[["render",l]]);export{c as __pageData,o as default};
