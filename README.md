@@ -19,7 +19,7 @@ Select your language:
 
 | Language    | Source                          | Status            | Documentation                                                |
 | ----------- | ------------------------------- | ----------------- | ------------------------------------------------------------ |
-| **Typescript** | `cd cleaker/Typescript && npm install` | [![npm](https://img.shields.io/npm/v/cleaker/latest?label=latest)](https://www.npmjs.com/package/cleaker) | [Typescript Docs ⟡](https://neurons-me.github.io/Cleaker/Typescript/docs/) |
+| **Typescript** | `cd cleaker/Typescript && npm install` | [![npm](https://img.shields.io/npm/v/cleaker/latest?label=latest)](https://www.npmjs.com/package/cleaker) | [Typescript Docs ⟡](https://neurons-me.github.io/Cleaker/Typescript/typedocs/) |
 | **Python**  | `cd cleaker/Python/`               | Not Available     | [Python Docs](https://neurons-me.github.io/Cleaker/Python/) |
 | **Rust**    | `cd cleaker/Rust/`                 | Not Available     | [Rust Docs](https://neurons-me.github.io/Cleaker/Rust/)     |
 
@@ -51,7 +51,7 @@ await ptr.promise; // resolves remotely and teaches the local kernel
 
 > Change the space, change the branch. Change the seed, change the universe.
 
-Once a [**namespace**](https://neurons-me.github.io/.me/Typescript/typedocs/Namespace-Resolution-Protocol.html) exists, serve or execute it:
+Once a [**namespace**](https://neurons-me.github.io/NRP/Namespace-Protocol-Resolution.html) exists, serve or execute it:
 
 ```txt
 suign.neurons.me/profile                 semantic path / meaning
