@@ -13,6 +13,35 @@ cleaker(me); // mounts this .me
 
 `subject = cleaker(me)` 
 
+The same mount, as a component (`this.gui/react`):
+
+```jsx
+<Me namespace="cleaker.me" transport="…">
+  <Cleaker />
+</Me>
+```
+
+# Function and component
+
+Both say *who am I here*. One is for code, the other for a person at a screen.
+
+| | `cleaker(me)` | `<Me><Cleaker /></Me>` |
+| --- | --- | --- |
+| **Starts from** | a `.me` that already carries its identity (`me["@"]("suiGn")`) | a namespace: a `.me` that carries only that |
+| **Does** | mounts that `.me` into a namespace and returns the mounted node (`claim`, `signIn`, …) | draws the way into the namespace: QR, connect, sign in, register, recover |
+| **Ends with** | a subject: the identity, mounted | a session whose kernel is mounted with `cleaker(me, { namespace })` |
+| **Needs** | the kernel in your hands | someone in front of the screen |
+
+They are the same operation at two ends, not two things to choose between. The component is built on the function: when someone signs in or registers, the session it opens is `cleaker(me, { … })` over the kernel that person's credentials derive. `<Me namespace>` is the other half: it fixes the context (what the README calls `cleaker()`), and signing in places an identity into it (`cleaker(me)`).
+
+What `<Cleaker />` takes from `<Me>`:
+
+- **The namespace.** It reads the namespace the `.me` stands in and that is its destination. There is no other way to say where it points.
+- **Nothing else from that `.me`.** It never logs it in or operates on it. The session is built on its own kernel when someone claims or opens an identity; a shared namespace is not a shared runtime.
+- **Optionally, where it is reached** (`transport`), when that is not the namespace's own address, for example a gateway page whose monad answers behind `/apps/<name>`.
+
+No `.me` above it, or one without a namespace, renders a message saying so: it does not guess a destination. A namespace that cannot be parsed raises an error; it is never swapped for `cleaker.me`.
+
 # Quick Start
 
 Select your language:
