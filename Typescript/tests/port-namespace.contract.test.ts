@@ -246,6 +246,14 @@ await contract('L4 with allowImplicitTransport the legacy discovery is still the
   assert.ok(hosts.length >= 1);
 });
 
+await contract('K17 a door on a DIFFERENT host than the namespace is still the transport: a contradicting written port is a conflict', async () => {
+  const r = await signInThrough('http://fulltrailer.x.local:8080', 'ana.x.local:9901');
+  assert.equal(r.error, 'TRANSPORT_PORT_CONFLICT');
+  assert.equal(r.calls.length, 0);
+  const ok = await signInThrough('http://fulltrailer.x.local', 'ana.x.local:9901');
+  assert.ok(ok.calls[0].url.startsWith('http://fulltrailer.x.local:9901/'), ok.calls[0]?.url);
+});
+
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} (failures are the places the port still contaminates the namespace)`);
 process.exit(failed ? 1 : 0);

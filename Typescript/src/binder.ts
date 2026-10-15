@@ -184,44 +184,32 @@ function stripPort(raw: string): string {
  * An explicit door is never silently replaced by a fallback origin. Nothing is carried from one door to another: each
  * origin is its own transport.
  */
-function applyWrittenPort(origins: string[], namespace: string): string[] {
-  let parsed: ReturnType<typeof parseNamespaceExpression>;
+function applyWrittenPort(origins: string[], namespace: string, fallbacks: string[] = []): string[] {
+  let port: number | null = null;
   try {
-    parsed = parseNamespaceExpression(namespace);
+    port = parseNamespaceExpression(namespace).transport.port;
   } catch {
-    return origins;
+    port = null;
   }
-  const port = parsed.transport.port;
-  if (!port) return origins;
+  if (!port) return [...origins, ...fallbacks];
 
-  const hosts = new Set([parsed.constant, parsed.fqdn].map((h) => String(h || '').toLowerCase()).filter(Boolean));
-  const withPort: string[] = [];
-  const others: string[] = [];
-  for (const origin of origins) {
+  // The declared origins ARE this node's transport for the namespace, whatever host they are on (a door `fulltrailer.x`
+  // reaches `ana.x`). The written port is a statement about that door: it agrees, it names the port the origin left
+  // open, or it contradicts the explicit port the node was built for -- which is reported, never settled by ignoring
+  // either. Explicit `fallbackOrigins` are separate, declared transports and keep their own ports.
+  const withPort = origins.map((origin) => {
     let url: URL;
     try {
       url = new URL(origin);
     } catch {
-      others.push(origin);
-      continue;
-    }
-    if (!hosts.has(url.hostname.toLowerCase())) {
-      others.push(origin);
-      continue;
+      return origin;
     }
     const explicit = url.port ? Number(url.port) : null;
-    if (explicit !== null && explicit !== port) {
-      throw new Error('TRANSPORT_PORT_CONFLICT');
-    }
+    if (explicit !== null && explicit !== port) throw new Error('TRANSPORT_PORT_CONFLICT');
     url.port = String(port);
-    withPort.push(`${url.protocol}//${url.host}${url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '')}`);
-  }
-  // An EXPLICIT door is the only door: if it does not answer, the request fails there. Other candidates (the page's
-  // location, a configured root, the public cleaker.me, localhost) are fallbacks for an address that did not name a
-  // door; a signed proof must not be sent to one of them because the written door was unreachable. Using another door
-  // is a policy somebody states, not a default.
-  if (withPort.length) return withPort;
-  return [parsed.transport.origin];
+    return `${url.protocol}//${url.host}${url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '')}`;
+  });
+  return [...withPort, ...fallbacks];
 }
 
 function normalizeSurfaceOrigin(input: string): string {
@@ -1106,16 +1094,18 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
    * look, they do not authorize presenting a signature. A page served from A with a link declared toward B never sends A
    * a proof. With nothing declared the proof is refused, unless `allowImplicitTransport` restores the old discovery.
    */
-  function resolveProofOrigins(_namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
-    const declared = uniqueOrigins([
+  function resolveProofOrigins(_namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): { primary: string[]; fallbacks: string[] } {
+    const primary = uniqueOrigins([
       preferredOrigin,
       options.space ? normalizeSpaceOrigin(options.space) : '',
       ...bootstrapOrigins,
       ...runtimeBootstrap,
-      ...(Array.isArray(options.fallbackOrigins) ? options.fallbackOrigins.map((o) => normalizeBaseUrl(o)).filter(Boolean) : []),
     ]);
-    if (declared.length > 0) return declared;
-    if (options.allowImplicitTransport) return resolveSurfaceOrigins(runtimeBootstrap, preferredOrigin);
+    const fallbacks = uniqueOrigins(
+      (Array.isArray(options.fallbackOrigins) ? options.fallbackOrigins : []).map((o) => normalizeBaseUrl(o)).filter(Boolean),
+    ).filter((o) => !primary.includes(o));
+    if (primary.length > 0 || fallbacks.length > 0) return { primary, fallbacks };
+    if (options.allowImplicitTransport) return { primary: resolveSurfaceOrigins(runtimeBootstrap, preferredOrigin), fallbacks: [] };
     throw new Error('TRANSPORT_NOT_DECLARED');
   }
 
@@ -1784,10 +1774,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
-    const origins = applyWrittenPort(
-      resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : ''),
-      namespace,
-    );
+    const proof = resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const origins = applyWrittenPort(proof.primary, namespace, proof.fallbacks);
     let lastError = 'SIGNIN_FAILED';
 
     for (const origin of origins) {
@@ -1850,10 +1838,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
-    const origins = applyWrittenPort(
-      resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : ''),
-      namespace,
-    );
+    const proof = resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const origins = applyWrittenPort(proof.primary, namespace, proof.fallbacks);
     let lastError = 'CLAIM_FAILED';
 
     for (const origin of origins) {
