@@ -77,8 +77,8 @@ await contract('K7 localhost:8191 is the namespace localhost reached on 8191 (CO
 });
 
 await contract('K8 the scheme is not lost: loopback stays http, a public name stays https', async () => {
-  const local = await signInThrough('localhost', 'ana.localhost:8191');
-  assert.ok(local.calls[0].url.startsWith('http://localhost:8191/'), local.calls[0].url);
+  const local = await signInThrough('http://localhost', 'ana.localhost:8191');
+  assert.ok(/^http:\/\/([a-z.]+\.)?localhost(\.local)?:8191\//.test(local.calls[0].url), local.calls[0].url);
   const pub = await signInThrough('name.space', 'ana.name.space:8080');
   assert.ok(pub.calls[0].url.startsWith('https://name.space:8080/'), pub.calls[0].url);
 });
@@ -171,17 +171,79 @@ await contract('K15 fallbackOrigins is explicit: a proof goes to the listed back
   assert.equal(r.error, null);
 });
 
-await contract('K16 with nothing selected at all, the built-in default is the one destination (not a fallback)', async () => {
+await contract('K16 with NO transport declared a signed proof is refused, and nothing is sent', async () => {
   const kernel: any = () => undefined;
   kernel[ME_EXPRESSION_SYMBOL] = 'ana.cleaker.me'; kernel.learn = () => undefined;
   kernel['!'] = { prove: async ({ rootNamespace, challenge }: any) => ({ identityHash: 'h', expression: 'ana', namespace: `ana.${rootNamespace}`, rootNamespace, challenge: challenge ?? null, publicKey: 'p', message: 'm', signature: 'SIG', timestamp: 1 }) };
   const urls: string[] = [];
-  const fetcher: any = async (u: any) => { urls.push(String(u)); return new Response(JSON.stringify({ ok: true, namespace: 'ana.cleaker.me', identityHash: 'h', memories: [], openedAt: 1 }), { status: 200, headers: { 'content-type': 'application/json' } }); };
+  const fetcher: any = async (u: any) => { urls.push(String(u)); return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'content-type': 'application/json' } }); };
   const node = cleaker(kernel, { fetcher } as any);
   await new Promise((r) => setTimeout(r, 30));
   const before = urls.length;
-  await node.signIn({ namespace: 'ana.cleaker.me' });
-  assert.ok(urls.slice(before)[0].startsWith('https://cleaker.me/'), urls.slice(before).join(', '));
+  let error = '';
+  try { await node.signIn({ namespace: 'ana.cleaker.me' }); } catch (e: any) { error = String(e?.message || e); }
+  assert.equal(error, 'TRANSPORT_NOT_DECLARED');
+  assert.equal(urls.length - before, 0, `requests: ${urls.slice(before).join(', ')}`);
+});
+
+// A page served from A, a link DECLARED toward B: where the page is served from is not a transport of the link.
+async function withLocation<T>(loc: { origin: string; href: string; hostname: string; host: string; protocol: string } | null, fn: () => Promise<T>): Promise<T> {
+  const g = globalThis as any;
+  const had = Object.prototype.hasOwnProperty.call(g, 'location'); const prev = g.location;
+  if (loc) g.location = loc;
+  try { return await fn(); } finally { if (had) g.location = prev; else delete g.location; }
+}
+const PAGE_A = { origin: 'https://a.example', href: 'https://a.example/app', hostname: 'a.example', host: 'a.example', protocol: 'https:' };
+
+await contract('L1 a page served from A with an explicit link to B: when B fails, A receives no proof', async () => {
+  await withLocation(PAGE_A, async () => {
+    const r = await contactsWithOptions('https://b.example', 'ana.b.example', {}, (u) => u.startsWith('https://b.example/'));
+    const proofs = r.explicit.filter((c) => c.signedProof).map((c) => new URL(c.url).origin);
+    assert.ok(r.error, 'it fails');
+    assert.ok(!proofs.includes('https://a.example'), `the page's origin received a proof: ${proofs.join(', ')}`);
+    assert.deepEqual(proofs, ['https://b.example']);
+  });
+});
+
+await contract('L2 a page location alone does not authorize a destination: nothing declared -> refused, A sent nothing', async () => {
+  await withLocation(PAGE_A, async () => {
+    const kernel: any = () => undefined;
+    kernel[ME_EXPRESSION_SYMBOL] = 'ana.a.example'; kernel.learn = () => undefined;
+    kernel['!'] = { prove: async ({ rootNamespace, challenge }: any) => ({ identityHash: 'h', expression: 'ana', namespace: `ana.${rootNamespace}`, rootNamespace, challenge: challenge ?? null, publicKey: 'p', message: 'm', signature: 'SIG', timestamp: 1 }) };
+    const urls: string[] = [];
+    const fetcher: any = async (u: any) => { urls.push(String(u)); return new Response('{}', { status: 200 }); };
+    const node = cleaker(kernel, { fetcher } as any);
+    await new Promise((r) => setTimeout(r, 30));
+    const before = urls.length;
+    let error = '';
+    try { await node.signIn({ namespace: 'ana.a.example' }); } catch (e: any) { error = String(e?.message || e); }
+    assert.equal(error, 'TRANSPORT_NOT_DECLARED');
+    assert.equal(urls.length - before, 0);
+  });
+});
+
+await contract('L3 the environment\'s defaults alone do not authorize one either', async () => {
+  const had = process.env.CLEAKER_NAMESPACE_ROOT; process.env.CLEAKER_NAMESPACE_ROOT = 'env.example';
+  try {
+    const kernel: any = () => undefined;
+    kernel[ME_EXPRESSION_SYMBOL] = 'ana.env.example'; kernel.learn = () => undefined;
+    kernel['!'] = { prove: async ({ rootNamespace, challenge }: any) => ({ identityHash: 'h', expression: 'ana', namespace: `ana.${rootNamespace}`, rootNamespace, challenge: challenge ?? null, publicKey: 'p', message: 'm', signature: 'SIG', timestamp: 1 }) };
+    const urls: string[] = [];
+    const fetcher: any = async (u: any) => { urls.push(String(u)); return new Response('{}', { status: 200 }); };
+    const node = cleaker(kernel, { fetcher } as any);
+    await new Promise((r) => setTimeout(r, 30));
+    const before = urls.length;
+    let error = '';
+    try { await node.signIn({ namespace: 'ana.env.example' }); } catch (e: any) { error = String(e?.message || e); }
+    assert.equal(error, 'TRANSPORT_NOT_DECLARED');
+    assert.equal(urls.length - before, 0);
+  } finally { if (had === undefined) delete process.env.CLEAKER_NAMESPACE_ROOT; else process.env.CLEAKER_NAMESPACE_ROOT = had; }
+});
+
+await contract('L4 with allowImplicitTransport the legacy discovery is still there, and only because it was asked for', async () => {
+  const r = await contactsWithOptions('name.space', 'ana.name.space', { allowImplicitTransport: true }, (u) => u.startsWith('https://name.space/'));
+  const hosts = r.explicit.filter((c) => c.signedProof).map((c) => new URL(c.url).origin);
+  assert.ok(hosts.length >= 1);
 });
 
 const failed = results.filter((r) => !r.ok).length;

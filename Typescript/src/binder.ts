@@ -83,6 +83,13 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
    * only when nothing else was selected at all.
    */
   fallbackOrigins?: string[];
+  /**
+   * Legacy behavior, off by default. When NO transport was declared for this node (no `space`, no `bootstrap`, no
+   * `fallbackOrigins`, no `input.space`), a signed proof is refused (`TRANSPORT_NOT_DECLARED`): the page's location, the
+   * environment and the built-in defaults do not authorize a destination for a signature by themselves. Set this to let
+   * discovery pick destinations from those sources, as nodes did before.
+   */
+  allowImplicitTransport?: boolean;
   fetcher?: typeof fetch;
   /**
    * Opt-in: keep every RemoteSlot this kernel creates live over the
@@ -1092,35 +1099,24 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   }
 
   /**
-   * Where a SIGNED proof may be presented: only destinations that were SELECTED, never guesses.
-   *   selected: the origins this node was built for (preferred, space, bootstrap), the explicit `fallbackOrigins`, what
-   *             the page's location or the operator's environment names, and the origin the signed NAMESPACE itself names
-   *             (`ana.name.space` -> name.space: the namespace is what is being signed in to).
-   *   guesses:  the machine's own hostname and the built-in defaults (public cleaker.me, localhost). They remain useful to
-   *             DISCOVER candidates (resolveSurfaceOrigins); a signature is not presented to them.
+   * Where a SIGNED proof may be presented: only the transport that was DECLARED for this node. Declared means given to
+   * the node on purpose: the origin it was built for (`space` / `bootstrap`), the per-call `space`, or an explicit
+   * `fallbackOrigins`. The page's location (`window.location`), the environment's defaults, the machine's hostname, the
+   * built-in cleaker.me / localhost and the origin a name would resolve to are all DISCOVERY: they can suggest where to
+   * look, they do not authorize presenting a signature. A page served from A with a link declared toward B never sends A
+   * a proof. With nothing declared the proof is refused, unless `allowImplicitTransport` restores the old discovery.
    */
-  function resolveProofOrigins(namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
-    let namespaceOrigin = '';
-    try {
-      const parsed = parseNamespaceExpression(bareNamespace(namespace));
-      // scheme by the parser's own rule for a host (loopback and .local: http; anything else: https), taken from the
-      // namespace's CONSTANT so a handle subdomain does not change it
-      namespaceOrigin = normalizeSurfaceOrigin(`${parseNamespaceExpression(parsed.constant).transport.protocol}://${parsed.constant}`);
-    } catch {
-      namespaceOrigin = '';
-    }
-    return uniqueOrigins([
+  function resolveProofOrigins(_namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
+    const declared = uniqueOrigins([
       preferredOrigin,
       options.space ? normalizeSpaceOrigin(options.space) : '',
       ...bootstrapOrigins,
       ...runtimeBootstrap,
       ...(Array.isArray(options.fallbackOrigins) ? options.fallbackOrigins.map((o) => normalizeBaseUrl(o)).filter(Boolean) : []),
-      readLocationSurfaceOrigin(),
-      readConfiguredSurfaceOrigin(
-        typeof process !== 'undefined' ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '') : '',
-      ),
-      namespaceOrigin,
     ]);
+    if (declared.length > 0) return declared;
+    if (options.allowImplicitTransport) return resolveSurfaceOrigins(runtimeBootstrap, preferredOrigin);
+    throw new Error('TRANSPORT_NOT_DECLARED');
   }
 
   function resolveSurfaceOrigins(runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
