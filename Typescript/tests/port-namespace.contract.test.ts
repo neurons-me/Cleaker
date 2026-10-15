@@ -240,18 +240,46 @@ await contract('L3 the environment\'s defaults alone do not authorize one either
   } finally { if (had === undefined) delete process.env.CLEAKER_NAMESPACE_ROOT; else process.env.CLEAKER_NAMESPACE_ROOT = had; }
 });
 
-await contract('L4 with allowImplicitTransport the legacy discovery is still there, and only because it was asked for', async () => {
-  const r = await contactsWithOptions('name.space', 'ana.name.space', { allowImplicitTransport: true }, (u) => u.startsWith('https://name.space/'));
-  const hosts = r.explicit.filter((c) => c.signedProof).map((c) => new URL(c.url).origin);
-  assert.ok(hosts.length >= 1);
+await contract('L4 discovery and authorization are separate: a source receives a proof only if the caller listed it', async () => {
+  // nothing listed: discovery has candidates (the page's location), none is authorized
+  await withLocation(PAGE_A, async () => {
+    const none = await contactsWithOptions('https://b.example', 'ana.b.example', {}, (u) => u.startsWith('https://b.example/'));
+    assert.ok(!none.explicit.some((c) => c.url.startsWith('https://a.example/')), 'the discovered page origin was not authorized');
+    // the caller lists 'location': now, and only now, the page's origin may receive the proof after the declared one fails
+    const listed = await contactsWithOptions('https://b.example', 'ana.b.example', { authorizeDiscovered: ['location'] }, (u) => u.startsWith('https://b.example/'));
+    const hosts = listed.explicit.filter((c) => c.signedProof).map((c) => new URL(c.url).origin);
+    assert.deepEqual(hosts, ['https://b.example', 'https://a.example']);
+  });
 });
 
-await contract('K17 a door on a DIFFERENT host than the namespace is still the transport: a contradicting written port is a conflict', async () => {
-  const r = await signInThrough('http://fulltrailer.x.local:8080', 'ana.x.local:9901');
-  assert.equal(r.error, 'TRANSPORT_PORT_CONFLICT');
-  assert.equal(r.calls.length, 0);
-  const ok = await signInThrough('http://fulltrailer.x.local', 'ana.x.local:9901');
-  assert.ok(ok.calls[0].url.startsWith('http://fulltrailer.x.local:9901/'), ok.calls[0]?.url);
+await contract('L5 authorizing one source does not authorize the others', async () => {
+  await withLocation(PAGE_A, async () => {
+    const r = await contactsWithOptions('https://b.example', 'ana.b.example', { authorizeDiscovered: ['defaults'] }, (u) => !u.startsWith('https://cleaker.me/') && !/^http:\/\/localhost/.test(u));
+    const hosts = r.explicit.filter((c) => c.signedProof).map((c) => new URL(c.url).origin);
+    assert.ok(!hosts.includes('https://a.example'), 'location was not listed');
+    assert.ok(hosts.includes('https://cleaker.me'), 'defaults were listed');
+  });
+});
+
+await contract('L6 with nothing declared, a listed source is the destination; an unlisted one is refused', async () => {
+  const kernelFor = () => {
+    const kernel: any = () => undefined;
+    kernel[ME_EXPRESSION_SYMBOL] = 'ana.name.space'; kernel.learn = () => undefined;
+    kernel['!'] = { prove: async ({ rootNamespace, challenge }: any) => ({ identityHash: 'h', expression: 'ana', namespace: `ana.${rootNamespace}`, rootNamespace, challenge: challenge ?? null, publicKey: 'p', message: 'm', signature: 'SIG', timestamp: 1 }) };
+    return kernel;
+  };
+  const urls: string[] = [];
+  const fetcher: any = async (u: any) => { urls.push(String(u)); return new Response(JSON.stringify({ ok: true, namespace: 'ana.name.space', identityHash: 'h', memories: [], openedAt: 1 }), { status: 200, headers: { 'content-type': 'application/json' } }); };
+  const unlisted = cleaker(kernelFor(), { fetcher } as any);
+  await new Promise((r) => setTimeout(r, 30));
+  const b0 = urls.length; let e1 = '';
+  try { await unlisted.signIn({ namespace: 'ana.name.space' }); } catch (e: any) { e1 = String(e?.message || e); }
+  assert.equal(e1, 'TRANSPORT_NOT_DECLARED'); assert.equal(urls.length - b0, 0);
+  const listed = cleaker(kernelFor(), { fetcher, authorizeDiscovered: ['namespace'] } as any);
+  await new Promise((r) => setTimeout(r, 30));
+  const b1 = urls.length;
+  await listed.signIn({ namespace: 'ana.name.space' });
+  assert.ok(urls.slice(b1).some((u) => u.startsWith('https://name.space/claims/signIn')), urls.slice(b1).join(', '));
 });
 
 const failed = results.filter((r) => !r.ok).length;

@@ -74,8 +74,8 @@ void run('Namespace constant: falls back to kernel-bound root when nothing else 
   // browser `location` (Node test env), no env vars set — every
   // higher-priority source is absent, so this should reach the new
   // kernel-bound-root fallback and compose "jabellae.local.cleaker".
-  // these tests are about WHICH namespace is composed; they opt in to the legacy implicit discovery (no transport declared)
-  const node = cleaker(me, { fetcher, allowImplicitTransport: true });
+  // these tests are about WHICH namespace is composed; they say which discovered sources may receive a signature (no transport declared)
+  const node = cleaker(me, { fetcher, authorizeDiscovered: ['namespace', 'machine', 'defaults'] });
   try { await node.signIn({} as any); } catch { /* expected: mock 404s */ }
   assert.ok(
     namespaces.some(ns => ns === 'jabellae.local.cleaker'),
@@ -101,7 +101,7 @@ void run('Namespace constant: explicit space still wins over kernel-bound root',
 void run('Namespace constant: no kernel-bound root, nothing else resolves → hardcoded default', async () => {
   const { namespaces, fetcher } = captureRequestNamespaces();
   const me = createMockKernelWithBoundNamespace('anon', null); // never bound to a namespace
-  const node = cleaker(me, { fetcher, allowImplicitTransport: true });
+  const node = cleaker(me, { fetcher, authorizeDiscovered: ['namespace', 'machine', 'defaults'] });
   try { await node.signIn({} as any); } catch { /* expected: mock 404s */ }
   assert.ok(
     namespaces.length > 0 && !namespaces.some(ns => ns.includes('local.cleaker')),

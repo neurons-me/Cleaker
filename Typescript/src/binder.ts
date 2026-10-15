@@ -84,12 +84,17 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
    */
   fallbackOrigins?: string[];
   /**
-   * Legacy behavior, off by default. When NO transport was declared for this node (no `space`, no `bootstrap`, no
-   * `fallbackOrigins`, no `input.space`), a signed proof is refused (`TRANSPORT_NOT_DECLARED`): the page's location, the
-   * environment and the built-in defaults do not authorize a destination for a signature by themselves. Set this to let
-   * discovery pick destinations from those sources, as nodes did before.
+   * Which DISCOVERED sources may, in addition to the declared transport, receive a SIGNED proof. Empty by default.
+   * Discovery itself (listing candidate origins for reads and host validation) is not affected by this: it always looks.
+   * This only decides what discovery may AUTHORIZE for a signature:
+   *   'location'     the page's own origin (window.location)
+   *   'environment'  CLEAKER_NAMESPACE_ROOT / CLEAKER_NAMESPACE_HOST
+   *   'machine'      this machine's hostname
+   *   'defaults'     the built-in public cleaker.me and localhost
+   *   'namespace'    the origin the signed namespace's own name resolves to
+   * A source listed here is a statement by the caller that a signature may go there; nothing is inferred from it.
    */
-  allowImplicitTransport?: boolean;
+  authorizeDiscovered?: Array<'location' | 'environment' | 'machine' | 'defaults' | 'namespace'>;
   fetcher?: typeof fetch;
   /**
    * Opt-in: keep every RemoteSlot this kernel creates live over the
@@ -1087,14 +1092,13 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
   }
 
   /**
-   * Where a SIGNED proof may be presented: only the transport that was DECLARED for this node. Declared means given to
-   * the node on purpose: the origin it was built for (`space` / `bootstrap`), the per-call `space`, or an explicit
-   * `fallbackOrigins`. The page's location (`window.location`), the environment's defaults, the machine's hostname, the
-   * built-in cleaker.me / localhost and the origin a name would resolve to are all DISCOVERY: they can suggest where to
-   * look, they do not authorize presenting a signature. A page served from A with a link declared toward B never sends A
-   * a proof. With nothing declared the proof is refused, unless `allowImplicitTransport` restores the old discovery.
+   * Where a SIGNED proof may be presented: the transport that was DECLARED for this node (`space` / `bootstrap`, the
+   * per-call `space`, explicit `fallbackOrigins`), plus only those DISCOVERED sources the caller listed in
+   * `authorizeDiscovered`. Discovery (resolveSurfaceOrigins) keeps listing candidates for everything that is not a
+   * signature; it does not authorize one. A page served from A with a link declared toward B never sends A a proof, and
+   * with nothing declared and nothing authorized the proof is refused (TRANSPORT_NOT_DECLARED).
    */
-  function resolveProofOrigins(_namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): { primary: string[]; fallbacks: string[] } {
+  function resolveProofOrigins(namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): { primary: string[]; fallbacks: string[] } {
     const primary = uniqueOrigins([
       preferredOrigin,
       options.space ? normalizeSpaceOrigin(options.space) : '',
@@ -1104,9 +1108,30 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     const fallbacks = uniqueOrigins(
       (Array.isArray(options.fallbackOrigins) ? options.fallbackOrigins : []).map((o) => normalizeBaseUrl(o)).filter(Boolean),
     ).filter((o) => !primary.includes(o));
-    if (primary.length > 0 || fallbacks.length > 0) return { primary, fallbacks };
-    if (options.allowImplicitTransport) return { primary: resolveSurfaceOrigins(runtimeBootstrap, preferredOrigin), fallbacks: [] };
-    throw new Error('TRANSPORT_NOT_DECLARED');
+
+    const allowed = new Set(options.authorizeDiscovered ?? []);
+    const discovered: string[] = [];
+    if (allowed.has('location')) discovered.push(readLocationSurfaceOrigin());
+    if (allowed.has('environment')) {
+      discovered.push(readConfiguredSurfaceOrigin(
+        typeof process !== 'undefined' ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '') : '',
+      ));
+    }
+    if (allowed.has('machine')) discovered.push(readRuntimeHostSurfaceOrigin());
+    if (allowed.has('namespace')) {
+      try {
+        const parsed = parseNamespaceExpression(bareNamespace(namespace));
+        discovered.push(normalizeSurfaceOrigin(`${parseNamespaceExpression(parsed.constant).transport.protocol}://${parsed.constant}`));
+      } catch {
+        /* a name that does not parse names no origin */
+      }
+    }
+    if (allowed.has('defaults')) discovered.push(normalizeBaseUrl(DEFAULT_CLEAKER_NAMESPACE_ORIGIN), normalizeBaseUrl(DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN));
+
+    const authorized = uniqueOrigins(discovered.filter(Boolean)).filter((o) => !primary.includes(o) && !fallbacks.includes(o));
+    if (primary.length === 0 && fallbacks.length === 0 && authorized.length === 0) throw new Error('TRANSPORT_NOT_DECLARED');
+    // authorized discovered sources are tried after what was declared
+    return { primary, fallbacks: [...fallbacks, ...authorized] };
   }
 
   function resolveSurfaceOrigins(runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
