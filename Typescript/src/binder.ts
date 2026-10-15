@@ -1103,8 +1103,9 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     let namespaceOrigin = '';
     try {
       const parsed = parseNamespaceExpression(bareNamespace(namespace));
-      // scheme by the same rule every origin here follows (loopback http, anything else https)
-      namespaceOrigin = normalizeSurfaceOrigin(parsed.constant);
+      // scheme by the parser's own rule for a host (loopback and .local: http; anything else: https), taken from the
+      // namespace's CONSTANT so a handle subdomain does not change it
+      namespaceOrigin = normalizeSurfaceOrigin(`${parseNamespaceExpression(parsed.constant).transport.protocol}://${parsed.constant}`);
     } catch {
       namespaceOrigin = '';
     }
