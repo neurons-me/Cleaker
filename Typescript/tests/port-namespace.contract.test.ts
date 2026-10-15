@@ -136,11 +136,52 @@ await contract('K13 an explicit door that does not answer FAILS there: no proof 
   assert.equal(r.explicit.filter((c) => c.signedProof && !c.url.startsWith('https://name.space:9901/')).length, 0);
 });
 
-await contract('K14 an address that named NO door still has its fallbacks (documented existing policy)', async () => {
+// contactsWhen with explicit node options (fallbackOrigins)
+async function contactsWithOptions(base: string, namespace: string, opts: Record<string, unknown>, refuse: (url: string) => boolean) {
+  const contacted: Array<{ url: string; signedProof: boolean }> = [];
+  const kernel: any = () => undefined;
+  kernel[ME_EXPRESSION_SYMBOL] = 'ana'; kernel.learn = () => undefined;
+  kernel['!'] = { prove: async ({ rootNamespace, challenge }: any) => ({ identityHash: 'h', expression: 'ana', namespace: `ana.${rootNamespace}`, rootNamespace, challenge: challenge ?? null, publicKey: 'p', message: 'm', signature: 'SIG', timestamp: 1 }) };
+  const fetcher: any = async (u: any, init: any) => {
+    let body: any = {}; try { body = JSON.parse(init.body); } catch { /* none */ }
+    contacted.push({ url: String(u), signedProof: Boolean(body?.proof?.signature) });
+    if (refuse(String(u))) throw new TypeError('fetch failed');
+    return new Response(JSON.stringify({ ok: true, namespace: body.namespace, identityHash: 'h', memories: [], openedAt: 1 }), { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  const node = cleaker(kernel, base, { fetcher, ...opts } as any);
+  await new Promise((r) => setTimeout(r, 30));
+  const before = contacted.length;
+  let error: string | null = null;
+  try { await node.signIn({ namespace }); } catch (e: any) { error = String(e?.message || e); }
+  return { explicit: contacted.slice(before), error };
+}
+
+await contract('K14 an address with no door: when its destination fails, NO signed proof goes to the implicit fallbacks', async () => {
   const r = await contactsWhen('name.space', 'ana.name.space', (u) => u.startsWith('https://name.space/'));
-  const hosts = r.explicit.map((c) => new URL(c.url).origin);
-  assert.ok(hosts.includes('https://name.space'), 'the named host was tried');
-  assert.ok(hosts.length > 1, `the unreachable primary fell back to: ${hosts.join(', ')}`);
+  const hosts = r.explicit.filter((c) => c.signedProof).map((c) => new URL(c.url).origin);
+  assert.ok(r.error, 'it fails');
+  assert.ok(!hosts.includes('https://cleaker.me'), `a proof reached cleaker.me: ${hosts.join(', ')}`);
+  assert.ok(!hosts.some((h) => /^http:\/\/localhost(:\d+)?$/.test(h)), `a proof reached localhost: ${hosts.join(', ')}`);
+});
+
+await contract('K15 fallbackOrigins is explicit: a proof goes to the listed backup, and only there', async () => {
+  const r = await contactsWithOptions('name.space', 'ana.name.space', { fallbackOrigins: ['https://backup.example'] }, (u) => u.startsWith('https://name.space/'));
+  const hosts = r.explicit.filter((c) => c.signedProof).map((c) => new URL(c.url).origin);
+  assert.deepEqual(hosts, ['https://name.space', 'https://backup.example']);
+  assert.equal(r.error, null);
+});
+
+await contract('K16 with nothing selected at all, the built-in default is the one destination (not a fallback)', async () => {
+  const kernel: any = () => undefined;
+  kernel[ME_EXPRESSION_SYMBOL] = 'ana.cleaker.me'; kernel.learn = () => undefined;
+  kernel['!'] = { prove: async ({ rootNamespace, challenge }: any) => ({ identityHash: 'h', expression: 'ana', namespace: `ana.${rootNamespace}`, rootNamespace, challenge: challenge ?? null, publicKey: 'p', message: 'm', signature: 'SIG', timestamp: 1 }) };
+  const urls: string[] = [];
+  const fetcher: any = async (u: any) => { urls.push(String(u)); return new Response(JSON.stringify({ ok: true, namespace: 'ana.cleaker.me', identityHash: 'h', memories: [], openedAt: 1 }), { status: 200, headers: { 'content-type': 'application/json' } }); };
+  const node = cleaker(kernel, { fetcher } as any);
+  await new Promise((r) => setTimeout(r, 30));
+  const before = urls.length;
+  await node.signIn({ namespace: 'ana.cleaker.me' });
+  assert.ok(urls.slice(before)[0].startsWith('https://cleaker.me/'), urls.slice(before).join(', '));
 });
 
 const failed = results.filter((r) => !r.ok).length;

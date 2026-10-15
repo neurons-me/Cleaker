@@ -76,6 +76,13 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
   identityHash?: string;
   space?: string;
   bootstrap?: string[];
+  /**
+   * Origins a SIGNED proof (signIn / claim) may be presented to when the destinations this node was built for do not
+   * answer. Empty by default: discovery may look for candidates, but presenting a signature requires a destination that was
+   * selected. The built-in defaults (the public cleaker.me, localhost) are NOT fallbacks for a signed proof; they are used
+   * only when nothing else was selected at all.
+   */
+  fallbackOrigins?: string[];
   fetcher?: typeof fetch;
   /**
    * Opt-in: keep every RemoteSlot this kernel creates live over the
@@ -1084,6 +1091,37 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     return composeNamespace(expression, constant);
   }
 
+  /**
+   * Where a SIGNED proof may be presented: only destinations that were SELECTED, never guesses.
+   *   selected: the origins this node was built for (preferred, space, bootstrap), the explicit `fallbackOrigins`, what
+   *             the page's location or the operator's environment names, and the origin the signed NAMESPACE itself names
+   *             (`ana.name.space` -> name.space: the namespace is what is being signed in to).
+   *   guesses:  the machine's own hostname and the built-in defaults (public cleaker.me, localhost). They remain useful to
+   *             DISCOVER candidates (resolveSurfaceOrigins); a signature is not presented to them.
+   */
+  function resolveProofOrigins(namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
+    let namespaceOrigin = '';
+    try {
+      const parsed = parseNamespaceExpression(bareNamespace(namespace));
+      // scheme by the same rule every origin here follows (loopback http, anything else https)
+      namespaceOrigin = normalizeSurfaceOrigin(parsed.constant);
+    } catch {
+      namespaceOrigin = '';
+    }
+    return uniqueOrigins([
+      preferredOrigin,
+      options.space ? normalizeSpaceOrigin(options.space) : '',
+      ...bootstrapOrigins,
+      ...runtimeBootstrap,
+      ...(Array.isArray(options.fallbackOrigins) ? options.fallbackOrigins.map((o) => normalizeBaseUrl(o)).filter(Boolean) : []),
+      readLocationSurfaceOrigin(),
+      readConfiguredSurfaceOrigin(
+        typeof process !== 'undefined' ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '') : '',
+      ),
+      namespaceOrigin,
+    ]);
+  }
+
   function resolveSurfaceOrigins(runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
     const spaceOrigin = options.space ? normalizeSpaceOrigin(options.space) : '';
     const locationSurfaceOrigin = readLocationSurfaceOrigin();
@@ -1750,7 +1788,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
     const fetcher = input.fetcher || options.fetcher || fetch;
     const origins = applyWrittenPort(
-      resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : ''),
+      resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : ''),
       namespace,
     );
     let lastError = 'SIGNIN_FAILED';
@@ -1816,7 +1854,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
 
     const fetcher = input.fetcher || options.fetcher || fetch;
     const origins = applyWrittenPort(
-      resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : ''),
+      resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : ''),
       namespace,
     );
     let lastError = 'CLAIM_FAILED';
