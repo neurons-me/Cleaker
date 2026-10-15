@@ -166,8 +166,9 @@ function stripPort(raw: string): string {
  *   - an origin of the namespace's own host with no explicit port gets the written one (its scheme is kept);
  *   - an origin of that host with a DIFFERENT explicit port is a contradiction between what was written and the
  *     transport this node was built for: it is reported (TRANSPORT_PORT_CONFLICT), never resolved by ignoring either;
- *   - when no origin names that host, the address as written is tried first.
- * Nothing is carried from one door to another: each origin is its own transport.
+ *   - when no origin names that host, the address as written is the only door.
+ * An explicit door is never silently replaced by a fallback origin. Nothing is carried from one door to another: each
+ * origin is its own transport.
  */
 function applyWrittenPort(origins: string[], namespace: string): string[] {
   let parsed: ReturnType<typeof parseNamespaceExpression>;
@@ -201,10 +202,12 @@ function applyWrittenPort(origins: string[], namespace: string): string[] {
     url.port = String(port);
     withPort.push(`${url.protocol}//${url.host}${url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '')}`);
   }
-  // The door that was written goes first: it is what was asked for. Other candidates stay behind it as fallbacks, so an
-  // unreachable door can still be told apart from a refusal, but a bare-port variant of the same host is never tried.
-  if (withPort.length) return [...withPort, ...others];
-  return [parsed.transport.origin, ...others];
+  // An EXPLICIT door is the only door: if it does not answer, the request fails there. Other candidates (the page's
+  // location, a configured root, the public cleaker.me, localhost) are fallbacks for an address that did not name a
+  // door; a signed proof must not be sent to one of them because the written door was unreachable. Using another door
+  // is a policy somebody states, not a default.
+  if (withPort.length) return withPort;
+  return [parsed.transport.origin];
 }
 
 function normalizeSurfaceOrigin(input: string): string {
