@@ -33,8 +33,10 @@ run('NRP3 - bare namespace with no path segment defaults to read', () => {
 });
 
 run('NRP4 - host:port is not misread as namespace:operation', () => {
+  // COMPATIBILITY CHANGE: the port is in the transport, not in fqdn (see NS1 in namespace-expression.test.ts).
   const parsed = parseNrpTarget('localhost:8191/profile');
-  assert.equal(parsed.fqdn, 'localhost:8191');
+  assert.equal(parsed.fqdn, 'localhost');
+  assert.equal(parsed.transport.port, 8191);
   assert.equal(parsed.operation, 'read');
   assert.equal(parsed.path, 'profile');
 });

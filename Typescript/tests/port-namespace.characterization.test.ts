@@ -1,5 +1,6 @@
-// What the code does TODAY with a port in a namespace. These pass against the base; they document the behavior the
-// contract tests (port-namespace.contract.test.ts) are about, so the change can be seen as a change.
+// What the code did with a port in a namespace at the BASE (ee519ef). This file PINS that behavior: it passes against
+// the base and is EXPECTED TO FAIL after the change (port-not-in-namespace). The assertions that now fail are the
+// compatibility changes, one by one; it is deliberately not part of `npm test`.
 import assert from 'node:assert/strict';
 import cleaker from '../index.ts';
 import { composeNamespace, parseNamespaceExpression } from '../src/namespace/expression.ts';

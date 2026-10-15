@@ -188,14 +188,15 @@ function deriveConstantAndPrefix(base: string): {
   labels: string[];
   port: number | null;
 } {
+  // The port is NOT part of the namespace: it belongs to the transport (`transport.port`, `transport.origin`). `fqdn` and
+  // `constant` name the space; `name.space` and `name.space:8080` are the same namespace reached through two doors.
   const normalized = normalizeBaseToken(base);
-  const portSuffix = normalized.port == null ? '' : `:${normalized.port}`;
 
   if (normalized.labels.length === 2 && normalized.labels[1] === 'localhost') {
     return {
-      fqdn: `${normalized.host}${portSuffix}`,
+      fqdn: normalized.host,
       prefix: normalized.labels[0] || null,
-      constant: `localhost${portSuffix}`,
+      constant: 'localhost',
       labels: normalized.labels,
       port: normalized.port,
     };
@@ -203,18 +204,18 @@ function deriveConstantAndPrefix(base: string): {
 
   if (normalized.labels.length <= 2) {
     return {
-      fqdn: `${normalized.host}${portSuffix}`,
+      fqdn: normalized.host,
       prefix: null,
-      constant: `${normalized.host}${portSuffix}`,
+      constant: normalized.host,
       labels: normalized.labels,
       port: normalized.port,
     };
   }
 
   return {
-    fqdn: `${normalized.host}${portSuffix}`,
+    fqdn: normalized.host,
     prefix: normalized.labels[0] || null,
-    constant: `${normalized.labels.slice(1).join('.')}${portSuffix}`,
+    constant: normalized.labels.slice(1).join('.'),
     labels: normalized.labels,
     port: normalized.port,
   };
@@ -341,10 +342,12 @@ export function composeNamespace(prefix: string | null | undefined, constant: st
 }
 
 export function stringifyNamespaceExpression(
-  input: Pick<ParsedNamespaceExpression, 'fqdn' | 'contextRaw' | 'operation' | 'path'>,
+  input: Pick<ParsedNamespaceExpression, 'fqdn' | 'contextRaw' | 'operation' | 'path'> & { port?: number | null },
 ): string {
-  const base = String(input.fqdn || '').trim().toLowerCase();
-  if (!base) throw new CleakerParseError('Namespace base cannot be empty', { input });
+  // The written door (`:port`) is kept in the expression so it round-trips, though it is not part of `fqdn`.
+  const host = String(input.fqdn || '').trim().toLowerCase();
+  if (!host) throw new CleakerParseError('Namespace base cannot be empty', { input });
+  const base = input.port ? `${host}:${input.port}` : host;
 
   const contextRaw = String(input.contextRaw || '').trim();
   const operation = String(input.operation || '').trim();
@@ -370,6 +373,7 @@ export function parseNamespaceExpression(input: string): ParsedNamespaceExpressi
 
   const expression = stringifyNamespaceExpression({
     fqdn: derived.fqdn,
+    port: derived.port,
     contextRaw: namespace.contextRaw,
     operation: head.operation,
     path: parts.path,

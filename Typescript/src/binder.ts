@@ -160,6 +160,53 @@ function stripPort(raw: string): string {
   return String(raw || '').trim().toLowerCase().replace(/:\d+$/i, '');
 }
 
+/**
+ * A port written in a namespace is the DOOR it asks to be reached through: it is not part of the namespace, so it is
+ * applied to the transport and nowhere else. Returns the origins to try with it applied:
+ *   - an origin of the namespace's own host with no explicit port gets the written one (its scheme is kept);
+ *   - an origin of that host with a DIFFERENT explicit port is a contradiction between what was written and the
+ *     transport this node was built for: it is reported (TRANSPORT_PORT_CONFLICT), never resolved by ignoring either;
+ *   - when no origin names that host, the address as written is tried first.
+ * Nothing is carried from one door to another: each origin is its own transport.
+ */
+function applyWrittenPort(origins: string[], namespace: string): string[] {
+  let parsed: ReturnType<typeof parseNamespaceExpression>;
+  try {
+    parsed = parseNamespaceExpression(namespace);
+  } catch {
+    return origins;
+  }
+  const port = parsed.transport.port;
+  if (!port) return origins;
+
+  const hosts = new Set([parsed.constant, parsed.fqdn].map((h) => String(h || '').toLowerCase()).filter(Boolean));
+  const withPort: string[] = [];
+  const others: string[] = [];
+  for (const origin of origins) {
+    let url: URL;
+    try {
+      url = new URL(origin);
+    } catch {
+      others.push(origin);
+      continue;
+    }
+    if (!hosts.has(url.hostname.toLowerCase())) {
+      others.push(origin);
+      continue;
+    }
+    const explicit = url.port ? Number(url.port) : null;
+    if (explicit !== null && explicit !== port) {
+      throw new Error('TRANSPORT_PORT_CONFLICT');
+    }
+    url.port = String(port);
+    withPort.push(`${url.protocol}//${url.host}${url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '')}`);
+  }
+  // The door that was written goes first: it is what was asked for. Other candidates stay behind it as fallbacks, so an
+  // unreachable door can still be told apart from a refusal, but a bare-port variant of the same host is never tried.
+  if (withPort.length) return [...withPort, ...others];
+  return [parsed.transport.origin, ...others];
+}
+
 function normalizeSurfaceOrigin(input: string): string {
   const raw = String(input || '').trim();
   if (!raw) return '';
@@ -455,6 +502,18 @@ function readKernelRuntimeMethod<T extends (...args: any[]) => unknown>(
   return null;
 }
 
+/** The namespace as it is signed, sent and compared: a written `:port` is the door, not part of the name. */
+function bareNamespace(namespace: string): string {
+  const raw = String(namespace || '').trim();
+  if (!raw) return '';
+  try {
+    const parsed = parseNamespaceExpression(raw);
+    return parsed.prefix ? composeNamespace(parsed.prefix, parsed.constant) : parsed.constant;
+  } catch {
+    return raw.toLowerCase().replace(/:\d{1,5}$/, '');
+  }
+}
+
 function resolveProofRootNamespace(namespace: string): string {
   const raw = String(namespace || '').trim();
   if (!raw) return '';
@@ -499,7 +558,7 @@ async function proveKernelNamespace(me: MeKernel, namespace: string, challenge: 
   if (!claimedNamespace) {
     throw new Error('PROOF_INVALID');
   }
-  if (claimedNamespace !== namespace) {
+  if (claimedNamespace !== bareNamespace(namespace)) {
     throw new Error('PROOF_NAMESPACE_MISMATCH');
   }
 
@@ -608,7 +667,19 @@ function readLocationSurfaceOrigin(): string {
 function readConfiguredSurfaceOrigin(input: string): string {
   const constant = deriveNamespaceConstant(input);
   if (!constant) return '';
-  return normalizeSurfaceOrigin(constant);
+  // An origin is an address: the written port goes back on it (the constant itself is the bare namespace).
+  return normalizeSurfaceOrigin(`${constant}${deriveNamespacePortSuffix(input)}`);
+}
+
+function deriveNamespacePortSuffix(input: string): string {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  try {
+    const port = parseNamespaceExpression(raw).transport.port;
+    return port ? `:${port}` : '';
+  } catch {
+    return '';
+  }
 }
 
 type BuiltinOsLike = {
@@ -1299,7 +1370,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       };
     }
 
-    const body = { namespace, proof };
+    const body = { namespace: bareNamespace(namespace), proof };
 
     // Primary: POST /claims/signIn
     const primary = await postJson(`${normalizeBaseUrl(origin)}/claims/signIn`, body, timeoutMs, fetcher, headers);
@@ -1348,7 +1419,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // Primary: POST /me/kernel:claim/<namespace>
     const claimed = await postJson(
       `${normalizeBaseUrl(origin)}/me/kernel:claim/${encodeURIComponent(namespace)}`,
-      { namespace, proof },
+      { namespace: bareNamespace(namespace), proof },
       timeoutMs,
       fetcher,
       headers,
@@ -1362,7 +1433,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (claimed.status === 404 || claimed.status === 405) {
       const legacy = await postJson(
         `${normalizeBaseUrl(origin)}/`,
-        { operation: 'claim', namespace, proof },
+        { operation: 'claim', namespace: bareNamespace(namespace), proof },
         timeoutMs,
         fetcher,
         { 'x-forwarded-host': namespace, ...headers },
@@ -1675,7 +1746,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
-    const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const origins = applyWrittenPort(
+      resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : ''),
+      namespace,
+    );
     let lastError = 'SIGNIN_FAILED';
 
     for (const origin of origins) {
@@ -1738,7 +1812,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
-    const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const origins = applyWrittenPort(
+      resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : ''),
+      namespace,
+    );
     let lastError = 'CLAIM_FAILED';
 
     for (const origin of origins) {
