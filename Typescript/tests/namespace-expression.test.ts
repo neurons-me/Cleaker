@@ -13,10 +13,24 @@ run('NS0 - default cleaker namespace resolves to public origin', () => {
   assert.equal(parsed.transport.origin, 'https://cleaker.me');
 });
 
-run('NS1 - localhost namespace keeps http transport and port', () => {
+// COMPATIBILITY CHANGE (was: `parsed.constant === 'localhost:8191'`, "localhost namespace keeps http transport and port").
+// A port belongs to the TRANSPORT, never to the namespace's identity, `localhost` included: `localhost:8191` and
+// `localhost:8192` are the SAME namespace reached through two different origins. The port is still in the transport
+// (`transport.port`, `transport.origin`) and in the written `expression`.
+run('NS1 - localhost keeps its namespace across ports; the port rides on the transport', () => {
   const parsed = parseNamespaceExpression('localhost:8191');
-  assert.equal(parsed.constant, 'localhost:8191');
+  assert.equal(parsed.constant, 'localhost');
+  assert.equal(parsed.fqdn, 'localhost');
+  assert.equal(parsed.transport.port, 8191);
   assert.equal(parsed.transport.origin, 'http://localhost:8191');
+  assert.equal(parsed.expression, 'localhost:8191', 'the written door round-trips');
+});
+
+run('NS1b - two ports are one namespace and two transports', () => {
+  const a = parseNamespaceExpression('localhost:8191');
+  const b = parseNamespaceExpression('localhost:8192');
+  assert.equal(a.constant, b.constant);
+  assert.notEqual(a.transport.origin, b.transport.origin);
 });
 
 run('NS2 - username prefix projects onto constant', () => {

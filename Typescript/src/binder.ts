@@ -76,6 +76,25 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
   identityHash?: string;
   space?: string;
   bootstrap?: string[];
+  /**
+   * Origins a SIGNED proof (signIn / claim) may be presented to when the destinations this node was built for do not
+   * answer. Empty by default: discovery may look for candidates, but presenting a signature requires a destination that was
+   * selected. The built-in defaults (the public cleaker.me, localhost) are NOT fallbacks for a signed proof; they are used
+   * only when nothing else was selected at all.
+   */
+  fallbackOrigins?: string[];
+  /**
+   * Which DISCOVERED sources may, in addition to the declared transport, receive a SIGNED proof. Empty by default.
+   * Discovery itself (listing candidate origins for reads and host validation) is not affected by this: it always looks.
+   * This only decides what discovery may AUTHORIZE for a signature:
+   *   'location'     the page's own origin (window.location)
+   *   'environment'  CLEAKER_NAMESPACE_ROOT / CLEAKER_NAMESPACE_HOST
+   *   'machine'      this machine's hostname
+   *   'defaults'     the built-in public cleaker.me and localhost
+   *   'namespace'    the origin the signed namespace's own name resolves to
+   * A source listed here is a statement by the caller that a signature may go there; nothing is inferred from it.
+   */
+  authorizeDiscovered?: Array<'location' | 'environment' | 'machine' | 'defaults' | 'namespace'>;
   fetcher?: typeof fetch;
   /**
    * Opt-in: keep every RemoteSlot this kernel creates live over the
@@ -160,6 +179,44 @@ function stripPort(raw: string): string {
   return String(raw || '').trim().toLowerCase().replace(/:\d+$/i, '');
 }
 
+/**
+ * A port written in a namespace is the DOOR it asks to be reached through: it is not part of the namespace, so it is
+ * applied to the transport and nowhere else. Returns the origins to try with it applied:
+ *   - an origin of the namespace's own host with no explicit port gets the written one (its scheme is kept);
+ *   - an origin of that host with a DIFFERENT explicit port is a contradiction between what was written and the
+ *     transport this node was built for: it is reported (TRANSPORT_PORT_CONFLICT), never resolved by ignoring either;
+ *   - when no origin names that host, the address as written is the only door.
+ * An explicit door is never silently replaced by a fallback origin. Nothing is carried from one door to another: each
+ * origin is its own transport.
+ */
+function applyWrittenPort(origins: string[], namespace: string, fallbacks: string[] = []): string[] {
+  let port: number | null = null;
+  try {
+    port = parseNamespaceExpression(namespace).transport.port;
+  } catch {
+    port = null;
+  }
+  if (!port) return [...origins, ...fallbacks];
+
+  // The declared origins ARE this node's transport for the namespace, whatever host they are on (a door `fulltrailer.x`
+  // reaches `ana.x`). The written port is a statement about that door: it agrees, it names the port the origin left
+  // open, or it contradicts the explicit port the node was built for -- which is reported, never settled by ignoring
+  // either. Explicit `fallbackOrigins` are separate, declared transports and keep their own ports.
+  const withPort = origins.map((origin) => {
+    let url: URL;
+    try {
+      url = new URL(origin);
+    } catch {
+      return origin;
+    }
+    const explicit = url.port ? Number(url.port) : null;
+    if (explicit !== null && explicit !== port) throw new Error('TRANSPORT_PORT_CONFLICT');
+    url.port = String(port);
+    return `${url.protocol}//${url.host}${url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '')}`;
+  });
+  return [...withPort, ...fallbacks];
+}
+
 function normalizeSurfaceOrigin(input: string): string {
   const raw = String(input || '').trim();
   if (!raw) return '';
@@ -173,11 +230,23 @@ function normalizeSurfaceOrigin(input: string): string {
     const protocol = parsed.protocol.toLowerCase();
     const hostname = String(parsed.hostname || '').trim().toLowerCase();
     if (!protocol || !hostname) return '';
-    return `${protocol}//${hostname}`;
+    // Keep an explicit port when the input carried one -- dropping it
+    // unconditionally (as this used to) silently rewrites e.g.
+    // `http://localhost:6006` to `http://localhost`, which can resolve to
+    // a completely different, unrelated service (confirmed live
+    // 2026-10-02: a Storybook dev server's own origin fell through this
+    // function and the port-less result landed on the real ambient
+    // netget/nginx gateway listening on :80, not Storybook itself).
+    const port = String(parsed.port || '').trim();
+    return port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
   } catch {
-    const host = stripPort(raw.replace(/^https?:\/\//i, '').split('/')[0] || '');
+    const withoutScheme = raw.replace(/^https?:\/\//i, '').split('/')[0] || '';
+    const host = stripPort(withoutScheme);
     if (!host) return '';
-    return `${isLoopbackishHost(host) ? 'http' : 'https'}://${host}`;
+    const portMatch = withoutScheme.match(/:(\d+)$/);
+    const port = portMatch ? portMatch[1] : '';
+    const protocol = isLoopbackishHost(host) ? 'http' : 'https';
+    return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
   }
 }
 
@@ -443,6 +512,18 @@ function readKernelRuntimeMethod<T extends (...args: any[]) => unknown>(
   return null;
 }
 
+/** The namespace as it is signed, sent and compared: a written `:port` is the door, not part of the name. */
+function bareNamespace(namespace: string): string {
+  const raw = String(namespace || '').trim();
+  if (!raw) return '';
+  try {
+    const parsed = parseNamespaceExpression(raw);
+    return parsed.prefix ? composeNamespace(parsed.prefix, parsed.constant) : parsed.constant;
+  } catch {
+    return raw.toLowerCase().replace(/:\d{1,5}$/, '');
+  }
+}
+
 function resolveProofRootNamespace(namespace: string): string {
   const raw = String(namespace || '').trim();
   if (!raw) return '';
@@ -487,7 +568,7 @@ async function proveKernelNamespace(me: MeKernel, namespace: string, challenge: 
   if (!claimedNamespace) {
     throw new Error('PROOF_INVALID');
   }
-  if (claimedNamespace !== namespace) {
+  if (claimedNamespace !== bareNamespace(namespace)) {
     throw new Error('PROOF_NAMESPACE_MISMATCH');
   }
 
@@ -596,7 +677,19 @@ function readLocationSurfaceOrigin(): string {
 function readConfiguredSurfaceOrigin(input: string): string {
   const constant = deriveNamespaceConstant(input);
   if (!constant) return '';
-  return normalizeSurfaceOrigin(constant);
+  // An origin is an address: the written port goes back on it (the constant itself is the bare namespace).
+  return normalizeSurfaceOrigin(`${constant}${deriveNamespacePortSuffix(input)}`);
+}
+
+function deriveNamespacePortSuffix(input: string): string {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  try {
+    const port = parseNamespaceExpression(raw).transport.port;
+    return port ? `:${port}` : '';
+  } catch {
+    return '';
+  }
 }
 
 type BuiltinOsLike = {
@@ -998,6 +1091,49 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     return composeNamespace(expression, constant);
   }
 
+  /**
+   * Where a SIGNED proof may be presented: the transport that was DECLARED for this node (`space` / `bootstrap`, the
+   * per-call `space`, explicit `fallbackOrigins`), plus only those DISCOVERED sources the caller listed in
+   * `authorizeDiscovered`. Discovery (resolveSurfaceOrigins) keeps listing candidates for everything that is not a
+   * signature; it does not authorize one. A page served from A with a link declared toward B never sends A a proof, and
+   * with nothing declared and nothing authorized the proof is refused (TRANSPORT_NOT_DECLARED).
+   */
+  function resolveProofOrigins(namespace: string, runtimeBootstrap: string[] = [], preferredOrigin = ''): { primary: string[]; fallbacks: string[] } {
+    const primary = uniqueOrigins([
+      preferredOrigin,
+      options.space ? normalizeSpaceOrigin(options.space) : '',
+      ...bootstrapOrigins,
+      ...runtimeBootstrap,
+    ]);
+    const fallbacks = uniqueOrigins(
+      (Array.isArray(options.fallbackOrigins) ? options.fallbackOrigins : []).map((o) => normalizeBaseUrl(o)).filter(Boolean),
+    ).filter((o) => !primary.includes(o));
+
+    const allowed = new Set(options.authorizeDiscovered ?? []);
+    const discovered: string[] = [];
+    if (allowed.has('location')) discovered.push(readLocationSurfaceOrigin());
+    if (allowed.has('environment')) {
+      discovered.push(readConfiguredSurfaceOrigin(
+        typeof process !== 'undefined' ? String(process.env.CLEAKER_NAMESPACE_ROOT || process.env.CLEAKER_NAMESPACE_HOST || '') : '',
+      ));
+    }
+    if (allowed.has('machine')) discovered.push(readRuntimeHostSurfaceOrigin());
+    if (allowed.has('namespace')) {
+      try {
+        const parsed = parseNamespaceExpression(bareNamespace(namespace));
+        discovered.push(normalizeSurfaceOrigin(`${parseNamespaceExpression(parsed.constant).transport.protocol}://${parsed.constant}`));
+      } catch {
+        /* a name that does not parse names no origin */
+      }
+    }
+    if (allowed.has('defaults')) discovered.push(normalizeBaseUrl(DEFAULT_CLEAKER_NAMESPACE_ORIGIN), normalizeBaseUrl(DEFAULT_CLEAKER_DEVELOPMENT_ORIGIN));
+
+    const authorized = uniqueOrigins(discovered.filter(Boolean)).filter((o) => !primary.includes(o) && !fallbacks.includes(o));
+    if (primary.length === 0 && fallbacks.length === 0 && authorized.length === 0) throw new Error('TRANSPORT_NOT_DECLARED');
+    // authorized discovered sources are tried after what was declared
+    return { primary, fallbacks: [...fallbacks, ...authorized] };
+  }
+
   function resolveSurfaceOrigins(runtimeBootstrap: string[] = [], preferredOrigin = ''): string[] {
     const spaceOrigin = options.space ? normalizeSpaceOrigin(options.space) : '';
     const locationSurfaceOrigin = readLocationSurfaceOrigin();
@@ -1287,7 +1423,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
       };
     }
 
-    const body = { namespace, proof };
+    const body = { namespace: bareNamespace(namespace), proof };
 
     // Primary: POST /claims/signIn
     const primary = await postJson(`${normalizeBaseUrl(origin)}/claims/signIn`, body, timeoutMs, fetcher, headers);
@@ -1336,7 +1472,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // Primary: POST /me/kernel:claim/<namespace>
     const claimed = await postJson(
       `${normalizeBaseUrl(origin)}/me/kernel:claim/${encodeURIComponent(namespace)}`,
-      { namespace, proof },
+      { namespace: bareNamespace(namespace), proof },
       timeoutMs,
       fetcher,
       headers,
@@ -1350,7 +1486,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (claimed.status === 404 || claimed.status === 405) {
       const legacy = await postJson(
         `${normalizeBaseUrl(origin)}/`,
-        { operation: 'claim', namespace, proof },
+        { operation: 'claim', namespace: bareNamespace(namespace), proof },
         timeoutMs,
         fetcher,
         { 'x-forwarded-host': namespace, ...headers },
@@ -1663,7 +1799,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
-    const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const proof = resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const origins = applyWrittenPort(proof.primary, namespace, proof.fallbacks);
     let lastError = 'SIGNIN_FAILED';
 
     for (const origin of origins) {
@@ -1726,7 +1863,8 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (!namespace) throw new Error('NAMESPACE_REQUIRED');
 
     const fetcher = input.fetcher || options.fetcher || fetch;
-    const origins = resolveSurfaceOrigins([], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const proof = resolveProofOrigins(namespace, [], input.space ? normalizeSpaceOrigin(input.space) : '');
+    const origins = applyWrittenPort(proof.primary, namespace, proof.fallbacks);
     let lastError = 'CLAIM_FAILED';
 
     for (const origin of origins) {
