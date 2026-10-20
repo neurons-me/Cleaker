@@ -1,7 +1,7 @@
 {
   "name": "cleaker",
   "version": "4.0.0",
-  "description": "Who am I here.",
+  "description": "Who am I here. — Resolves a me:// namespace to an identity, a transport and a surface: binds who you are to where you are.",
   "type": "module",
   "main": "dist/cleaker.cjs",
   "module": "dist/cleaker.es.js",
@@ -45,12 +45,13 @@
   },
   "keywords": [
     "cleaker",
-    "namespace",
     "me://",
+    "namespace",
+    "nrp",
+    "namespace-resolution-protocol",
+    "identity",
     "contextual-binding",
-    "semantic-mounting",
-    "namespace-projection",
-    "monad.ai"
+    "semantic-mounting"
   ],
   "repository": {
     "type": "git",
@@ -59,10 +60,14 @@
   "bugs": {
     "url": "https://github.com/neurons-me/Cleaker/issues"
   },
-  "homepage": "https://www.npmjs.com/package/cleaker",
+  "homepage": "https://neurons-me.github.io/Cleaker/",
   "docs": "https://docs.neurons.me/cleaker/index.html",
-  "author": "Sui Gn",
-  "license": "MIT License",
+  "author": {
+    "name": "sui.gn",
+    "url": "https://neurons.me",
+    "email": "dev@neurons.me"
+  },
+  "license": "MIT",
   "repoType": "NPM Package",
   "category": "utils",
   "devDependencies": {
