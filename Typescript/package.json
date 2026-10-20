@@ -1,6 +1,6 @@
 {
   "name": "cleaker",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Who am I here. — Resolves a me:// namespace to an identity, a transport and a surface: binds who you are to where you are.",
   "type": "module",
   "main": "dist/cleaker.cjs",
