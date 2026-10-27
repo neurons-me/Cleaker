@@ -627,6 +627,8 @@
       h("rect", { x: 5, y: 11, width: 14, height: 9.5, rx: 2 }),
       h("path", { d: p.secure ? "M8 11V8a4 4 0 0 1 8 0v3" : "M8 11V8a4 4 0 0 1 7.6-1.7" }));
   }
+  // The label is monospace, so " @ " is three full-width cells; word-spacing on the path part (the "@ host" tspan) pulls the two spaces
+  // in to ~0.24em each, so it reads as one expression. Presentation only; the label text itself is unchanged.
   // QRme draws a status dot at the start of its perimeter label and has no slot for another indicator (this.gui could take a native
   // prop for it later). The dot stays drawn but hidden (the selector below), and the lock is placed exactly where the dot is.
   function CleakerCard(p) {
@@ -651,7 +653,7 @@
     return h(Box, { "data-gui-node-id": p["data-gui-node-id"], sx: { display: "flex", justifyContent: "center", pt: { xs: 1, sm: 2 }, pb: 1 } },
       h(Box, { component: "a", href: (loc.origin || "") + "/", title: full, "aria-label": full, "data-position-expression": full,
         sx: { display: "inline-flex", color: "inherit", textDecoration: "none", "&:focus": { outline: "none" }, "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 4, borderRadius: 2 } } },
-        h(Box, { ref, sx: { position: "relative", display: "inline-flex", "& svg circle": { visibility: "hidden" } } },
+        h(Box, { ref, sx: { position: "relative", display: "inline-flex", "& svg circle": { visibility: "hidden" }, "& tspan[data-gui-part=path]": { wordSpacing: "-0.36em" } } },
           h(G.QRme, { variant: "xl", diameter: 192, value: CLEAKER_QR_VALUE, perimeterLabel: label, perimeterRootLabel: CLEAKER_NAMESPACE,
             clickFlip: false, hoverFlip: false, cursor: "pointer", "data-gui-node-id": "Cleaker.QR" }),
           pos ? h(Box, { component: "span", title: tr.title, "data-gui-node-id": "Cleaker.QR.transport", "data-transport": tr.secure ? "https" : "insecure",
