@@ -1,7 +1,7 @@
 // Cleaker copy of /.me/assets/landing-gui/landing-gui.js (same .GUI topbar: me:// path, search, Docs, GitHub icon,
 // theme picker, light/dark, gear), plus one layout: #static-landing[data-layout=cleaker] renders the Cleaker component
-// (G.Cleaker from this.gui@4.2.0, no props filled in beyond namespace="cleaker.me"), then the Docs and Tests glyph cards.
-// .GUI (this.gui@4.2.0) for hand-written .me landings. Copy of neurons-me.github.io docs/assets/landing-gui.js
+// (G.Cleaker from this.gui@4.2.1, no props filled in beyond namespace="cleaker.me"), then the Docs and Tests glyph cards.
+// .GUI (this.gui@4.2.1) for hand-written .me landings. Copy of neurons-me.github.io docs/assets/landing-gui.js
 // (the /robots/ and /smart-cities/ landings), kept here so .me pages don't depend on the site repo's paths, plus
 // the /.me/Demos/ index layout (kicker, h1, one line, image-left demo cards) and the /.me/docs/ index layout
 // (#static-landing[data-layout=docs-index]: kicker, h1 with the .me mark, language chips, cover-top cards, footer).
@@ -587,7 +587,7 @@
   ]);
   // monad root: only the monad.ai orb, in its default state (healthy unset: no live/offline claim), drawn as
   // MonadNamespaceCard draws it with orbScale={2} in the GUI source: a 130*2px band, the orb in its 120x130 box under
-  // CSS scale(2) from the centre. (core="flat" / ring={1.25} from the source are not props of this.gui@4.2.0's Monad.)
+  // CSS scale(2) from the centre. (core="flat" / ring={1.25} from the source are not props of this.gui@4.2.1's Monad.)
   // monad root cards: a monochrome line glyph (inline SVG, currentColor, so it follows the theme and never shows tofu) + title
   function GlyphCard(p) {
     return h(G.Atoms.Box, { "data-gui-node-id": p["data-gui-node-id"], component: "a", href: p.href, sx: { display: "flex", flexDirection: "column", alignItems: "center", gap: 1.25, py: 3, px: 2,
@@ -597,11 +597,13 @@
         dangerouslySetInnerHTML: { __html: p.glyph } }),
       h("span", { style: { fontWeight: 700, fontSize: "1.05rem" } }, p.title));
   }
-  // Cleaker root: the .GUI Cleaker component as published in this.gui@4.2.0 (G.Cleaker, namespace="cleaker.me"), in its own
-  // default state. It reaches cleaker.me itself (it is the card that talks to the .me service); nothing is filled in here.
+  // Cleaker root: the .GUI Cleaker component as published in this.gui@4.2.1, composed the way the package documents it:
+  //   <Me><Cleaker namespace="cleaker.me" /></Me>
+  // <Me> is the local .me of this part of the page (no username declared: none is invented). <Cleaker> links it to the
+  // namespace and reaches cleaker.me itself; nothing is filled in or mocked here.
   function CleakerCard(p) {
     return h(Box, { "data-gui-node-id": p["data-gui-node-id"], sx: { display: "flex", justifyContent: "center", minHeight: 190 } },
-      h(G.Cleaker, { namespace: "cleaker.me" }));
+      h(G.Me, null, h(G.Cleaker, { namespace: "cleaker.me" })));
   }
   const monadSpec = () => N("Box", { sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary" } }, [
     N("LandingTopBar", {}),
