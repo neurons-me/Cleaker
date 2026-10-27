@@ -1,6 +1,6 @@
 // Cleaker copy of /.me/assets/landing-gui/landing-gui.js (same .GUI topbar: me:// path, search, Docs, GitHub icon,
 // theme picker, light/dark, gear), plus one layout: #static-landing[data-layout=cleaker] renders the Cleaker component
-// (G.Cleaker from this.gui@4.2.1, no props filled in beyond namespace="cleaker.me"), then the Docs and Tests glyph cards.
+// (G.QRme from this.gui@4.2.1, the compact QR.me for namespace "cleaker.me"), then the Docs and Tests glyph cards.
 // .GUI (this.gui@4.2.1) for hand-written .me landings. Copy of neurons-me.github.io docs/assets/landing-gui.js
 // (the /robots/ and /smart-cities/ landings), kept here so .me pages don't depend on the site repo's paths, plus
 // the /.me/Demos/ index layout (kicker, h1, one line, image-left demo cards) and the /.me/docs/ index layout
@@ -597,13 +597,15 @@
         dangerouslySetInnerHTML: { __html: p.glyph } }),
       h("span", { style: { fontWeight: 700, fontSize: "1.05rem" } }, p.title));
   }
-  // Cleaker root: the .GUI Cleaker component as published in this.gui@4.2.1, composed the way the package documents it:
-  //   <Me><Cleaker namespace="cleaker.me" /></Me>
-  // <Me> is the local .me of this part of the page (no username declared: none is invented). <Cleaker> links it to the
-  // namespace and reaches cleaker.me itself; nothing is filled in or mocked here.
+  // Cleaker root: only the compact identity, QRme from this.gui@4.2.1 (G.QRme): the QR of the namespace's address with the
+  // namespace written on its edge. Not the full <Cleaker> shell (that one brings its own fixed header, rail and drawer). The
+  // namespace is cleaker.me and the host is where this page is served, as the shell's own position line resolved it
+  // ("cleaker.me @ <host>"). Nothing is checked or claimed here, so no connection status is passed (the default, idle).
+  const CLEAKER_NAMESPACE = "cleaker.me";
   function CleakerCard(p) {
-    return h(Box, { "data-gui-node-id": p["data-gui-node-id"], sx: { display: "flex", justifyContent: "center", minHeight: 190 } },
-      h(G.Me, null, h(G.Cleaker, { namespace: "cleaker.me" })));
+    return h(Box, { "data-gui-node-id": p["data-gui-node-id"], sx: { display: "flex", justifyContent: "center", pt: { xs: 1, sm: 2 }, pb: 1 } },
+      h(G.QRme, { variant: "xl", diameter: 192, value: "https://" + CLEAKER_NAMESPACE, perimeterLabel: CLEAKER_NAMESPACE, perimeterRootLabel: CLEAKER_NAMESPACE,
+        clickFlip: false, hoverFlip: false, "data-gui-node-id": "Cleaker.QR" }));
   }
   const monadSpec = () => N("Box", { sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary" } }, [
     N("LandingTopBar", {}),
