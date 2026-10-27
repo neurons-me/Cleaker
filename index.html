@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cleaker</title>
+  <meta name="description" content="Cleaker: the .me client for namespaces and identity." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Cleaker" />
+  <meta property="og:description" content="Cleaker: the .me client for namespaces and identity." />
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1778177581/ChatGPT_Image_May_7_2026_12_12_28_PM_xzkwtc.png" />
+  <!-- .GUI (this.gui@4.2.0: GUI.Cleaker, namespace="cleaker.me", then the Docs and Tests cards) renders this page from the static markup below (assets/landing-gui/landing-gui.js, a copy of
+       /.me/assets/landing-gui/landing-gui.js); the static page stays as the no-JS / CDN-failure fallback.
+       Page-scoped theme keys, neurons.me, dark by default. -->
+  <script>
+    window.__thisGuiThemeScope = { scopeId: "cleaker", themeModeKey: "cleaker.themeMode", themeIdKey: "cleaker.themeId", defaultMode: "dark" };
+    try {
+      if (!localStorage.getItem("cleaker.themeMode")) localStorage.setItem("cleaker.themeMode", "dark");
+      if (!localStorage.getItem("cleaker.themeId")) localStorage.setItem("cleaker.themeId", "neurons.me");
+    } catch (e) {}
+    document.documentElement.classList.add("gui-boot");
+  </script>
+  <style>.material-symbols-rounded,.material-symbols-outlined,.material-icons{display:none!important} body{margin:0} .gui-boot #static-landing{display:none}</style>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.2.0/dist/this.gui.umd.js" integrity="sha384-tAyskhiyJweQ9xXPVOSEJ0OQDE+lFsqRJvGRb8LVoqLbdNxYmJEhW21+fxcAYG0d" crossorigin="anonymous"></script>
+  <style>
+    html:not(.gui-on) body { font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif; background:#0b1114; color:#e8eded; }
+    html:not(.gui-on) .topnav { display:flex; align-items:center; gap:10px; padding:0 20px; min-height:48px; border-bottom:1px solid rgba(232,237,237,0.08); }
+    html:not(.gui-on) .topnav a { color:inherit; text-decoration:none; }
+    html:not(.gui-on) .topnav .logo img { width:28px; height:28px; display:block; }
+    html:not(.gui-on) .mepath { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; }
+    html:not(.gui-on) .mepath a { color:#4fb3bf; }
+    html:not(.gui-on) .mepath .here { font-weight:600; }
+    html:not(.gui-on) .spacer { flex:1; }
+    html:not(.gui-on) .root-cards a { display:block; margin:12px 0; padding:12px; border:1px solid rgba(232,237,237,0.15); border-radius:12px; color:inherit; text-decoration:none; } html:not(.gui-on) .root-cards svg { width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; } html:not(.gui-on) .page { max-width:560px; margin:48px auto; padding:0 16px; font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+<div id="static-landing" data-layout="cleaker">
+  <nav class="topnav" aria-label="me path">
+    <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
+    <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><span class="here" aria-current="page">Cleaker</span></div>
+    <span class="spacer"></span>
+    <a data-topbar="docs" href="/Cleaker/docs/">Docs</a>
+    <a href="https://github.com/neurons-me/Cleaker">GitHub</a>
+  </nav>
+  <main class="page">
+    <h1>Cleaker</h1>
+    <div class="root-cards">
+      <a class="card" href="/Cleaker/docs/"><svg class="card-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4"/><path d="M7 8.5v7M10 12h8"/></svg><span class="card-title">Docs</span></a>
+      <a class="card" href="/Cleaker/tests/"><svg class="card-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5c5-2.5 13-2.5 18 0"/><path d="M3.5 11.5c5-4.5 12-4.5 17 0c-5 4.5-12 4.5-17 0z"/><circle cx="12" cy="11.5" r="2"/><path d="M10 15.2 8 20.5M14 15.2c.5 3 4 4 4.5 1.5"/></svg><span class="card-title">Tests</span></a>
+    </div>
+  </main>
+</div>
+<div id="root"></div>
+<script src="/Cleaker/assets/landing-gui/landing-gui.js?v=1" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+</body>
+</html>

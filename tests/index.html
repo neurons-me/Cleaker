@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tests · Cleaker</title>
+  <meta name="description" content="Cleaker: the test suites, what each one verifies, and the last run." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Cleaker" />
+  <meta property="og:description" content="Cleaker: the test suites, what each one verifies, and the last run." />
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1778177581/ChatGPT_Image_May_7_2026_12_12_28_PM_xzkwtc.png" />
+  <!-- .GUI (this.gui@4.2.0: GUI.Cleaker, namespace="cleaker.me", then the Docs and Tests cards) renders this page from the static markup below (assets/landing-gui/landing-gui.js, a copy of
+       /.me/assets/landing-gui/landing-gui.js); the static page stays as the no-JS / CDN-failure fallback.
+       Page-scoped theme keys, neurons.me, dark by default. -->
+  <script>
+    window.__thisGuiThemeScope = { scopeId: "cleaker", themeModeKey: "cleaker.themeMode", themeIdKey: "cleaker.themeId", defaultMode: "dark" };
+    try {
+      if (!localStorage.getItem("cleaker.themeMode")) localStorage.setItem("cleaker.themeMode", "dark");
+      if (!localStorage.getItem("cleaker.themeId")) localStorage.setItem("cleaker.themeId", "neurons.me");
+    } catch (e) {}
+    document.documentElement.classList.add("gui-boot");
+  </script>
+  <style>.material-symbols-rounded,.material-symbols-outlined,.material-icons{display:none!important} body{margin:0} .gui-boot #static-landing{display:none}</style>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.2.0/dist/this.gui.umd.js" integrity="sha384-tAyskhiyJweQ9xXPVOSEJ0OQDE+lFsqRJvGRb8LVoqLbdNxYmJEhW21+fxcAYG0d" crossorigin="anonymous"></script>
+  <style>
+    html:not(.gui-on) body { font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif; background:#0b1114; color:#e8eded; }
+    html:not(.gui-on) .topnav { display:flex; align-items:center; gap:10px; padding:0 20px; min-height:48px; border-bottom:1px solid rgba(232,237,237,0.08); }
+    html:not(.gui-on) .topnav a { color:inherit; text-decoration:none; }
+    html:not(.gui-on) .topnav .logo img { width:28px; height:28px; display:block; }
+    html:not(.gui-on) .mepath { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; }
+    html:not(.gui-on) .mepath a { color:#4fb3bf; }
+    html:not(.gui-on) .mepath .here { font-weight:600; }
+    html:not(.gui-on) .spacer { flex:1; }
+    html:not(.gui-on) .root-cards a { display:block; margin:12px 0; padding:12px; border:1px solid rgba(232,237,237,0.15); border-radius:12px; color:inherit; text-decoration:none; } html:not(.gui-on) .root-cards svg { width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; } html:not(.gui-on) .page { max-width:560px; margin:48px auto; padding:0 16px; font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+<div id="static-landing">
+  <nav class="topnav" aria-label="me path">
+    <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
+    <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><a href="/Cleaker/" title="Cleaker">Cleaker</a><span class="here" aria-current="page">tests</span></div>
+    <span class="spacer"></span>
+    <a class="act" href="/Cleaker/docs/">Docs</a>
+    <a class="gh" href="https://github.com/neurons-me/Cleaker">GitHub</a>
+  </nav>
+  <div class="wrap">
+    <header>
+      <h1>Tests</h1>
+      <div class="mls-card"><a class="mls-title" href="/Cleaker/tests/targets/">Targets (me://)</a><span class="mls-meta">15 tests</span><p class="item-desc">Reading a me:// target: namespace, operation and path, and the pointer cleaker() returns for it.</p><div class="mls-links"></div></div>
+      <div class="mls-card"><a class="mls-title" href="/Cleaker/tests/namespaces/">Namespaces and spaces</a><span class="mls-meta">23 tests</span><p class="item-desc">How a namespace is written, composed and resolved: public names, localhost, defaults and fallbacks.</p><div class="mls-links"></div></div>
+      <div class="mls-card"><a class="mls-title" href="/Cleaker/tests/ports/">Ports and proof destinations</a><span class="mls-meta">22 tests</span><p class="item-desc">A port belongs to the transport, not the namespace, and a signed proof goes only to a destination the caller named.</p><div class="mls-links"></div></div>
+      <div class="mls-card"><a class="mls-title" href="/Cleaker/tests/binding/">Binding and groups</a><span class="mls-meta">10 tests</span><p class="item-desc">Binding a .me kernel to namespaces, and who counts as an owner, admin or member of a group.</p><div class="mls-links"></div></div>
+      <div class="mls-card"><a class="mls-title" href="/Cleaker/tests/runs/2026-10-26/">Last run</a><span class="mls-meta">2026-10-26</span><p class="item-desc">70 of 70 passed in npm test, on Node 20 and Node 22.</p><div class="mls-links"></div></div>
+    </header>
+    <section><h2 class="section-title">Run them</h2>
+      <div class="links demo-grid"><a class="item" href="https://github.com/neurons-me/Cleaker/blob/main/Typescript/package.json"><span class="item-title">npm test</span><span class="item-desc">The ten scripts listed in package.json, one after another (tsx).</span><code class="item-code">cd Typescript
+npm install
+npm test</code></a>
+      <a class="item" href="https://github.com/neurons-me/Cleaker/blob/main/Typescript/tests/port-namespace.characterization.test.ts"><span class="item-title">The characterization script</span><span class="item-desc">Not part of npm test; run it by itself.</span><code class="item-code">cd Typescript
+npx tsx tests/port-namespace.characterization.test.ts</code></a></div>
+    </section>
+    <footer>MIT · neurons.me</footer>
+  </div>
+</div>
+<div id="root"></div>
+<script src="/Cleaker/assets/landing-gui/landing-gui.js?v=1" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+</body>
+</html>
