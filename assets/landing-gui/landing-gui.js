@@ -597,15 +597,66 @@
         dangerouslySetInnerHTML: { __html: p.glyph } }),
       h("span", { style: { fontWeight: 700, fontSize: "1.05rem" } }, p.title));
   }
-  // Cleaker root: only the compact identity, QRme from this.gui@4.2.1 (G.QRme): the QR of the namespace's address with the
-  // namespace written on its edge. Not the full <Cleaker> shell (that one brings its own fixed header, rail and drawer). The
-  // namespace is cleaker.me and the host is where this page is served, as the shell's own position line resolved it
-  // ("cleaker.me @ <host>"). Nothing is checked or claimed here, so no connection status is passed (the default, idle).
+  // Cleaker root: only the compact identity, QRme from this.gui@4.2.1 (G.QRme), not the full <Cleaker> shell (that one brings
+  // its own fixed header, rail and drawer). It is written the way the shell writes where you are (the NRP's
+  // `namespace @ surface`, react/positionExpression.ts): the namespace is cleaker.me, the surface is the host this page is
+  // served from (window.location, read at runtime). The shell's QR value for that namespace is the namespace's own address,
+  // https://cleaker.me, built by the library's linkQrValue/endpointForRoot: the NRP keeps the page's host out of the QR
+  // value (hosts are execution details), so the host is in the label and in the title only. Nothing is checked or claimed
+  // here, so no connection status is passed (the default, idle): the surface is shown, never abbreviated as "bound".
   const CLEAKER_NAMESPACE = "cleaker.me";
+  const CLEAKER_QR_VALUE = "https://" + CLEAKER_NAMESPACE;
+  // surfaceToken (positionExpression.ts): a bare host[:port]; quoted with its scheme only for http on a non-loopback host or an IPv6 literal.
+  function surfaceToken(loc) {
+    const host = String(loc.host || "").trim().toLowerCase();
+    if (!host) return "";
+    const scheme = String(loc.protocol || "http:").toLowerCase().replace(/:?$/, ":");
+    const loopback = /^(localhost|127(?:\.\d{1,3}){3}|\[::1\]|[^.:\s]+\.localhost)(?::\d+)?$/i.test(host);
+    return (scheme === "http:" && !loopback) || host.charAt(0) === "[" ? '"' + scheme + "//" + host + '"' : host;
+  }
+  // Transport security as the browser itself reports it, nothing more: https: in a secure context means the browser accepted a
+  // certificate; http: means there is none. Issuer and expiry are not readable from a page, so none is claimed.
+  function transportInfo() {
+    const proto = String(location.protocol || "").toLowerCase();
+    const secure = proto === "https:" && window.isSecureContext === true;
+    return { secure, title: secure ? "HTTPS \u00b7 certificate accepted by browser" : proto === "http:" ? "HTTP \u00b7 no certificate" : proto === "https:" ? "HTTPS \u00b7 not a secure context" : String(proto.replace(":", "")).toUpperCase() + " \u00b7 no certificate" };
+  }
+  // Line icon, currentColor, 24-box: a closed padlock, or the same padlock with its shackle lifted.
+  function LockGlyph(p) {
+    return h("svg", { viewBox: "0 0 24 24", width: p.size, height: p.size, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", "data-lock": p.secure ? "closed" : "open" },
+      h("rect", { x: 5, y: 11, width: 14, height: 9.5, rx: 2 }),
+      h("path", { d: p.secure ? "M8 11V8a4 4 0 0 1 8 0v3" : "M8 11V8a4 4 0 0 1 7.6-1.7" }));
+  }
+  // QRme draws a status dot at the start of its perimeter label and has no slot for another indicator (this.gui could take a native
+  // prop for it later). The dot stays drawn but hidden (the selector below), and the lock is placed exactly where the dot is.
   function CleakerCard(p) {
+    const loc = typeof window !== "undefined" ? window.location : { host: "", protocol: "https:", origin: "" };
+    const surface = surfaceToken(loc);
+    const label = surface ? CLEAKER_NAMESPACE + " @ " + surface : CLEAKER_NAMESPACE;
+    const full = loc.host ? CLEAKER_NAMESPACE + ' @ "' + String(loc.protocol).toLowerCase() + "//" + String(loc.host).toLowerCase() + '"' : CLEAKER_NAMESPACE;
+    const tr = React.useMemo(transportInfo, []), ref = React.useRef(null), [pos, setPos] = React.useState(null);
+    React.useEffect(() => {
+      const root = ref.current; if (!root) return undefined;
+      const place = () => {
+        const dot = root.querySelector("svg circle"); if (!dot) return;
+        const a = dot.getBoundingClientRect(), b = root.getBoundingClientRect();
+        if (a.width) setPos((q) => { const n = { x: a.left - b.left + a.width / 2, y: a.top - b.top + a.height / 2, d: a.width }; return q && Math.abs(q.x - n.x) < 0.1 && Math.abs(q.y - n.y) < 0.1 && Math.abs(q.d - n.d) < 0.1 ? q : n; });
+      };
+      place(); const t1 = setTimeout(place, 300), t2 = setTimeout(place, 1200);
+      const ro = typeof ResizeObserver === "function" ? new ResizeObserver(place) : null; if (ro) ro.observe(root);
+      window.addEventListener("resize", place); if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+      return () => { clearTimeout(t1); clearTimeout(t2); if (ro) ro.disconnect(); window.removeEventListener("resize", place); };
+    }, []);
+    const size = pos ? Math.round(pos.d * 1.6 * 10) / 10 : 13;
     return h(Box, { "data-gui-node-id": p["data-gui-node-id"], sx: { display: "flex", justifyContent: "center", pt: { xs: 1, sm: 2 }, pb: 1 } },
-      h(G.QRme, { variant: "xl", diameter: 192, value: "https://" + CLEAKER_NAMESPACE, perimeterLabel: CLEAKER_NAMESPACE, perimeterRootLabel: CLEAKER_NAMESPACE,
-        clickFlip: false, hoverFlip: false, "data-gui-node-id": "Cleaker.QR" }));
+      h(Box, { component: "a", href: (loc.origin || "") + "/", title: full, "aria-label": full, "data-position-expression": full,
+        sx: { display: "inline-flex", color: "inherit", textDecoration: "none", "&:focus": { outline: "none" }, "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 4, borderRadius: 2 } } },
+        h(Box, { ref, sx: { position: "relative", display: "inline-flex", "& svg circle": { visibility: "hidden" } } },
+          h(G.QRme, { variant: "xl", diameter: 192, value: CLEAKER_QR_VALUE, perimeterLabel: label, perimeterRootLabel: CLEAKER_NAMESPACE,
+            clickFlip: false, hoverFlip: false, cursor: "pointer", "data-gui-node-id": "Cleaker.QR" }),
+          pos ? h(Box, { component: "span", title: tr.title, "data-gui-node-id": "Cleaker.QR.transport", "data-transport": tr.secure ? "https" : "insecure",
+            sx: { position: "absolute", left: pos.x - size / 2, top: pos.y - size / 2, width: size, height: size, display: "inline-flex", color: tr.secure ? "text.secondary" : "warning.main" } },
+            h(LockGlyph, { size, secure: tr.secure })) : null)));
   }
   const monadSpec = () => N("Box", { sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary" } }, [
     N("LandingTopBar", {}),
