@@ -5,6 +5,25 @@ export interface BindKernelOptions extends CreateRemotePointerOptions {
     identityHash?: string;
     space?: string;
     bootstrap?: string[];
+    /**
+     * Origins a SIGNED proof (signIn / claim) may be presented to when the destinations this node was built for do not
+     * answer. Empty by default: discovery may look for candidates, but presenting a signature requires a destination that was
+     * selected. The built-in defaults (the public cleaker.me, localhost) are NOT fallbacks for a signed proof; they are used
+     * only when nothing else was selected at all.
+     */
+    fallbackOrigins?: string[];
+    /**
+     * Which DISCOVERED sources may, in addition to the declared transport, receive a SIGNED proof. Empty by default.
+     * Discovery itself (listing candidate origins for reads and host validation) is not affected by this: it always looks.
+     * This only decides what discovery may AUTHORIZE for a signature:
+     *   'location'     the page's own origin (window.location)
+     *   'environment'  CLEAKER_NAMESPACE_ROOT / CLEAKER_NAMESPACE_HOST
+     *   'machine'      this machine's hostname
+     *   'defaults'     the built-in public cleaker.me and localhost
+     *   'namespace'    the origin the signed namespace's own name resolves to
+     * A source listed here is a statement by the caller that a signature may go there; nothing is inferred from it.
+     */
+    authorizeDiscovered?: Array<'location' | 'environment' | 'machine' | 'defaults' | 'namespace'>;
     fetcher?: typeof fetch;
     /**
      * Opt-in: keep every RemoteSlot this kernel creates live over the

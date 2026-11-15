@@ -1,11 +1,32 @@
 import type { ResolvePointerOptions } from './pointer';
 import type { RemotePointerDefinition, ResolvePointerResult } from './pointer';
+/**
+ * The claim this link signs for: the exact namespace sent to the monad, the identity the proof declares, and the
+ * proof's own public key -- the key the monad registers for the new claim. Built AFTER the proof, from the proof that
+ * is then sent unchanged, so the link never covers a provisional key.
+ */
+export interface IdentityLinkTarget {
+    toNamespace: string;
+    identityHash: string;
+    toPublicKey: string;
+}
+/** What the monad checks (claim/records.ts verifyIdentityLink): signed by the anchor's claim key over the target. */
+export interface IdentityLinkProof {
+    fromNamespace: string;
+    timestamp: number;
+    signature: string;
+}
 export interface OpenNodeInput {
     namespace: string;
     identityHash?: string;
     space?: string;
     headers?: Record<string, string>;
     fetcher?: typeof fetch;
+    /**
+     * claim() only: a second namespace for an identity a monad already holds needs an identity-link from that identity's
+     * anchor. Called once per attempt with the target of THIS proof; returning null sends no link.
+     */
+    link?: (target: IdentityLinkTarget) => Promise<IdentityLinkProof | null>;
 }
 export interface OpenNodeResult {
     status: 'verified';

@@ -17,6 +17,8 @@ export type {
   MeKernel,
   NamespaceFallbackPayload,
   NamespaceFailedPayload,
+  IdentityLinkProof,
+  IdentityLinkTarget,
   OpenNodeInput,
   OpenNodeResult,
 } from './types/kernel.js';

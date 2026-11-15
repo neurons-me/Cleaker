@@ -16,6 +16,7 @@ import type {
   CleakerReadyPayload,
   CleakerState,
   CleakerStatus,
+  IdentityLinkProof,
   KernelPendingResolution,
   MeKernel,
   OpenNodeInput,
@@ -1454,10 +1455,20 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     timeoutMs: number,
     fetcher: typeof fetch,
     headers: Record<string, string> = {},
+    makeLink?: OpenNodeInput['link'],
   ): Promise<ClaimResponse | { ok: false; error: string; status: number }> {
     let proof: ClaimProof;
+    let link: IdentityLinkProof | null = null;
     try {
       proof = await proveKernelNamespace(me, namespace);
+      // The link is signed over THIS proof's key and the namespace exactly as sent; the proof is not rebuilt after it.
+      if (makeLink) {
+        link = await makeLink({
+          toNamespace: bareNamespace(namespace),
+          identityHash: String(proof.identityHash || ''),
+          toPublicKey: String(proof.publicKey || ''),
+        });
+      }
     } catch (error) {
       return {
         ok: false,
@@ -1472,7 +1483,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // Primary: POST /me/kernel:claim/<namespace>
     const claimed = await postJson(
       `${normalizeBaseUrl(origin)}/me/kernel:claim/${encodeURIComponent(namespace)}`,
-      { namespace: bareNamespace(namespace), proof },
+      { namespace: bareNamespace(namespace), proof, ...(link ? { link } : {}) },
       timeoutMs,
       fetcher,
       headers,
@@ -1486,7 +1497,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (claimed.status === 404 || claimed.status === 405) {
       const legacy = await postJson(
         `${normalizeBaseUrl(origin)}/`,
-        { operation: 'claim', namespace: bareNamespace(namespace), proof },
+        { operation: 'claim', namespace: bareNamespace(namespace), proof, ...(link ? { link } : {}) },
         timeoutMs,
         fetcher,
         { 'x-forwarded-host': namespace, ...headers },
@@ -1868,7 +1879,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     let lastError = 'CLAIM_FAILED';
 
     for (const origin of origins) {
-      const result = await claimRemote(origin, namespace, 5000, fetcher, input.headers || {});
+      const result = await claimRemote(origin, namespace, 5000, fetcher, input.headers || {}, input.link);
 
       if (!result.ok) {
         lastError = String(result.error || 'CLAIM_FAILED');

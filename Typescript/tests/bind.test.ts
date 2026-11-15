@@ -148,6 +148,58 @@ void run('Bind: claim → POST /me/kernel:claim/<namespace>', async () => {
   assert.ok(calls.some(u => u.includes('/me/kernel:claim/')));
 });
 
+// node.claim({ namespace, link }) → the link is made from the proof that is sent, once per attempt, and travels with it
+void run('Bind: claim with link → link signed over the sent proof key and namespace', async () => {
+  const me = createMockKernel('suiGn');
+  let proofs = 0;
+  me['!'] = {
+    // cleaker() also signs in on bind (challenge "open:..."); only claim proofs (challenge null) are counted here.
+    prove: async ({ rootNamespace, challenge }: { rootNamespace: string; challenge?: string | null }) => {
+      if (challenge == null) proofs += 1;
+      return {
+        identityHash: 'id-hash', expression: 'suign', namespace: 'suign.neurons.me', rootNamespace,
+        publicKey: `pubkey-${proofs}`, message: 'msg', signature: 'sig', timestamp: Date.now(),
+      };
+    },
+  };
+  const targets: unknown[] = [];
+  let sent: Record<string, any> = {};
+  const node = cleaker(me, 'neurons.me', {
+    fetcher: mockFetcher((url, body) => {
+      if (!url.startsWith('https://neurons.me/me/kernel:claim/')) return null;
+      sent = body;
+      return ok({ namespace: 'suign.neurons.me', identityHash: 'id-hash', publicKey: body.proof?.publicKey, createdAt: Date.now() });
+    }),
+  });
+  await node.claim({
+    namespace: 'suign.neurons.me',
+    link: async (target) => {
+      targets.push(target);
+      return { fromNamespace: 'anchor.neurons.me', timestamp: 1, signature: `sig-over-${target.toPublicKey}` };
+    },
+  });
+  assert.equal(proofs, 1, 'one proof per attempt: no provisional key');
+  assert.deepEqual(targets, [{ toNamespace: 'suign.neurons.me', identityHash: 'id-hash', toPublicKey: 'pubkey-1' }]);
+  assert.equal(sent.proof.publicKey, 'pubkey-1', 'the key the link covers is the key that is sent');
+  assert.deepEqual(sent.link, { fromNamespace: 'anchor.neurons.me', timestamp: 1, signature: 'sig-over-pubkey-1' });
+});
+
+// A link callback that answers null sends no link field at all.
+void run('Bind: claim with a null link → no link field', async () => {
+  const me = createMockKernel('suiGn');
+  me['!'] = { prove: async ({ rootNamespace }: { rootNamespace: string }) => ({ identityHash: 'id-hash', expression: 'suign', namespace: 'suign.neurons.me', rootNamespace, publicKey: 'pk', message: 'm', signature: 's', timestamp: Date.now() }) };
+  let sent: Record<string, any> = {};
+  const node = cleaker(me, 'neurons.me', {
+    fetcher: mockFetcher((url, body) => {
+      if (!url.startsWith('https://neurons.me/me/kernel:claim/')) return null;
+      sent = body;
+      return ok({ namespace: 'suign.neurons.me', identityHash: 'id-hash', createdAt: Date.now() });
+    }),
+  });
+  await node.claim({ namespace: 'suign.neurons.me', link: async () => null });
+  assert.equal('link' in sent, false);
+});
+
 // Same me, different spaces → different namespaces, different endpoints
 void run('Bind: same identity, different spaces → different namespaces', () => {
   const me = createMockKernel('suiGn');
