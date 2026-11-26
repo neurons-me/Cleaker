@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>cleaker — Docs</title>
+  <title>Cleaker — Docs</title>
   <meta name="description" content="cleaker: the .me client that turns a namespace into me:// addresses. .me is syntax; cleaker is protocol." />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="cleaker — Docs" />
@@ -68,7 +68,7 @@
     html:not(.gui-on) .page-subtitle {
       font-size: 1.05rem;
       color: #51606d;
-      margin-bottom: 48px;
+      margin-bottom: 20px;
       max-width: 560px;
     }
 
@@ -155,6 +155,8 @@
     }
   </style>
 <link rel="icon" type="image/png" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png?v=brain"><link rel="stylesheet" href="https://neurons-me.github.io/.me/assets/hiero.css">
+<!-- Less space between the subtitle and the language chips than the shared docs-index layout gives (.GUI render). -->
+<style>#root main > p:has(+ nav[aria-label="Languages"]) { margin-bottom: 20px !important; }</style>
 </head>
 <body>
 <div id="static-landing" data-layout="docs-index">
@@ -172,13 +174,13 @@
   </nav>
   <div class="page">
     <p class="kicker">Name before place.</p>
-    <h1 class="page-title">cleaker Docs</h1>
+    <h1 class="page-title">Cleaker Docs</h1>
     <p class="page-subtitle">.me is syntax. cleaker is protocol.</p>
 
     <nav class="lang-nav">
       <a href="https://neurons-me.github.io/Cleaker/Typescript/">🟦 TypeScript</a>
-      <a href="https://neurons-me.github.io/Cleaker/Python/">🐍 Python</a>
       <a href="https://neurons-me.github.io/Cleaker/Rust/">🦀 Rust</a>
+      <a href="https://neurons-me.github.io/Cleaker/Python/">🐍 Python</a>
     </nav>
 
     <div class="grid">
@@ -204,6 +206,9 @@
         <div class="card-desc">Every QR status, and what cleaker checks.</div>
       </a>
       <a class="card" href="https://neurons-me.github.io/Cleaker/docs/en/The-Algebra-of-Me.html">
+        <picture>
+          <svg class="card-media" viewBox="36 12 148 144" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Three .me as sets, a.me, b.me and c.me, with their intersections a∩b, a∩c, b∩c and a∩b∩c at the centre" xmlns="http://www.w3.org/2000/svg"><circle cx="86" cy="62" r="46" fill="color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 16%, transparent)" stroke="color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 72%, var(--mui-palette-text-primary, #e8eded))" stroke-width="3"/><circle cx="134" cy="62" r="46" fill="color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 16%, transparent)" stroke="color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 72%, var(--mui-palette-text-primary, #e8eded))" stroke-width="3"/><circle cx="110" cy="104" r="46" fill="color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 16%, transparent)" stroke="color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 72%, var(--mui-palette-text-primary, #e8eded))" stroke-width="3"/><text x="64" y="50" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="currentColor" opacity=".85">a.me</text><text x="156" y="50" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="currentColor" opacity=".85">b.me</text><text x="110" y="136" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="currentColor" opacity=".85">c.me</text><text x="110" y="46" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10" font-weight="400" fill="currentColor" opacity=".75">a∩b</text><text x="83" y="98" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10" font-weight="400" fill="currentColor" opacity=".75">a∩c</text><text x="137" y="98" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10" font-weight="400" fill="currentColor" opacity=".75">b∩c</text><text x="110" y="81" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="currentColor" opacity=".95">∩</text></svg>
+        </picture>
         <div class="card-title">The Algebra of Me</div>
         <div class="card-desc">Namespaces as a set, and how they compose.</div>
       </a>

@@ -1,4 +1,4 @@
-# Builds the Cleaker, The Model and Statuses card covers from QR.me's own output for https://cleaker.me
+# Builds the Cleaker, The Model, Statuses and The Algebra of Me card covers from QR.me's own output for https://cleaker.me
 # Run from the repo root: python3 docs/covers/build-covers.py docs/covers/qrme.json docs/index.html
 # (qrme.json: the code path and the .me wordmark, read from the rendered GUI.QRme). Colours: .GUI theme variables.
 import json, math, re, sys
@@ -96,8 +96,23 @@ def cleaker():
     return ('<svg class="card-media" viewBox="20 6 160 172" preserveAspectRatio="xMidYMax meet" role="img" aria-label="The QR.me of cleaker.me, turning between its code and its .me face" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
+def algebra():
+    # Three .me as sets (a.me, b.me, c.me) and their intersections, named as set expressions:
+    # a∩b, b∩c, a∩c and, at the centre, a∩b∩c.
+    T = "currentColor"; r = 46
+    c = {"a": (86, 62), "b": (134, 62), "c": (110, 104)}
+    fill = "color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 16%, transparent)"
+    out = [f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{P}" stroke-width="3"/>' for x, y in c.values()]
+    lab = lambda x, y, t, size, w, op: f'<text x="{x}" y="{y}" text-anchor="middle" font-family="{MONO}" font-size="{size}" font-weight="{w}" fill="{T}" opacity="{op}">{t}</text>'
+    out += [lab(64, 50, "a.me", 12, 700, ".85"), lab(156, 50, "b.me", 12, 700, ".85"), lab(110, 136, "c.me", 12, 700, ".85")]
+    # each label sits in its own lens (pair midpoint pushed away from the third centre); a∩b∩c at the centre
+    out += [lab(110, 46, "a∩b", 10, 400, ".75"), lab(83, 98, "a∩c", 10, 400, ".75"), lab(137, 98, "b∩c", 10, 400, ".75")]
+    out.append(lab(110, 81, "∩", 15, 700, ".95"))
+    return ('<svg class="card-media" viewBox="36 12 148 144" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Three .me as sets, a.me, b.me and c.me, with their intersections a∩b, a∩c, b∩c and a∩b∩c at the centre" xmlns="http://www.w3.org/2000/svg">'
+            + "".join(out) + "</svg>")
+
 s = open(INDEX).read()
-for href, build in (("docs/en/Cleaker.html", cleaker), ("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses)):
+for href, build in (("docs/en/Cleaker.html", cleaker), ("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses), ("docs/en/The-Algebra-of-Me.html", algebra)):
     i = s.index(f'href="https://neurons-me.github.io/Cleaker/{href}"'); j = s.index('<svg class="card-media"', i); e = s.index("</svg>", j) + 6
     assert e < s.index('<div class="card-title">', i)
     s = s[:j] + build() + s[e:]
