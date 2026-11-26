@@ -610,12 +610,18 @@
   const CLEAKER_NAMESPACE = "cleaker.me";
   const CLEAKER_QR_VALUE = "https://" + CLEAKER_NAMESPACE;
   // surfaceToken (positionExpression.ts): a bare host[:port]; quoted with its scheme only for http on a non-loopback host or an IPv6 literal.
+  // The surface is the page's place: host plus path (on github.io the host is shared by every repo's site, so
+  // neurons-me.github.io/Cleaker, not neurons-me.github.io). Trailing "/" and "index.html" are dropped.
+  function surfacePath(loc) {
+    return String(loc.pathname || "").replace(/\/index\.html?$/i, "/").replace(/\/+$/, "");
+  }
   function surfaceToken(loc) {
     const host = String(loc.host || "").trim().toLowerCase();
     if (!host) return "";
+    const place = host + surfacePath(loc);
     const scheme = String(loc.protocol || "http:").toLowerCase().replace(/:?$/, ":");
     const loopback = /^(localhost|127(?:\.\d{1,3}){3}|\[::1\]|[^.:\s]+\.localhost)(?::\d+)?$/i.test(host);
-    return (scheme === "http:" && !loopback) || host.charAt(0) === "[" ? '"' + scheme + "//" + host + '"' : host;
+    return (scheme === "http:" && !loopback) || host.charAt(0) === "[" ? '"' + scheme + "//" + place + '"' : place;
   }
   // Transport security as the browser itself reports it, nothing more: https: in a secure context means the browser accepted a
   // certificate; http: means there is none. Issuer and expiry are not readable from a page, so none is claimed.
@@ -638,7 +644,7 @@
     const loc = typeof window !== "undefined" ? window.location : { host: "", protocol: "https:", origin: "" };
     const surface = surfaceToken(loc);
     const label = surface ? CLEAKER_NAMESPACE + " @ " + surface : CLEAKER_NAMESPACE;
-    const full = loc.host ? CLEAKER_NAMESPACE + ' @ "' + String(loc.protocol).toLowerCase() + "//" + String(loc.host).toLowerCase() + '"' : CLEAKER_NAMESPACE;
+    const full = loc.host ? CLEAKER_NAMESPACE + ' @ "' + String(loc.protocol).toLowerCase() + "//" + String(loc.host).toLowerCase() + surfacePath(loc) + '"' : CLEAKER_NAMESPACE;
     const tr = React.useMemo(transportInfo, []), ref = React.useRef(null), [pos, setPos] = React.useState(null);
     const CL = window.CleakerLive, [live, setLive] = React.useState(CL ? CL.state : null);
     React.useEffect(() => { if (!CL) return undefined; const off = CL.subscribe(setLive); CL.connect(); return off; }, []);
