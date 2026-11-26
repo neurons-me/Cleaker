@@ -9,6 +9,8 @@ mepath:
     url: https://neurons-me.github.io/Cleaker/docs/
 canonical: https://neurons-me.github.io/Cleaker/docs/en/The-Algebra-of-Me.html
 crumb: the algebra of me
+scripts:
+  - /assets/algebra-live/algebra-live.js?v=1
 related:
   - The-Model.html
   - Statuses.html
@@ -36,6 +38,8 @@ seed(N) = N        id(N) = keccak256("this.me/identity:v1::" + N)
 A namespace is a public name. Its seed is the name itself, so anyone can compute its identity hash: it protects nothing, and it never rotates. It is the axis. Everything around it (owners, keys, the server's key, who opens what) is mechanism, and mechanism can rotate.
 
 `me://cleaker.me` is the same axis for every viewer, before anyone signs in.
+
+<div data-live="AxIdentity"></div>
 
 ### Ax2 — Mounting
 
@@ -72,6 +76,8 @@ The port, the URL and `?ref=` say where you are (the transport, the surface), no
 
 `cleaker.me @ neurons-me.github.io` is the namespace `cleaker.me` seen from the page `neurons-me.github.io`; the page grants nothing inside it.
 
+<div data-live="AxLocation"></div>
+
 ### Ax5 — Authority never comes from the seed
 
 ```
@@ -81,6 +87,8 @@ write(N, p) accepted  ⟺  proof(p) verifies against the key anchored in claim(N
 What governs a namespace is a key anchored in its claim. The identity hash is a label anyone can compute (Ax1), so it is never authority: knowing the name opens nothing.
 
 `me://jabellae.cleaker.me:write/profile.name` is accepted only with a proof signed by the key registered in jabellae's claim.
+
+<div data-live="AxAuthority"></div>
 
 ---
 
