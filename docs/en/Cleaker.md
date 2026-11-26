@@ -44,4 +44,27 @@ And precisely because of that:
 
 ---
 
+## In code
+
+The same three layers, as calls:
+
+```ts
+// "/" — the namespace exists, nobody is bound to it
+cleaker(new Me(), 'cleaker.me')          // anonymous: the root, read-only
+
+// "/?" — a self enters that reality
+cleaker(new Me('ana', secret), 'cleaker.me')   // a who that can prove(): signs in
+```
+
+- **`/` is real without you.** An anonymous `.me` bound to `cleaker.me` resolves the namespace `cleaker.me` and reaches its hosts. It reads what is public and sends nothing that writes.
+- **`/?` is the binding.** Only a `.me` with a who can sign a proof. That proof is how a self enters; the namespace was already there.
+
+**.me is syntax; cleaker is protocol.** `.me` keeps the where in its own tree (`profile.rootNamespace`), as one more value. cleaker reads that where and turns expressions into addresses: `me.profile.name` → `me://cleaker.me:read/profile.name`.
+
+**The page is not the namespace.** `cleaker.me @ neurons-me.github.io` is the namespace `cleaker.me` seen from the surface `neurons-me.github.io`. The surface grants nothing.
+
+More in [The Model](./The-Model.html).
+
+---
+
 [← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
