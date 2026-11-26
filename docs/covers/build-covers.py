@@ -1,4 +1,4 @@
-# Builds the Statuses and The Model card covers from QR.me's own output for https://cleaker.me
+# Builds the Cleaker, The Model and Statuses card covers from QR.me's own output for https://cleaker.me
 # Run from the repo root: python3 docs/covers/build-covers.py docs/covers/qrme.json docs/index.html
 # (qrme.json: the code path and the .me wordmark, read from the rendered GUI.QRme). Colours: .GUI theme variables.
 import json, math, re, sys
@@ -75,8 +75,29 @@ def model():
     return ('<svg class="card-media" viewBox="-8 -2 202 170" preserveAspectRatio="xMidYMax meet" role="img" aria-label="cleaker mounting a .me into its namespace: the .me as the root of a tree with keys, wallet and contacts branches, their children and leaves" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
+def cleaker():
+    # The home's QR.me for cleaker.me, turning: the code face, then the .me face, and back (scaleX flip, 7 s loop).
+    # Without motion (prefers-reduced-motion) it stays on the code face.
+    id_ = "ckq-cl"; cx, cy, F = 100, 80, 118
+    s_ = F / 140; x, y = cx - F / 2, cy - F / 2
+    wm = "".join(f'<rect x="{x0}" y="{y0}" width="{w}" height="{h}"/>' for x0, y0, w, h in Q["wm"])
+    style = ('<style>.ck-turn{transform-box:fill-box;transform-origin:center;animation:ck-turn 7s ease-in-out infinite}'
+             '.ck-front{animation:ck-front 7s step-end infinite}.ck-back{opacity:0;animation:ck-back 7s step-end infinite}'
+             '@keyframes ck-turn{0%,38%{transform:scaleX(1)}44%{transform:scaleX(0)}50%,88%{transform:scaleX(1)}94%{transform:scaleX(0)}100%{transform:scaleX(1)}}'
+             '@keyframes ck-front{0%{opacity:1}44%{opacity:0}94%{opacity:1}}@keyframes ck-back{0%{opacity:0}44%{opacity:1}94%{opacity:0}}'
+             '@media (prefers-reduced-motion:reduce){.ck-turn,.ck-front,.ck-back{animation:none}.ck-back{opacity:0}}</style>')
+    out = [style, defs(id_),
+           f'<g class="ck-turn" style="color:{P}"><g transform="translate({round(x,2)} {round(y,2)}) scale({round(s_,4)})">'
+           f'<rect x="1.5" y="1.5" width="137" height="137" rx="22" fill="none" stroke="currentColor" stroke-width="3"/>'
+           f'<g class="ck-front"><use href="#{id_}" x="8" y="8"/></g>'
+           f'<g class="ck-back"><rect x="8" y="8" width="124" height="124" rx="12" fill="{PAPER}"/>'
+           f'<g transform="translate(70 70) scale(2.6) translate(-16.38 -4.9)" fill="currentColor">{wm}</g></g></g></g>',
+           f'<text x="{cx}" y="{cy+F/2+22}" text-anchor="middle" font-family="{MONO}" font-size="13" font-weight="700" fill="currentColor" opacity=".7">cleaker.me</text>']
+    return ('<svg class="card-media" viewBox="20 6 160 172" preserveAspectRatio="xMidYMax meet" role="img" aria-label="The QR.me of cleaker.me, turning between its code and its .me face" xmlns="http://www.w3.org/2000/svg">'
+            + "".join(out) + "</svg>")
+
 s = open(INDEX).read()
-for href, build in (("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses)):
+for href, build in (("docs/en/Cleaker.html", cleaker), ("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses)):
     i = s.index(f'href="https://neurons-me.github.io/Cleaker/{href}"'); j = s.index('<svg class="card-media"', i); e = s.index("</svg>", j) + 6
     assert e < s.index('<div class="card-title">', i)
     s = s[:j] + build() + s[e:]
