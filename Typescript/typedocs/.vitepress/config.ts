@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress';
 const base = process.env.VITEPRESS_BASE || '/Cleaker/Typescript/typedocs/';
 
 export default defineConfig({
-  title: 'cleaker',
+  title: 'Cleaker',
   description: 'Contextual namespace binding for the neurons.me stack. Resolution before direction; name before place.',
   base,
   outDir: '.',
@@ -27,6 +27,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'The Model', link: '/The-Model' },
       { text: 'Algebra', link: '/Algebra-of-Me' },
+      { text: 'Docs', link: 'https://neurons-me.github.io/Cleaker/docs/' },
       { text: 'API', link: 'https://neurons-me.github.io/Cleaker/Typescript/typedocs/api/' },
     ],
     sidebar: [
@@ -35,14 +36,17 @@ export default defineConfig({
         items: [
           { text: 'Overview', link: '/' },
           { text: 'The Model', link: '/The-Model' },
-          { text: 'Cleaker Protocol', link: '/Cleaker' },
+          { text: 'Cleaker', link: '/Cleaker' },
+          { text: 'Statuses', link: '/Statuses' },
+          { text: 'Notes', link: '/Notes' },
         ],
       },
       {
         text: 'Concepts',
         items: [
-          { text: 'Algebra of Me', link: '/Algebra-of-Me' },
+          { text: 'The Algebra of .me', link: '/Algebra-of-Me' },
           { text: 'The Flat Universe', link: '/The-Flat-Universe' },
+          { text: 'El Universo Es Plano (ES)', link: 'https://neurons-me.github.io/Cleaker/docs/es/El%20Universo%20Es%20Plano.html' },
           { text: 'Namespace Is Context', link: '/Namespace-Is-Context' },
           { text: 'Surface Identity Claims (design)', link: '/Surface-Identity-Claims' },
           { text: 'NRP Namespace Grammar', link: '/NRP-Namespaces' },

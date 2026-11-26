@@ -54,9 +54,11 @@ This is also why the **contract** lives in cleaker and not in `.me`. A local exp
 The namespace is not something cleaker glues onto `.me` from outside. It is part of the `.me` tree, stored as data like any other value:
 
 ```
-profile.rootNamespace   → cleaker.me             (the where)
-profile.namespace       → ana.cleaker.me         (who + where)
+me.namespace   → ana.cleaker.me     (where this .me is mounted: who + root)
+me.namespace   → cleaker.me         (no who: the root itself)
 ```
+
+One field, at the top of the tree: **where this `.me` is mounted**. The root is not stored apart; it is derived (the namespace minus the who). `profile.rootNamespace` and `profile.namespace` are still written, for older readers, and are deprecated.
 
 - **`.me` keeps the where in its tree**, as one more value.
 - **cleaker reads that where and turns it into protocol**: `me://cleaker.me:read/...`.
@@ -69,8 +71,14 @@ const node = cleaker(me, 'cleaker.me');
 
 // The where comes from inside .me
 const me = new Me('ana', secret, { namespace: 'cleaker.me' });
-const node = cleaker(me);   // reads profile.rootNamespace
+const node = cleaker(me);   // reads me.namespace: ana.cleaker.me
+
+// ...with or without a who
+const guest = new Me(undefined, { namespace: 'cleaker.me' });
+cleaker(guest);             // cleaker.me, read-only
 ```
+
+Both forms need `this.me` 4.4.0 and `cleaker` 4.0.1 or later.
 
 A `.me` whose expression is already a full name (`"suiGn.neurons.me"`) also carries its own namespace: `cleaker(me)` reads it directly.
 
@@ -115,7 +123,7 @@ cleaker(me, namespace)
 
 cleaker(me)
 // The namespace comes from inside .me: its full-name expression,
-// or profile.rootNamespace set with new Me(who, secret, { namespace }).
+// or me.namespace, set with new Me(who?, secret?, { namespace }).
 
 cleaker('me://ana.cleaker.me:read/profile')
 // A remote pointer: an address, no kernel needed.
@@ -189,14 +197,14 @@ The secret never goes to cleaker and never leaves `.me`. cleaker only ever recei
 
 ------
 
-## Where this stands (2026-11-25)
+## Where this stands (2026-11-26)
 
 The model above is ahead of the code in a few places:
 
-- **`.me` refuses a namespace without a who.** `new Me({ namespace: 'cleaker.me' })` throws `ACTIVE_EXPRESSION_REQUIRED`. Proposed: accept it and store only `profile.rootNamespace`; `profile.namespace` (who.root) appears once there is a who.
-- **`cleaker(me)` with an anonymous `.me` does not read `profile.rootNamespace` yet.** It does with a who. `cleaker(me, namespace)` already works with or without one.
 - **No state for "public, reachable, no who".** Status has `healthy` (a who was verified) and `degraded`. An anonymous visit to a reachable namespace reports `degraded`, as if something were wrong.
 - **Host discovery.** Besides the declared namespace, cleaker also probes `http://localhost` on purpose, to find the visitor's own local monad. In a browser, it can also list the page's own origin as a candidate host of the namespace.
 - **Unowned namespaces.** Proposed contract: a namespace with no owner bound through cleaker is read-only. Writes enter only through a contract (a signed who, or a server key the owner delegated to).
-- **npm.** The anonymous `cleaker(me, namespace)` resolution is on `main` and not yet published; npm has `cleaker@4.0.0`.
+- **Versions.** A namespace without a who, inside `.me` or given to cleaker, works from `this.me` 4.4.0 and `cleaker` 4.0.1. Older versions refuse it (`this.me` throws `ACTIVE_EXPRESSION_REQUIRED`) or do not read it.
+- **`profile.rootNamespace` / `profile.namespace`** are deprecated but still written: they go once every reader uses `me.namespace` (the `this.gui` bundles still carry a cleaker that reads `profile.rootNamespace`).
+- **One mount for now.** A `.me` can live in several namespaces, so `me.namespace` will become a collection; that waits until `.me` paths can hold a segment with dots (`cleaker.me`) without reading it as nesting.
 

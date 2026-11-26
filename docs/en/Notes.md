@@ -49,6 +49,7 @@ The notebook of cleaker: the phrases that carry the idea, the concepts in one pl
 | **.me** | The kernel: expressions evaluated in your own process. Syntax, no network, no authority. |
 | **cleaker** | The protocol: mounts a `.me` on a namespace and turns its expressions into `me://` addresses. |
 | **mount** | `cleaker(me, namespace)`: the `.me` becomes the root of a tree on that axis (`keys`, `wallet`, `contacts`, …). |
+| **me.namespace** | Where a `.me` is mounted: `ana.cleaker.me`, or `cleaker.me` with no who. The root is derived from it. |
 | **who** | A `.me` built with a who and a secret can `prove()`; an anonymous `.me` can only look. |
 | **claim** | The key anchored for a namespace. The only thing that authorizes a write; the identity hash never does. |
 | **audience** | Who can open a value: `∪`, `∩` (shares), `A \ x` (at sealing), `{self}` = a secret scope `_()`. |
@@ -127,10 +128,10 @@ Underneath: per host `transport` (up / down) and `triad` (verified / unverified 
 
 ## Where the code is behind the model
 
-- `.me` refuses a namespace without a who (`new Me({ namespace })` throws `ACTIVE_EXPRESSION_REQUIRED`); the model says a namespace exists without one.
-- An anonymous `cleaker(me)` does not read `profile.rootNamespace` yet (`cleaker(me, namespace)` already works).
+- A namespace without a who (inside `.me` or given to cleaker) needs `this.me` 4.4.0 and `cleaker` 4.0.1; older versions refuse it or do not read it.
 - There is no `overall` state for "public, reachable, no who": an anonymous visit reports `degraded`.
-- npm has `cleaker@4.0.0`; the anonymous `cleaker(me, namespace)` fix is on `main`, unpublished.
+- `profile.rootNamespace` / `profile.namespace` are deprecated but still written, until every reader uses `me.namespace`.
+- `me.namespace` holds one mount for now; it becomes a collection once `.me` paths can hold a dotted segment.
 - `cleaker()` with no arguments is the conceptual base form, not implemented.
 
 ---
