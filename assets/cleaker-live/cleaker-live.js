@@ -20,8 +20,8 @@
   var PKGS = {
     me: { label: "this.me@4.2.1", sha256: "0bd2cc60d15dfc9ff8942d390c075bbc22b4ae3a24d3cbfe581511ea84478757",
       urls: ["https://cdn.jsdelivr.net/npm/this.me@4.2.1/dist/me.es.js", "https://unpkg.com/this.me@4.2.1/dist/me.es.js"] },
-    cleaker: { label: "cleaker@4.0.1", sha256: "db36f82384535b48e12343570b092d7c7a3f7a66030300dcf1848120067716a8",
-      urls: ["https://cdn.jsdelivr.net/npm/cleaker@4.0.1/dist/cleaker.es.js", "https://unpkg.com/cleaker@4.0.1/dist/cleaker.es.js"] },
+    cleaker: { label: "cleaker@4.0.2", sha256: "b0535be9b1b414d88e2dc37df869a4bdbb4f55c52c933d1f988207ea61eeecea",
+      urls: ["https://cdn.jsdelivr.net/npm/cleaker@4.0.2/dist/cleaker.es.js", "https://unpkg.com/cleaker@4.0.2/dist/cleaker.es.js"] },
   };
   var state = { state: "idle" }, subs = new Set(), promise = null, node = null;
   function set(s) { state = s; subs.forEach(function (f) { try { f(state); } catch (e) {} }); }
@@ -54,7 +54,7 @@
     promise = Promise.all([loadVerified(PKGS.me), loadVerified(PKGS.cleaker)]).then(function (mods) {
       var ME = mods[0].default || mods[0].ME, cleaker = mods[1].default || mods[1].cleaker;
       var me = new ME();                                                       // no who
-      node = cleaker(me, NAMESPACE, { fetcher: declaredOnly });   // cleaker >= 4.0.1: an anonymous .me resolves the space's namespace
+      node = cleaker(me, NAMESPACE, { fetcher: declaredOnly });   // cleaker >= 4.0.1: an anonymous .me resolves the space's namespace; >= 4.0.2: node.position()
       set({ state: "checking", namespace: NAMESPACE });
       return node.validateHosts({ timeoutMs: 8000 }).then(function (s) {
         var host = (s.hosts || []).filter(function (x) { return x.space === ORIGIN; })[0] || null;
