@@ -1071,7 +1071,10 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     if (explicit) return explicit;
 
     const expression = readKernelExpression(me);
-    if (!expression) return '';
+    // No who: a namespace exists without one. cleaker(me, space) with an
+    // anonymous `me` is the space's own namespace (its root), read-only by
+    // construction -- signIn/claim still require an expression that can prove().
+    if (!expression) return options.space ? deriveSpaceNamespaceConstant(options.space) : '';
 
     // If the expression already contains a dot, try to interpret it as a full fqdn
     // (e.g. "suiGn.neurons.me" should not get another constant appended).

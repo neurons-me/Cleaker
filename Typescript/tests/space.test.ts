@@ -113,6 +113,40 @@ void run('Form 2: fqdn in expression, cleaker(me) reads it', async () => {
   assert.equal(status.activeNamespace, 'suign.neurons.me');
 });
 
+// --- Anonymous: cleaker(me, space) with no who is the namespace itself ---
+// A namespace exists without a who: an anonymous `me` bound to a space resolves
+// to that space's own namespace (the root), not to nothing.
+
+void run('Anonymous: public domain space → the domain is the namespace', async () => {
+  const node = cleaker(createMockKernel(null), 'cleaker.me');
+  assert.equal(node.getStatus().activeNamespace, 'cleaker.me');
+});
+
+void run('Anonymous: hostname with port → port stripped, .local root', async () => {
+  const node = cleaker(createMockKernel(null), 'sui-desk:9000');
+  assert.equal(node.getStatus().activeNamespace, 'sui-desk.local');
+});
+
+void run('Anonymous: no space → still no namespace', async () => {
+  const node = cleaker(createMockKernel(null));
+  assert.equal(node.getStatus().activeNamespace, '');
+});
+
+void run('Anonymous: validateHosts reaches the space and never signs in', async () => {
+  const urls: string[] = [];
+  const fetcher = (async (endpoint: URL | RequestInfo, init?: RequestInit) => {
+    urls.push(`${init?.method || 'GET'} ${String(endpoint)}`);
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }) as typeof fetch;
+  const node = cleaker(createMockKernel(null), 'cleaker.me', { fetcher });
+  const status = await node.validateHosts({ timeoutMs: 1000 });
+  assert.equal(status.activeNamespace, 'cleaker.me');
+  assert.ok(urls.includes('GET https://cleaker.me/__bootstrap'), `expected a ping to https://cleaker.me, got ${urls.join(', ')}`);
+  assert.ok(urls.every((u) => u.startsWith('GET ')), `anonymous must not POST anything, got ${urls.join(', ')}`);
+  const host = status.hosts.find((h) => h.space === 'https://cleaker.me');
+  assert.equal(host?.status.transport, 'up');
+});
+
 // --- signIn hits /claims/signIn first ---
 
 void run('signIn: primary endpoint is /claims/signIn', async () => {
