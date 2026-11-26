@@ -1,0 +1,1 @@
+import{_ as t,o,c as a,a0 as d}from"./chunks/framework.DPF_EvDs.js";const u=JSON.parse('{"title":"Statuses","description":"","frontmatter":{},"headers":[],"relativePath":"Statuses.md","filePath":"Statuses.md"}'),r={name:"Statuses.md"};function s(n,e,h,c,i,l){return o(),a("div",null,[...e[0]||(e[0]=[d("",35)])])}const b=t(r,[["render",s]]);export{u as __pageData,b as default};
