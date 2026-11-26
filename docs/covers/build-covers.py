@@ -8,6 +8,12 @@ P = "color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 72%, var(--mui-
 PAPER = V("background-paper", "#111a1f")
 MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 
+def fit(x0, y0, x1, y1, top=13, bottom=6, band=140):
+    # viewBox that puts the content (x0..x1, y0..y1) TOP px below the top of the card's band and BOTTOM px above its
+    # bottom, height-bound (the bands are 140px tall and wider than tall), centred horizontally.
+    h = y1 - y0; k = h / (band - top - bottom); H = band * k; W = (x1 - x0) + 8 * k
+    return f"{round(x0 - 4 * k, 1)} {round(y0 - top * k, 1)} {round(W, 1)} {round(H, 1)}"
+
 def defs(id_):
     wm = "".join(f'<rect x="{round(x+45.62,2)}" y="{round(y+57.1,2)}" width="{w}" height="{h}"/>' for x, y, w, h in Q["wm"])
     # 124x124 code (as QR.me draws it), the .me wordmark centred on a paper halo, then the ring 8 units out
@@ -40,7 +46,7 @@ def statuses():
             out.append(f'<circle cx="{ex}" cy="{ey}" r="8.5" fill="{PAPER}"/><path d="M{ex-4.5} {ey-4.5} L{ex+4.5} {ey+4.5} M{ex+4.5} {ey-4.5} L{ex-4.5} {ey+4.5}" stroke="{col}" stroke-width="3.2" stroke-linecap="round"/>')
     out.append(f'<circle cx="{cx}" cy="{cy}" r="6" fill="{P}" opacity=".7"/>')
     xs = [p[0] for p in pos]; ys = [p[1] for p in pos]
-    vb = f"{round(min(xs)-F/2-14)} {round(min(ys)-F/2-22)} {round(max(xs)-min(xs)+F+28)} {round(max(ys)-min(ys)+F+26)}"
+    vb = fit(84, 4.7, 316, 228.5)  # content box, measured in the browser (frames, dot, cross)
     return (f'<svg class="card-media" viewBox="{vb}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Five QR.me codes in a ring, one per status: idle, checking (warning), confirmed (green dot), error (red, a cross), off (grey, dashed)" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
@@ -72,7 +78,7 @@ def model():
     out.append(f'<circle cx="{rx}" cy="{ry}" r="20.5" fill="{P}"/>')
     out.append(f'<text x="{rx}" y="{ry+5}" text-anchor="middle" font-family="{MONO}" font-size="14" font-weight="700" fill="{PAPER}">.me</text>')
     out.append(f'<text x="{rx}" y="{ry-39}" text-anchor="middle" font-family="{MONO}" font-size="12" font-weight="700" fill="{T}" opacity=".75">cleaker</text>')
-    return ('<svg class="card-media" viewBox="-8 -2 202 170" preserveAspectRatio="xMidYMax meet" role="img" aria-label="cleaker mounting a .me into its namespace: the .me as the root of a tree with keys, wallet and contacts branches, their children and leaves" xmlns="http://www.w3.org/2000/svg">'
+    return (f'<svg class="card-media" viewBox="{fit(2, 9.1, 189.4, 158.9)}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="cleaker mounting a .me into its namespace: the .me as the root of a tree with keys, wallet and contacts branches, their children and leaves" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
 def cleaker():
@@ -97,18 +103,23 @@ def cleaker():
             + "".join(out) + "</svg>")
 
 def algebra():
-    # Three .me as sets (a.me, b.me, c.me) and their intersections, named as set expressions:
-    # a∩b, b∩c, a∩c and, at the centre, a∩b∩c.
+    # Three .me as sets, written in .me syntax: me(a), me(b), me(c). Each circle takes its own theme colour
+    # (primary, warning, error) at low opacity, so the overlaps mix them; the intersections are named a∩b, a∩c,
+    # b∩c and, at the centre, a∩b∩c, each label inside its own lens.
+    # Placement as the other covers: about 13px from the top of the band and 6px from the bottom.
     T = "currentColor"; r = 46
-    c = {"a": (86, 62), "b": (134, 62), "c": (110, 104)}
-    fill = "color-mix(in srgb, var(--mui-palette-primary-main, #90caf9) 16%, transparent)"
-    out = [f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{P}" stroke-width="3"/>' for x, y in c.values()]
+    # primary / warning / error: the three palette colours that stay distinct across the themes (secondary and success
+    # are the same teal in neurons.me; info equals primary there)
+    sets = [("a", (86, 62), "primary-main", "#90caf9"), ("b", (134, 62), "warning-main", "#f4c95d"), ("c", (110, 104), "error-main", "#ff6b6b")]
+    out = []
+    for _, (x, y), var, fb in sets:
+        col = f"var(--mui-palette-{var}, {fb})"
+        out.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{col}" fill-opacity=".2" stroke="color-mix(in srgb, {col} 75%, var(--mui-palette-text-primary, #e8eded))" stroke-width="3"/>')
     lab = lambda x, y, t, size, w, op: f'<text x="{x}" y="{y}" text-anchor="middle" font-family="{MONO}" font-size="{size}" font-weight="{w}" fill="{T}" opacity="{op}">{t}</text>'
-    out += [lab(64, 50, "a.me", 12, 700, ".85"), lab(156, 50, "b.me", 12, 700, ".85"), lab(110, 136, "c.me", 12, 700, ".85")]
-    # each label sits in its own lens (pair midpoint pushed away from the third centre); a∩b∩c at the centre
-    out += [lab(110, 46, "a∩b", 10, 400, ".75"), lab(83, 98, "a∩c", 10, 400, ".75"), lab(137, 98, "b∩c", 10, 400, ".75")]
+    out += [lab(62, 52, "me(a)", 11.5, 700, ".9"), lab(158, 52, "me(b)", 11.5, 700, ".9"), lab(110, 136, "me(c)", 11.5, 700, ".9")]
+    out += [lab(110, 46, "a∩b", 10, 400, ".8"), lab(83, 98, "a∩c", 10, 400, ".8"), lab(137, 98, "b∩c", 10, 400, ".8")]
     out.append(lab(110, 81, "∩", 15, 700, ".95"))
-    return ('<svg class="card-media" viewBox="36 12 148 144" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Three .me as sets, a.me, b.me and c.me, with their intersections a∩b, a∩c, b∩c and a∩b∩c at the centre" xmlns="http://www.w3.org/2000/svg">'
+    return (f'<svg class="card-media" viewBox="{fit(40, 16, 180, 150)}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Three .me as sets, me(a), me(b) and me(c), each in its own colour, with their intersections a∩b, a∩c, b∩c and a∩b∩c at the centre" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
 s = open(INDEX).read()
