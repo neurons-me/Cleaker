@@ -227,10 +227,6 @@
         <div class="card-title">Misión</div>
         <div class="card-desc">cleaker en español.</div>
       </a>
-      <a class="card" href="https://neurons-me.github.io/Cleaker/docs/es/El%20Universo%20Es%20Plano.html">
-        <div class="card-title">El Universo Es Plano</div>
-        <div class="card-desc">La jerarquía es emergente.</div>
-      </a>
       <a class="card" href="https://neurons-me.github.io/.me/docs/me.html">
         <div class="card-title">What is .me?</div>
         <div class="card-desc">The identity primitive cleaker mounts.</div>
@@ -257,6 +253,9 @@
 </div>
 <div id="root"></div>
 <script src="https://neurons-me.github.io/.me/assets/landing-gui/landing-gui.js?v=35" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<!-- Language pills on a card (as the neurons-me.github.io index): card href suffix -> [label, url]. -->
+<script type="application/json" id="card-langs">{ "/Cleaker/docs/en/The-Flat-Universe.html": [["ES", "https://neurons-me.github.io/Cleaker/docs/es/El%20Universo%20Es%20Plano.html"]] }</script>
+<script src="/Cleaker/assets/docs-card-langs/docs-card-langs.js?v=2"></script>
 <!-- The Cleaker card's cover: the real QR.me (GUI.QRme), mounted after .GUI renders the cards. -->
 <script src="/Cleaker/assets/cleaker-cover-live/cleaker-cover-live.js?v=4"></script>
 <!-- Static fallback only: the standalone SearchBar bundle, loaded when .GUI did not render the page. -->
