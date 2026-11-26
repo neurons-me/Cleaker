@@ -602,8 +602,11 @@
   // `namespace @ surface`, react/positionExpression.ts): the namespace is cleaker.me, the surface is the host this page is
   // served from (window.location, read at runtime). The shell's QR value for that namespace is the namespace's own address,
   // https://cleaker.me, built by the library's linkQrValue/endpointForRoot: the NRP keeps the page's host out of the QR
-  // value (hosts are execution details), so the host is in the label and in the title only. Nothing is checked or claimed
-  // here, so no connection status is passed (the default, idle): the surface is shown, never abbreviated as "bound".
+  // value (hosts are execution details), so the host is in the label and in the title only.
+  // Connected for real (assets/cleaker-live/cleaker-live.js, window.CleakerLive): an anonymous .me runs
+  // cleaker(me, "cleaker.me") from the npm builds and pings https://cleaker.me. The QR's status follows it: checking while
+  // it loads and probes, confirmed when cleaker.me answers, error when it does not. "Confirmed" here means reachable and
+  // public: there is no who, nothing is signed in or claimed. The line under the QR says exactly that.
   const CLEAKER_NAMESPACE = "cleaker.me";
   const CLEAKER_QR_VALUE = "https://" + CLEAKER_NAMESPACE;
   // surfaceToken (positionExpression.ts): a bare host[:port]; quoted with its scheme only for http on a non-loopback host or an IPv6 literal.
@@ -637,6 +640,11 @@
     const label = surface ? CLEAKER_NAMESPACE + " @ " + surface : CLEAKER_NAMESPACE;
     const full = loc.host ? CLEAKER_NAMESPACE + ' @ "' + String(loc.protocol).toLowerCase() + "//" + String(loc.host).toLowerCase() + '"' : CLEAKER_NAMESPACE;
     const tr = React.useMemo(transportInfo, []), ref = React.useRef(null), [pos, setPos] = React.useState(null);
+    const CL = window.CleakerLive, [live, setLive] = React.useState(CL ? CL.state : null);
+    React.useEffect(() => { if (!CL) return undefined; const off = CL.subscribe(setLive); CL.connect(); return off; }, []);
+    const st = live && live.state, qrStatus = !CL ? "idle" : st === "reachable" ? "confirmed" : st === "unreachable" || st === "error" ? "error" : "checking";
+    const liveText = !CL ? "" : st === "reachable" ? CLEAKER_NAMESPACE + " reachable \u00b7 " + live.latencyMs + " ms \u00b7 public, no who"
+      : st === "unreachable" ? CLEAKER_NAMESPACE + " did not answer" : st === "error" ? "could not run cleaker: " + live.text : "connecting to " + CLEAKER_NAMESPACE + "\u2026";
     React.useEffect(() => {
       const root = ref.current; if (!root) return undefined;
       const place = () => {
@@ -650,15 +658,19 @@
       return () => { clearTimeout(t1); clearTimeout(t2); if (ro) ro.disconnect(); window.removeEventListener("resize", place); };
     }, []);
     const size = pos ? Math.round(pos.d * 1.6 * 10) / 10 : 13;
-    return h(Box, { "data-gui-node-id": p["data-gui-node-id"], sx: { display: "flex", justifyContent: "center", pt: { xs: 1, sm: 2 }, pb: 1 } },
+    return h(Box, { "data-gui-node-id": p["data-gui-node-id"], sx: { display: "flex", flexDirection: "column", alignItems: "center", pt: { xs: 1, sm: 2 }, pb: 1 } },
       h(Box, { component: "a", href: (loc.origin || "") + "/", title: full, "aria-label": full, "data-position-expression": full,
         sx: { display: "inline-flex", color: "inherit", textDecoration: "none", "&:focus": { outline: "none" }, "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 4, borderRadius: 2 } } },
         h(Box, { ref, sx: { position: "relative", display: "inline-flex", "& svg circle": { visibility: "hidden" }, "& tspan[data-gui-part=path]": { wordSpacing: "-0.36em" } } },
           h(G.QRme, { variant: "xl", diameter: 192, value: CLEAKER_QR_VALUE, perimeterLabel: label, perimeterRootLabel: CLEAKER_NAMESPACE,
+            status: qrStatus, statusLabel: liveText || undefined,
             clickFlip: false, hoverFlip: false, cursor: "pointer", "data-gui-node-id": "Cleaker.QR" }),
           pos ? h(Box, { component: "span", title: tr.title, "data-gui-node-id": "Cleaker.QR.transport", "data-transport": tr.secure ? "https" : "insecure",
             sx: { position: "absolute", left: pos.x - size / 2, top: pos.y - size / 2, width: size, height: size, display: "inline-flex", color: tr.secure ? "text.secondary" : "warning.main" } },
-            h(LockGlyph, { size, secure: tr.secure })) : null)));
+            h(LockGlyph, { size, secure: tr.secure })) : null)),
+      CL ? h(Box, { component: "p", "data-gui-node-id": "Cleaker.QR.live", "data-live-state": st || "idle", title: live && live.packages ? live.expression + " \u00b7 " + live.packages.join(" + ") + " (npm, sha256 checked)" : undefined,
+          sx: { m: 0, mt: 1.5, fontFamily: MONO, fontSize: ".78rem", textAlign: "center", color: st === "reachable" ? "text.secondary" : st === "unreachable" || st === "error" ? "warning.main" : "text.disabled" } },
+        liveText) : null);
   }
   const monadSpec = () => N("Box", { sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary" } }, [
     N("LandingTopBar", {}),
