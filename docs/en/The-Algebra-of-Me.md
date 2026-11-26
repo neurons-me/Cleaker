@@ -62,6 +62,10 @@ A \ x           everyone in A except x         resolved when sealing
 
 The algebra of `.me` is not over addresses: it is over who can open a value. Every secret scope is an audience, and the smallest audience is `{self}`. There is no NOT and no threshold; a key once read cannot be un-read, so removal works forward, by resealing.
 
+**`A \ x` is resolved when sealing.** The audience is computed once, at the moment a value is sealed: the sealed value carries a wrap (or a share) for every member of `A` except `x`, and none for `x`. It is not a rule checked later. Changing `A` afterwards does not touch values already sealed; and if `x` could open an earlier seal, excluding `x` means sealing the value again under a new key, which `x` never receives.
+
+**The notation.** In `.me` syntax the dot builds the path and `()` writes on it (`me.whatever(what)`); an operator is a bracketed key called on a path. `me.wallet["_"]("vault-key")` is the `_` operator called on the path `wallet` with `"vault-key"`: it declares a secret scope there. Written `_()` in the axioms, as a short form. More in [.me Syntax](https://neurons-me.github.io/.me/docs/Syntax.html) and [.me Operators](https://neurons-me.github.io/.me/docs/Operators.html).
+
 Which of these each implementation runs today is listed in [.me Audiences](https://neurons-me.github.io/.me/docs/Audiences.html#status-by-implementation).
 
 `me.wallet["_"]("vault-key")` seals `wallet`: `me://jabellae.cleaker.me:read/wallet.note` opens for jabellae and returns nothing to a guest.
@@ -113,6 +117,8 @@ B adds a handle or a path to A   ⟹   B ⊑ A
 ```
 
 A handle under a root (Ax2) or a path under a namespace is more specific, and lies inside it. A port, a URL or a query adds nothing to the namespace (Ax4), so they never refine it.
+
+Refinement is **structural**: `B ⊑ A` says where `B` sits in the tree, not who may open it. Who opens a value is an audience (Ax3), and going down never widens it: a path inside a secret scope stays sealed with it (a guest reading `wallet.note` under a sealed `wallet` gets nothing), and it can be sealed further on its own.
 
 `jabellae.cleaker.me/board ⊑ jabellae.cleaker.me ⊑ cleaker.me`; `cleaker.me:8161` is not ⊑ `cleaker.me`, it is `cleaker.me` through another door.
 
