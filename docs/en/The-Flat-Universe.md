@@ -14,7 +14,10 @@ related:
   - The-Model.html
   - Cleaker.html
 ---
-# **The Flat Universe**
+# The Flat Universe
+
+*En español: [El Universo Es Plano](../es/El%20Universo%20Es%20Plano.html).*
+
 Reality has one primitive: **distinction.**  
 `0 / 1`  
 `A / not-A`  

@@ -1,13 +1,23 @@
 ---
-layout: readme
-title: El Universo Es Plano — cleaker
+layout: gui-doc
+lang: es
+title: "El Universo Es Plano"
+description: "La realidad tiene una sola primitiva: la distinción. La jerarquía no es fundamental; es emergente."
+mepath:
+  - text: Cleaker
+    url: https://neurons-me.github.io/Cleaker/
+  - text: Docs
+    url: https://neurons-me.github.io/Cleaker/docs/
+canonical: https://neurons-me.github.io/Cleaker/docs/es/El%20Universo%20Es%20Plano.html
+crumb: el universo es plano
+related:
+  - The-Flat-Universe.html
+  - The-Algebra-of-Me.html
 ---
+# El Universo Es Plano
 
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
+*In English: [The Flat Universe](../en/The-Flat-Universe.html).*
 
----
-
-### **El Universo Plano**
 En el nivel más básico de la realidad solo existen dos direcciones. Todo lo demás es composición de esas dos.
 
 En lógica clásica:  
@@ -98,6 +108,3 @@ Todo lo demás es paisaje.
 
 `distinción → información → geometría`
 
----
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
