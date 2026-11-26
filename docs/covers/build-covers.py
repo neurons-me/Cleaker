@@ -149,8 +149,30 @@ def flat():
     return (f'<svg class="card-media" viewBox="{fit(0, 0, w, h)}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="A flat plane of cells, each occupied or not: scattered on the left, settling into a landscape on the right" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
+def notes():
+    # Notes: a notebook page, ruled, with a margin line, and the notes on it in .me syntax and in words:
+    # the page's own phrases (name before place, / before /?, N @ surface, me(a) ∩ me(b), the singularity is .me).
+    W, H = 214, 128
+    lines = [("name before place", "currentColor", ".75", 400),
+             ("/  before  /?", P, "1", 700),
+             ("cleaker.me @ surface", "currentColor", ".75", 400),
+             ("me(a) ∩ me(b)", P, "1", 700),
+             ("the singularity is .me", "currentColor", ".75", 400)]
+    o = [f'<rect x="1.5" y="1.5" width="{W-3}" height="{H-3}" rx="10" fill="{PAPER}" stroke="currentColor" stroke-width="1.5" opacity=".9"/>',
+         f'<path d="M30 6 V{H-6}" stroke="{P}" stroke-width="1.6" opacity=".55"/>']
+    for k in range(6):
+        y = 22 + k * 20
+        o.append(f'<path d="M10 {y} H{W-10}" stroke="currentColor" stroke-width="1" opacity=".14"/>')
+    for k, (t, col, op, w) in enumerate(lines):
+        y = 18 + k * 20
+        o.append(f'<text x="38" y="{y}" font-family="{MONO}" font-size="11.5" font-weight="{w}" fill="{col}" opacity="{op}">{t}</text>')
+    # three ring holes on the margin
+    o += [f'<circle cx="17" cy="{y}" r="3.6" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".35"/>' for y in (28, 64, 100)]
+    return (f'<svg class="card-media" viewBox="{fit(0, 0, W, H)}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="A notebook page with notes: name before place, / before /?, cleaker.me @ surface, me(a) ∩ me(b), the singularity is .me" xmlns="http://www.w3.org/2000/svg">'
+            + "".join(o) + "</svg>")
+
 s = open(INDEX).read()
-for href, build in (("docs/en/Cleaker.html", cleaker), ("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses), ("docs/en/The-Algebra-of-Me.html", algebra), ("docs/en/The-Flat-Universe.html", flat)):
+for href, build in (("docs/en/Cleaker.html", cleaker), ("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses), ("docs/en/The-Algebra-of-Me.html", algebra), ("docs/en/The-Flat-Universe.html", flat), ("docs/en/Notes.html", notes)):
     i = s.index(f'href="https://neurons-me.github.io/Cleaker/{href}"'); j = s.index('<svg class="card-media"', i); e = s.index("</svg>", j) + 6
     assert e < s.index('<div class="card-title">', i)
     s = s[:j] + build() + s[e:]
