@@ -663,10 +663,10 @@
         sx: { display: "inline-flex", color: "inherit", textDecoration: "none", "&:focus": { outline: "none" }, "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 4, borderRadius: 2 } } },
         h(Box, { ref, sx: { position: "relative", display: "inline-flex", "& svg circle": { visibility: "hidden" }, "& tspan[data-gui-part=path]": { wordSpacing: "-0.36em" } } },
           h(G.QRme, { variant: "xl", diameter: 192, value: CLEAKER_QR_VALUE, perimeterLabel: label, perimeterRootLabel: CLEAKER_NAMESPACE,
-            status: qrStatus, statusLabel: liveText || undefined,
+            status: qrStatus,   // no statusLabel: that text is the line under the QR; the padlock's tooltip is the page's HTTPS
             clickFlip: false, hoverFlip: false, cursor: "pointer", "data-gui-node-id": "Cleaker.QR" }),
           pos ? h(Box, { component: "span", title: tr.title, "data-gui-node-id": "Cleaker.QR.transport", "data-transport": tr.secure ? "https" : "insecure",
-            sx: { position: "absolute", left: pos.x - size / 2, top: pos.y - size / 2, width: size, height: size, display: "inline-flex", color: tr.secure ? "text.secondary" : "warning.main" } },
+            sx: { position: "absolute", zIndex: 2, left: pos.x - size / 2, top: pos.y - size / 2, width: size, height: size, display: "inline-flex", color: tr.secure ? "text.secondary" : "warning.main" } },
             h(LockGlyph, { size, secure: tr.secure })) : null)),
       CL ? h(Box, { component: "p", "data-gui-node-id": "Cleaker.QR.live", "data-live-state": st || "idle", title: live && live.packages ? live.expression + " \u00b7 " + live.packages.join(" + ") + " (npm, sha256 checked)" : undefined,
           sx: { m: 0, mt: 1.5, fontFamily: MONO, fontSize: ".78rem", textAlign: "center", color: st === "reachable" || st === "unreachable" ? "text.secondary" : st === "error" ? "error.main" : "text.disabled" } },
