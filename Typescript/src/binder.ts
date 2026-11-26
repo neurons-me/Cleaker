@@ -426,21 +426,37 @@ function readKernelExpression(me: MeKernel): string | null {
   return null;
 }
 
-// Reads the root namespace a caller bound onto this kernel via
-// ME.bindNamespace(root) (me/Typescript/src/me.ts) — written as a plain
-// profile.rootNamespace path value, same convention createThisMe()'s
-// configureIdentity() already uses for the same field. No dedicated symbol
-// exists for this (unlike expression/identityHash above), so it's read the
-// same way any other stored value is: calling the kernel proxy with the
-// path string directly.
-function readKernelRootNamespace(me: MeKernel): string | null {
+function readKernelProfileString(me: MeKernel, path: string): string | null {
   try {
-    const value = (me as any)('profile.rootNamespace');
+    const value = (me as any)(path);
     return typeof value === 'string' && value.trim() ? value.trim() : null;
   } catch {
     // Kernels that were never bound to a namespace simply have nothing here.
     return null;
   }
+}
+
+// Where this kernel is mounted: me("namespace") (this.me >= 4.4.0; with a who
+// who.root, without one the root itself), else profile.namespace (what this.me
+// <= 4.3.0 wrote with a who). No dedicated symbol exists for it (unlike
+// expression/identityHash above), so it is read like any stored value.
+function readKernelNamespace(me: MeKernel): string | null {
+  return readKernelProfileString(me, 'namespace') || readKernelProfileString(me, 'profile.namespace');
+}
+
+// The root this kernel is mounted under, derived from the mount: with a who,
+// the namespace minus "<who>."; without one, the namespace itself. Falls back to
+// profile.rootNamespace (deprecated in this.me 4.4.0, still written) for older
+// kernels, or when the stored namespace does not start with the who.
+function readKernelRootNamespace(me: MeKernel): string | null {
+  const namespace = readKernelNamespace(me);
+  if (namespace) {
+    const who = String(readKernelExpression(me) || '').trim().toLowerCase();
+    if (!who) return namespace;
+    const prefix = `${who}.`;
+    if (namespace.toLowerCase().startsWith(prefix) && namespace.length > prefix.length) return namespace.slice(prefix.length);
+  }
+  return readKernelProfileString(me, 'profile.rootNamespace');
 }
 
 function readKernelIdentityHash(me: MeKernel): string | null {
@@ -1074,7 +1090,12 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     // No who: a namespace exists without one. cleaker(me, space) with an
     // anonymous `me` is the space's own namespace (its root), read-only by
     // construction -- signIn/claim still require an expression that can prove().
-    if (!expression) return options.space ? deriveSpaceNamespaceConstant(options.space) : '';
+    // Without a space, the namespace comes from inside the .me (me("namespace"),
+    // this.me >= 4.4.0; profile.rootNamespace for older kernels).
+    if (!expression) {
+      if (options.space) return deriveSpaceNamespaceConstant(options.space);
+      return readKernelNamespace(me) || readKernelRootNamespace(me) || '';
+    }
 
     // If the expression already contains a dot, try to interpret it as a full fqdn
     // (e.g. "suiGn.neurons.me" should not get another constant appended).

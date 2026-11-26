@@ -147,6 +147,52 @@ void run('Anonymous: validateHosts reaches the space and never signs in', async 
   assert.equal(host?.status.transport, 'up');
 });
 
+// --- The namespace from inside the .me: me("namespace") (this.me >= 4.4.0), profile.* fallbacks for older kernels ---
+
+function kernelWithProfile(expression: string | null, profile: Record<string, string>) {
+  const kernel = createMockKernel(expression);
+  const read = (path?: string) => (path && path in profile ? profile[path] : undefined);
+  const callable: any = (path?: string) => read(path);
+  Object.getOwnPropertySymbols(kernel).forEach((s) => { callable[s] = kernel[s]; });
+  Object.keys(kernel).forEach((k) => { callable[k] = kernel[k]; });
+  return callable;
+}
+
+void run('Inside .me: anonymous, me.namespace (this.me 4.4.0) → that namespace', async () => {
+  const node = cleaker(kernelWithProfile(null, { 'namespace': 'cleaker.me', 'profile.rootNamespace': 'cleaker.me' }));
+  assert.equal(node.getStatus().activeNamespace, 'cleaker.me');
+});
+
+void run('Inside .me: anonymous, only profile.rootNamespace (older kernel) → still resolves', async () => {
+  const node = cleaker(kernelWithProfile(null, { 'profile.rootNamespace': 'cleaker.me' }));
+  assert.equal(node.getStatus().activeNamespace, 'cleaker.me');
+});
+
+void run('Inside .me: a who with both profile fields (kernels from this.me <= 4.3.0) → who.root', async () => {
+  const node = cleaker(kernelWithProfile('ana', { 'profile.namespace': 'ana.cleaker.me', 'profile.rootNamespace': 'cleaker.me' }));
+  assert.equal(node.getStatus().activeNamespace, 'ana.cleaker.me');
+});
+
+void run('Inside .me: a who with only me.namespace → root derived, who.root', async () => {
+  const node = cleaker(kernelWithProfile('ana', { 'namespace': 'ana.cleaker.me' }));
+  assert.equal(node.getStatus().activeNamespace, 'ana.cleaker.me');
+});
+
+void run('Inside .me: a who with only profile.rootNamespace (older kernel) → who.root', async () => {
+  const node = cleaker(kernelWithProfile('ana', { 'profile.rootNamespace': 'cleaker.me' }));
+  assert.equal(node.getStatus().activeNamespace, 'ana.cleaker.me');
+});
+
+void run('Inside .me: a who with all three (this.me 4.4.0) → who.root', async () => {
+  const node = cleaker(kernelWithProfile('ana', { 'namespace': 'ana.cleaker.me', 'profile.namespace': 'ana.cleaker.me', 'profile.rootNamespace': 'cleaker.me' }));
+  assert.equal(node.getStatus().activeNamespace, 'ana.cleaker.me');
+});
+
+void run('Inside .me: an explicit space still wins over the .me for an anonymous kernel', async () => {
+  const node = cleaker(kernelWithProfile(null, { 'namespace': 'cleaker.me' }), 'neurons.me');
+  assert.equal(node.getStatus().activeNamespace, 'neurons.me');
+});
+
 // --- signIn hits /claims/signIn first ---
 
 void run('signIn: primary endpoint is /claims/signIn', async () => {
