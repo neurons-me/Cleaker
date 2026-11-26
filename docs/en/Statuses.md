@@ -9,6 +9,8 @@ mepath:
     url: https://neurons-me.github.io/Cleaker/docs/
 canonical: https://neurons-me.github.io/Cleaker/docs/en/Statuses.html
 crumb: statuses
+scripts:
+  - /assets/qr-statuses/qr-statuses.js?v=1
 related:
   - The-Model.html
   - Cleaker.html
@@ -37,10 +39,23 @@ Read it left to right:
 | loading | `connecting to cleaker.me…` | checking | the npm builds of `this.me` and `cleaker` are downloading and their sha256 is being checked |
 | checking | `connecting to cleaker.me…` | checking | `validateHosts()` is pinging the host |
 | **reachable** | `cleaker.me reachable · N ms · public, no who` | confirmed | `https://cleaker.me` answered `/__bootstrap` |
-| unreachable | `cleaker.me did not answer` | error | the host did not answer: a network error, or no answer within 8 s |
+| unreachable | `cleaker.me did not answer` | off | the host did not answer: a network error, or no answer within 8 s |
 | error | `could not run cleaker: …` | error | a build failed to load, or its sha256 did not match |
 
 **Reachable is not signed in.** "Confirmed" on the QR means the namespace answered. Nothing was signed, claimed or written: the visitor has no who.
+
+## How each status looks
+
+These are the real QR.me component, drawn in this page's theme: change the theme or light / dark in the top bar and they follow it.
+
+<div data-live="QrStatuses"></div>
+
+- **`idle`** and **`confirmed`** keep the QR's own colour. What tells them apart is the dot at the start of the label: grey for `idle`, green for `confirmed`.
+- **`checking`** uses the theme's warning colour.
+- **`off`** is grey: **nothing answers** at this address.
+- **`error`** uses the theme's error colour: **something answered and refused**, or cleaker could not run. A namespace that is simply not running is `off`, not `error`.
+
+On the home page the dot is covered by the padlock, so there `idle` and `confirmed` look the same and the line under the QR is what tells them apart.
 
 The padlock on the QR is a different fact: the transport of the **page you are on** (HTTPS with a certificate the browser accepted, or not). It says nothing about the namespace.
 

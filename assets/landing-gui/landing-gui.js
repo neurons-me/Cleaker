@@ -605,7 +605,7 @@
   // value (hosts are execution details), so the host is in the label and in the title only.
   // Connected for real (assets/cleaker-live/cleaker-live.js, window.CleakerLive): an anonymous .me runs
   // cleaker(me, "cleaker.me") from the npm builds and pings https://cleaker.me. The QR's status follows it: checking while
-  // it loads and probes, confirmed when cleaker.me answers, error when it does not. "Confirmed" here means reachable and
+  // it loads and probes, confirmed when cleaker.me answers, off (grey) when nothing answers, error when cleaker could not run. "Confirmed" here means reachable and
   // public: there is no who, nothing is signed in or claimed. The line under the QR says exactly that.
   const CLEAKER_NAMESPACE = "cleaker.me";
   const CLEAKER_QR_VALUE = "https://" + CLEAKER_NAMESPACE;
@@ -642,7 +642,7 @@
     const tr = React.useMemo(transportInfo, []), ref = React.useRef(null), [pos, setPos] = React.useState(null);
     const CL = window.CleakerLive, [live, setLive] = React.useState(CL ? CL.state : null);
     React.useEffect(() => { if (!CL) return undefined; const off = CL.subscribe(setLive); CL.connect(); return off; }, []);
-    const st = live && live.state, qrStatus = !CL ? "idle" : st === "reachable" ? "confirmed" : st === "unreachable" || st === "error" ? "error" : "checking";
+    const st = live && live.state, qrStatus = !CL ? "idle" : st === "reachable" ? "confirmed" : st === "unreachable" ? "off" : st === "error" ? "error" : "checking";
     const liveText = !CL ? "" : st === "reachable" ? CLEAKER_NAMESPACE + " reachable \u00b7 " + live.latencyMs + " ms \u00b7 public, no who"
       : st === "unreachable" ? CLEAKER_NAMESPACE + " did not answer" : st === "error" ? "could not run cleaker: " + live.text : "connecting to " + CLEAKER_NAMESPACE + "\u2026";
     React.useEffect(() => {
@@ -669,7 +669,7 @@
             sx: { position: "absolute", left: pos.x - size / 2, top: pos.y - size / 2, width: size, height: size, display: "inline-flex", color: tr.secure ? "text.secondary" : "warning.main" } },
             h(LockGlyph, { size, secure: tr.secure })) : null)),
       CL ? h(Box, { component: "p", "data-gui-node-id": "Cleaker.QR.live", "data-live-state": st || "idle", title: live && live.packages ? live.expression + " \u00b7 " + live.packages.join(" + ") + " (npm, sha256 checked)" : undefined,
-          sx: { m: 0, mt: 1.5, fontFamily: MONO, fontSize: ".78rem", textAlign: "center", color: st === "reachable" ? "text.secondary" : st === "unreachable" || st === "error" ? "warning.main" : "text.disabled" } },
+          sx: { m: 0, mt: 1.5, fontFamily: MONO, fontSize: ".78rem", textAlign: "center", color: st === "reachable" || st === "unreachable" ? "text.secondary" : st === "error" ? "error.main" : "text.disabled" } },
         liveText) : null);
   }
   const monadSpec = () => N("Box", { sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary" } }, [
