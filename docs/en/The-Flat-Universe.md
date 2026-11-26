@@ -1,12 +1,19 @@
 ---
-layout: readme
-title: The Flat Universe — cleaker
+layout: gui-doc
+title: "The Flat Universe"
+description: "Reality has one primitive: distinction. How namespaces form a flat, traversable surface."
+mepath:
+  - text: Cleaker
+    url: https://neurons-me.github.io/Cleaker/
+  - text: Docs
+    url: https://neurons-me.github.io/Cleaker/docs/
+canonical: https://neurons-me.github.io/Cleaker/docs/en/The-Flat-Universe.html
+crumb: the flat universe
+related:
+  - The-Algebra-of-Me.html
+  - The-Model.html
+  - Cleaker.html
 ---
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
-
----
-
 # **The Flat Universe**
 Reality has one primitive: **distinction.**  
 `0 / 1`  
@@ -28,6 +35,3 @@ Only one rule: **allow distinction.**
 
 `distinction → information → geometry → landscape`
 
----
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)

@@ -1,0 +1,39 @@
+{
+ "/Cleaker/docs/en/Cleaker.html": {
+  "href": "https://neurons-me.github.io/Cleaker/docs/en/Cleaker.html",
+  "title": "Cleaker",
+  "desc": "Existence before identity: / is the namespace without you, /? is a self entering it."
+ },
+ "/Cleaker/docs/en/The-Model.html": {
+  "href": "https://neurons-me.github.io/Cleaker/docs/en/The-Model.html",
+  "title": "The Model",
+  "desc": ".me is syntax, cleaker is protocol. The where lives in the .me tree; a namespace exists without a who."
+ },
+ "/Cleaker/docs/en/The-Algebra-of-Me.html": {
+  "href": "https://neurons-me.github.io/Cleaker/docs/en/The-Algebra-of-Me.html",
+  "title": "The Algebra of Me",
+  "desc": "The universe of namespaces as a set, and the operations that compose them."
+ },
+ "/Cleaker/docs/en/The-Flat-Universe.html": {
+  "href": "https://neurons-me.github.io/Cleaker/docs/en/The-Flat-Universe.html",
+  "title": "The Flat Universe",
+  "desc": "Reality has one primitive: distinction. How namespaces form a flat, traversable surface."
+ },
+ "/Cleaker/docs/en/Notes.html": {
+  "href": "https://neurons-me.github.io/Cleaker/docs/en/Notes.html",
+  "title": "Notes",
+  "desc": "Secrets are holes in the map, not flags in a DB."
+ },
+ "/.me/docs/me.html": {
+  "href": "https://neurons-me.github.io/.me/docs/me.html",
+  "title": "What is .me?",
+  "desc": "The core identity primitive. One object, infinite derivations.",
+  "img": "/.me/docs/assets/card-me.webp"
+ },
+ "/.me/docs/Syntax.html": {
+  "href": "https://neurons-me.github.io/.me/docs/Syntax.html",
+  "title": ".me Syntax",
+  "desc": "Dot builds the path, [] selects members, () writes, reads or applies an operator. Names in any language.",
+  "img": "/.me/docs/assets/card-syntax-me.webp"
+ }
+}

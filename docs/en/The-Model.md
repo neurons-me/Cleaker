@@ -1,12 +1,20 @@
 ---
-layout: readme
-title: The Model — cleaker
+layout: gui-doc
+title: "The Model"
+description: ".me is syntax, cleaker is protocol. The where lives in the .me tree, cleaker turns it into me:// addresses, and a namespace exists without a who."
+mepath:
+  - text: Cleaker
+    url: https://neurons-me.github.io/Cleaker/
+  - text: Docs
+    url: https://neurons-me.github.io/Cleaker/docs/
+canonical: https://neurons-me.github.io/Cleaker/docs/en/The-Model.html
+crumb: the model
+related:
+  - Cleaker.html
+  - The-Algebra-of-Me.html
+  - /.me/docs/me.html
+  - /.me/docs/Syntax.html
 ---
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
-
----
-
 ## The model
 **Identity exists in relation to something else**. There is no meaningful `.me` floating in the void. There is only **`.me in context`.**
 
@@ -188,6 +196,3 @@ The model above is ahead of the code in a few places:
 - **Unowned namespaces.** Proposed contract: a namespace with no owner bound through cleaker is read-only. Writes enter only through a contract (a signed who, or a server key the owner delegated to).
 - **npm.** The anonymous `cleaker(me, namespace)` resolution is on `main` and not yet published; npm has `cleaker@4.0.0`.
 
----
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)

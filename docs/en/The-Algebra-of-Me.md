@@ -1,12 +1,19 @@
 ---
-layout: readme
-title: The Algebra of Me — cleaker
+layout: gui-doc
+title: "The Algebra of Me"
+description: "The universe of namespaces as a set, and the operations that compose them."
+mepath:
+  - text: Cleaker
+    url: https://neurons-me.github.io/Cleaker/
+  - text: Docs
+    url: https://neurons-me.github.io/Cleaker/docs/
+canonical: https://neurons-me.github.io/Cleaker/docs/en/The-Algebra-of-Me.html
+crumb: the algebra of me
+related:
+  - The-Model.html
+  - The-Flat-Universe.html
+  - /.me/docs/Syntax.html
 ---
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
-
----
-
 # **The Algebra of** **.Me**
 Let us define the universe of the system:
 > **𝕌 =** the set of all possible namespaces.
@@ -102,6 +109,3 @@ This preserves a clean separation:
 ## **Conclusion**
 This algebraic framework provides a structured way to understand and manipulate namespaces and relations within the **.Me** system. By defining namespaces as regions and relations as functions, we can reason about their interactions and refinements systematically.
 
----
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)

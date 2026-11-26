@@ -1,12 +1,20 @@
 ---
-layout: readme
-title: Cleaker — cleaker
+layout: gui-doc
+title: "Cleaker"
+description: "Existence before identity: / is the namespace without you, /? is a self entering it. Resolution before direction; name before place."
+mepath:
+  - text: Cleaker
+    url: https://neurons-me.github.io/Cleaker/
+  - text: Docs
+    url: https://neurons-me.github.io/Cleaker/docs/
+canonical: https://neurons-me.github.io/Cleaker/docs/en/Cleaker.html
+crumb: cleaker
+related:
+  - The-Model.html
+  - The-Algebra-of-Me.html
+  - The-Flat-Universe.html
+  - /.me/docs/me.html
 ---
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
-
----
-
 # CLEAKER
 > ***Resolutio ante directionem; nomen ante locum.***
 > **שם קודם למקום**
@@ -65,6 +73,3 @@ cleaker(new Me('ana', secret), 'cleaker.me')   // a who that can prove(): signs 
 
 More in [The Model](./The-Model.html).
 
----
-
-[← Back to cleaker Docs](https://neurons-me.github.io/Cleaker/docs/)
