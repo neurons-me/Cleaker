@@ -8,6 +8,8 @@ export {
   stringifyNamespaceExpression,
 } from './namespace/expression.js';
 export { parseNrpTarget } from './namespace/nrpTarget.js';
+export { currentPage, placePath, positionOf, surfaceOf } from './position/position.js';
+export type { PagePlace, Position, Surface } from './position/position.js';
 export type {
   CleakerErrorPayload,
   CleakerEvents,

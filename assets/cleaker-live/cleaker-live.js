@@ -23,7 +23,7 @@
     cleaker: { label: "cleaker@4.0.1", sha256: "db36f82384535b48e12343570b092d7c7a3f7a66030300dcf1848120067716a8",
       urls: ["https://cdn.jsdelivr.net/npm/cleaker@4.0.1/dist/cleaker.es.js", "https://unpkg.com/cleaker@4.0.1/dist/cleaker.es.js"] },
   };
-  var state = { state: "idle" }, subs = new Set(), promise = null;
+  var state = { state: "idle" }, subs = new Set(), promise = null, node = null;
   function set(s) { state = s; subs.forEach(function (f) { try { f(state); } catch (e) {} }); }
   function sha256Hex(buf) { return crypto.subtle.digest("SHA-256", buf).then(function (d) { return Array.from(new Uint8Array(d)).map(function (b) { return b.toString(16).padStart(2, "0"); }).join(""); }); }
   function loadVerified(pkg) {
@@ -54,7 +54,7 @@
     promise = Promise.all([loadVerified(PKGS.me), loadVerified(PKGS.cleaker)]).then(function (mods) {
       var ME = mods[0].default || mods[0].ME, cleaker = mods[1].default || mods[1].cleaker;
       var me = new ME();                                                       // no who
-      var node = cleaker(me, NAMESPACE, { fetcher: declaredOnly });   // cleaker >= 4.0.1: an anonymous .me resolves the space's namespace
+      node = cleaker(me, NAMESPACE, { fetcher: declaredOnly });   // cleaker >= 4.0.1: an anonymous .me resolves the space's namespace
       set({ state: "checking", namespace: NAMESPACE });
       return node.validateHosts({ timeoutMs: 8000 }).then(function (s) {
         var host = (s.hosts || []).filter(function (x) { return x.space === ORIGIN; })[0] || null;
@@ -73,6 +73,9 @@
     });
     return promise;
   }
-  window.CleakerLive = { NAMESPACE: NAMESPACE, ORIGIN: ORIGIN, PKGS: PKGS, connect: connect,
+  // Where this page is, from cleaker itself (node.position(), cleaker >= 4.0.2): `cleaker.me @ <exact place>`. null until
+  // the node exists, or when the pinned build predates position() -- the caller then uses its own copy of the same rule.
+  function position() { return node && typeof node.position === "function" ? node.position() : null; }
+  window.CleakerLive = { NAMESPACE: NAMESPACE, ORIGIN: ORIGIN, PKGS: PKGS, connect: connect, position: position,
     get state() { return state; }, subscribe: function (f) { subs.add(f); return function () { subs.delete(f); }; } };
 })();

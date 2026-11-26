@@ -3,6 +3,8 @@ export type { CleakerOptions } from './cleaker.js';
 export { parseTarget } from './parse/parseTarget.js';
 export { composeNamespace, isValidDomainShape, parseNamespaceExpression, stringifyNamespaceExpression, } from './namespace/expression.js';
 export { parseNrpTarget } from './namespace/nrpTarget.js';
+export { currentPage, placePath, positionOf, surfaceOf } from './position/position.js';
+export type { PagePlace, Position, Surface } from './position/position.js';
 export type { CleakerErrorPayload, CleakerEvents, CleakerNode, CleakerReadyPayload, CleakerStatus, MeKernel, NamespaceFallbackPayload, NamespaceFailedPayload, IdentityLinkProof, IdentityLinkTarget, OpenNodeInput, OpenNodeResult, } from './types/kernel.js';
 export type { ParsedNamespaceExpression, } from './types/namespace.js';
 export type { ParseTargetOptions, ParsedTarget, } from './types/target.js';

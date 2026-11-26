@@ -57,6 +57,11 @@ export interface CleakerNode extends MeKernel {
     discoverHosts(): CleakerHostRecord[];
     validateHosts(options?: ValidateHostsOptions): Promise<CleakerStatus>;
     getStatus(): CleakerStatus;
+    /**
+     * Where this node is: `namespace @ surface`, the surface being the exact place of the page it runs on
+     * (host + path + query + fragment), read fresh on each call. No page: just the namespace. Display only.
+     */
+    position(): import('../position/position.js').Position;
     waitUntilReady(timeoutMs?: number): Promise<CleakerReadyPayload>;
     on<E extends keyof CleakerEvents>(eventName: E, handler: CleakerEvents[E]): () => void;
     once<E extends keyof CleakerEvents>(eventName: E, handler: CleakerEvents[E]): () => void;

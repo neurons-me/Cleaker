@@ -609,19 +609,23 @@
   // public: there is no who, nothing is signed in or claimed. The line under the QR says exactly that.
   const CLEAKER_NAMESPACE = "cleaker.me";
   const CLEAKER_QR_VALUE = "https://" + CLEAKER_NAMESPACE;
-  // surfaceToken (positionExpression.ts): a bare host[:port]; quoted with its scheme only for http on a non-loopback host or an IPv6 literal.
-  // The surface is the page's place: host plus path (on github.io the host is shared by every repo's site, so
-  // neurons-me.github.io/Cleaker, not neurons-me.github.io). Trailing "/" and "index.html" are dropped.
-  function surfacePath(loc) {
-    return String(loc.pathname || "").replace(/\/index\.html?$/i, "/").replace(/\/+$/, "");
-  }
-  function surfaceToken(loc) {
+  // Where this page is: `cleaker.me @ <exact place>` (host + path + query + fragment). The rule lives in cleaker
+  // (src/position/position.ts, node.position()); CleakerLive.position() returns it once the loaded cleaker build has it
+  // (>= 4.0.2). Until the pin moves, placeFallback() is the same rule, copied: bare when the scheme is the usual one,
+  // quoted with it for http on a non-loopback host or an IPv6 literal; trailing "/" and "index.html" dropped.
+  function placeFallback(loc) {
     const host = String(loc.host || "").trim().toLowerCase();
-    if (!host) return "";
-    const place = host + surfacePath(loc);
+    if (!host) return { expression: CLEAKER_NAMESPACE, full: CLEAKER_NAMESPACE };
+    const place = host + String(loc.pathname || "").replace(/\/index\.html?$/i, "/").replace(/\/+$/, "") + String(loc.search || "") + String(loc.hash || "");
     const scheme = String(loc.protocol || "http:").toLowerCase().replace(/:?$/, ":");
     const loopback = /^(localhost|127(?:\.\d{1,3}){3}|\[::1\]|[^.:\s]+\.localhost)(?::\d+)?$/i.test(host);
-    return (scheme === "http:" && !loopback) || host.charAt(0) === "[" ? '"' + scheme + "//" + place + '"' : place;
+    const full = '"' + scheme + "//" + place + '"';
+    const compact = (scheme === "http:" && !loopback) || host.charAt(0) === "[" ? full : place;
+    return { expression: CLEAKER_NAMESPACE + " @ " + compact, full: CLEAKER_NAMESPACE + " @ " + full };
+  }
+  function pagePosition(loc) {
+    const fromCleaker = window.CleakerLive && window.CleakerLive.position && window.CleakerLive.position();
+    return fromCleaker || placeFallback(loc);
   }
   // Transport security as the browser itself reports it, nothing more: https: in a secure context means the browser accepted a
   // certificate; http: means there is none. Issuer and expiry are not readable from a page, so none is claimed.
@@ -642,9 +646,14 @@
   // prop for it later). The dot stays drawn but hidden (the selector below), and the lock is placed exactly where the dot is.
   function CleakerCard(p) {
     const loc = typeof window !== "undefined" ? window.location : { host: "", protocol: "https:", origin: "" };
-    const surface = surfaceToken(loc);
-    const label = surface ? CLEAKER_NAMESPACE + " @ " + surface : CLEAKER_NAMESPACE;
-    const full = loc.host ? CLEAKER_NAMESPACE + ' @ "' + String(loc.protocol).toLowerCase() + "//" + String(loc.host).toLowerCase() + surfacePath(loc) + '"' : CLEAKER_NAMESPACE;
+    // read again when the place changes (a #section, back/forward): the label always says where you are now
+    const [, setPlaceTick] = React.useState(0);
+    React.useEffect(() => {
+      const bump = () => setPlaceTick((n) => n + 1);
+      window.addEventListener("hashchange", bump); window.addEventListener("popstate", bump);
+      return () => { window.removeEventListener("hashchange", bump); window.removeEventListener("popstate", bump); };
+    }, []);
+    const here = pagePosition(loc), label = here.expression, full = here.full;
     const tr = React.useMemo(transportInfo, []), ref = React.useRef(null), [pos, setPos] = React.useState(null);
     const CL = window.CleakerLive, [live, setLive] = React.useState(CL ? CL.state : null);
     React.useEffect(() => { if (!CL) return undefined; const off = CL.subscribe(setLive); CL.connect(); return off; }, []);

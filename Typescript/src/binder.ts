@@ -7,6 +7,7 @@ import {
   DEFAULT_CLEAKER_NAMESPACE_ORIGIN,
 } from './constants';
 import { composeNamespace, parseNamespaceExpression } from './namespace/expression';
+import { currentPage, positionOf, type Position } from './position/position';
 import type { CreateRemotePointerOptions } from './pointer/remotePointer';
 import type {
   CleakerErrorPayload,
@@ -1537,6 +1538,13 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
     return { ok: false, error: String(claimed.error || 'CLAIM_FAILED'), status: claimed.status };
   }
 
+  // Where this node is: its namespace @ the exact place of the page it runs on (host + path + query + fragment).
+  // Read fresh on every call, so it follows navigation. No page (Node): just the namespace. Display only: the
+  // surface never changes the namespace and authorizes nothing.
+  function position(): Position {
+    return positionOf(resolveNamespace(), currentPage());
+  }
+
   function getStatus(): CleakerStatus {
     return {
       ...lastStatus,
@@ -2168,6 +2176,7 @@ export function bindKernel(me: MeKernel, options: BindKernelOptions = {}): Cleak
           if (key === 'discoverHosts') return discoverHosts;
           if (key === 'validateHosts') return validateHosts;
           if (key === 'getStatus') return getStatus;
+          if (key === 'position') return position;
           if (key === 'waitUntilReady') return waitUntilReady;
           if (key === 'on') return on;
           if (key === 'once') return once;
