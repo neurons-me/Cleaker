@@ -10,12 +10,14 @@ mepath:
 canonical: https://neurons-me.github.io/Cleaker/docs/en/Statuses.html
 crumb: statuses
 scripts:
-  - /assets/qr-statuses/qr-statuses.js?v=1
+  - /assets/qr-statuses/qr-statuses.js?v=4
 related:
   - The-Model.html
   - Cleaker.html
 ---
 ## Statuses
+
+<div data-live="QrStatuses"></div>
 
 The [Cleaker home](https://neurons-me.github.io/Cleaker/) runs `cleaker(me, "cleaker.me")` with an anonymous `.me` and writes what happened under the QR:
 
@@ -46,9 +48,7 @@ Read it left to right:
 
 ## How each status looks
 
-These are the real QR.me component, drawn in this page's theme: change the theme or light / dark in the top bar and they follow it.
-
-<div data-live="QrStatuses"></div>
+The QRs at the top of this page are the real QR.me component, drawn in this page's theme: change the theme or light / dark in the top bar and they follow it.
 
 - **`idle`** and **`confirmed`** keep the QR's own colour. What tells them apart is the dot at the start of the label: grey for `idle`, green for `confirmed`.
 - **`checking`** uses the theme's warning colour.
