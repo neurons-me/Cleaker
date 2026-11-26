@@ -10,8 +10,6 @@
 // origin and http://localhost (the visitor's local monad) as candidate hosts; the fetcher below refuses every origin but
 // the declared one, so a public page never probes a visitor's localhost. Refused candidates are dropped from the summary.
 //
-// `{ namespace }` is passed explicitly: cleaker 4.0.0 (npm) does not yet resolve the namespace from `space` for an
-// anonymous .me (fixed on main, d2ef2dc, unpublished). Both forms give the same node.
 //
 // window.CleakerLive.connect() → Promise<summary>; state: idle | loading | checking | reachable | unreachable | error;
 // subscribe(fn) → unsubscribe.
@@ -22,8 +20,8 @@
   var PKGS = {
     me: { label: "this.me@4.2.1", sha256: "0bd2cc60d15dfc9ff8942d390c075bbc22b4ae3a24d3cbfe581511ea84478757",
       urls: ["https://cdn.jsdelivr.net/npm/this.me@4.2.1/dist/me.es.js", "https://unpkg.com/this.me@4.2.1/dist/me.es.js"] },
-    cleaker: { label: "cleaker@4.0.0", sha256: "ebbd136af2e9ac03afba76a5375892ee8b9c4f1374a23054a6c51e45860e2a26",
-      urls: ["https://cdn.jsdelivr.net/npm/cleaker@4.0.0/dist/cleaker.es.js", "https://unpkg.com/cleaker@4.0.0/dist/cleaker.es.js"] },
+    cleaker: { label: "cleaker@4.0.1", sha256: "db36f82384535b48e12343570b092d7c7a3f7a66030300dcf1848120067716a8",
+      urls: ["https://cdn.jsdelivr.net/npm/cleaker@4.0.1/dist/cleaker.es.js", "https://unpkg.com/cleaker@4.0.1/dist/cleaker.es.js"] },
   };
   var state = { state: "idle" }, subs = new Set(), promise = null;
   function set(s) { state = s; subs.forEach(function (f) { try { f(state); } catch (e) {} }); }
@@ -56,7 +54,7 @@
     promise = Promise.all([loadVerified(PKGS.me), loadVerified(PKGS.cleaker)]).then(function (mods) {
       var ME = mods[0].default || mods[0].ME, cleaker = mods[1].default || mods[1].cleaker;
       var me = new ME();                                                       // no who
-      var node = cleaker(me, NAMESPACE, { namespace: NAMESPACE, fetcher: declaredOnly });
+      var node = cleaker(me, NAMESPACE, { fetcher: declaredOnly });   // cleaker >= 4.0.1: an anonymous .me resolves the space's namespace
       set({ state: "checking", namespace: NAMESPACE });
       return node.validateHosts({ timeoutMs: 8000 }).then(function (s) {
         var host = (s.hosts || []).filter(function (x) { return x.space === ORIGIN; })[0] || null;
