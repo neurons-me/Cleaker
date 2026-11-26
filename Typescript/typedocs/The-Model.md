@@ -95,10 +95,19 @@ That gives three states for one namespace:
 The page you are on is not the namespace. It is the **surface** the namespace is seen from.
 
 ```
-cleaker.me @ neurons-me.github.io
+cleaker.me @ neurons-me.github.io/Cleaker
 ```
 
-reads as: *the namespace `cleaker.me`, seen from the surface `neurons-me.github.io`.* Two channels: the namespace (what) and the location (where you are looking from). Being on a page grants nothing inside the namespace; the door never changes what an identity may do.
+reads as: *the namespace `cleaker.me`, seen from the surface `neurons-me.github.io/Cleaker`.* Two channels: the namespace (what) and the location (where you are looking from). Being on a page grants nothing inside the namespace; the door never changes what an identity may do.
+
+The surface is the **exact place**: host, path, query and section. A place has to be one you can return to. A highlight on one section of one page, shared with a friend, has to lead them back to exactly there:
+
+```ts
+node.position().expression;   // 'cleaker.me @ neurons-me.github.io/Cleaker#notes'
+node.position().full;         // 'cleaker.me @ "https://neurons-me.github.io/Cleaker#notes"'
+```
+
+`position()` reads the page's location on every call, so it follows you as you move. Without a page (Node) it is just the namespace. Only noise is dropped: a trailing `/` and `index.html`. The scheme is written only when it is news (`http` on a public host). Long places are for the drawing to shorten; the value is never shortened. Needs `cleaker` 4.0.2 or later.
 
 ## Core forms
 
