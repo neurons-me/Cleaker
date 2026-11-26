@@ -15,7 +15,7 @@ related:
   - The-Model.html
   - Cleaker.html
 ---
-## Statuses
+# Statuses
 
 <div data-live="QrStatuses"></div>
 

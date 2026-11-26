@@ -16,7 +16,7 @@ related:
   - /.me/docs/me.html
   - /.me/docs/Syntax.html
 ---
-## The model
+# The model
 **Identity exists in relation to something else**. There is no meaningful `.me` floating in the void. There is only **`.me in context`.**
 
 ```
