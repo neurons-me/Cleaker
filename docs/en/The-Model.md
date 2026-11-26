@@ -11,6 +11,7 @@ canonical: https://neurons-me.github.io/Cleaker/docs/en/The-Model.html
 crumb: the model
 related:
   - Cleaker.html
+  - Statuses.html
   - The-Algebra-of-Me.html
   - /.me/docs/me.html
   - /.me/docs/Syntax.html
