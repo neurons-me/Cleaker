@@ -52,21 +52,27 @@ ICONS = {
 }
 
 def model():
-    # cleaker mounts the .me into the namespace (the dashed slot) as the root of the tree; each branch is a path it can hold, shown as an icon
-    # (keys, wallet, contacts).
-    T = "currentColor"; rx, ry = 34, 80
-    kids = [(122, 30, "keys"), (138, 80, "wallet"), (122, 130, "contacts")]
-    curve = lambda x1, y1, x2, y2: f'<path d="M{x1} {y1} C {x1+(x2-x1)/2} {y1} {x1+(x2-x1)/2} {y2} {x2} {y2}" fill="none" stroke="{P}" stroke-width="3.5" opacity=".55"/>'
-    out = [curve(rx, ry, kx, ky) for kx, ky, _ in kids]
+    # cleaker mounts the .me into the namespace (the dashed slot) as the root of the tree. Four levels: the .me, the
+    # branches it holds (icons: keys, wallet, contacts), their children, their leaves.
+    T = "currentColor"; rx, ry = 32, 84
+    curve = lambda x1, y1, x2, y2, w, op: f'<path d="M{x1} {y1} C {x1+(x2-x1)/2} {y1} {x1+(x2-x1)/2} {y2} {x2} {y2}" fill="none" stroke="{P}" stroke-width="{w}" opacity="{op}"/>'
+    kids = [(104, 32, "keys"), (110, 84, "wallet"), (104, 136, "contacts")]
+    out = [curve(rx, ry, kx, ky, 3.5, ".55") for kx, ky, _ in kids]
+    for kx, ky, _ in kids:
+        for dy in (-13, 13):
+            nx, ny = kx + 46, ky + dy
+            out.append(curve(kx, ky, nx, ny, 2.8, ".45"))
+            for ly in (-6.5, 6.5):
+                out.append(curve(nx, ny, nx + 30, ny + ly, 2, ".3") + f'<circle cx="{nx+30}" cy="{ny+ly}" r="3.4" fill="{P}" opacity=".5"/>')
+            out.append(f'<circle cx="{nx}" cy="{ny}" r="5" fill="{PAPER}" stroke="{P}" stroke-width="3"/>')
     for kx, ky, name in kids:
-        out.append(f'<circle cx="{kx}" cy="{ky}" r="19" fill="{PAPER}" stroke="{P}" stroke-width="3.5"/>'
-                   f'<g transform="translate({kx-11} {ky-11}) scale(.917)" fill="none" stroke="{P}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>{name}</title>{ICONS[name]}</g>')
-    # the namespace slot (dashed ring) with the .me mounted in it; "cleaker" names what does the mounting
-    out.append(f'<circle cx="{rx}" cy="{ry}" r="31" fill="{PAPER}" stroke="{P}" stroke-width="2.5" stroke-dasharray="5 5" opacity=".75"/>')
-    out.append(f'<circle cx="{rx}" cy="{ry}" r="21" fill="{P}"/>')
+        out.append(f'<circle cx="{kx}" cy="{ky}" r="16" fill="{PAPER}" stroke="{P}" stroke-width="3.2"/>'
+                   f'<g transform="translate({kx-9.6} {ky-9.6}) scale(.8)" fill="none" stroke="{P}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><title>{name}</title>{ICONS[name]}</g>')
+    out.append(f'<circle cx="{rx}" cy="{ry}" r="30" fill="{PAPER}" stroke="{P}" stroke-width="2.5" stroke-dasharray="5 5" opacity=".75"/>')
+    out.append(f'<circle cx="{rx}" cy="{ry}" r="20.5" fill="{P}"/>')
     out.append(f'<text x="{rx}" y="{ry+5}" text-anchor="middle" font-family="{MONO}" font-size="14" font-weight="700" fill="{PAPER}">.me</text>')
-    out.append(f'<text x="{rx}" y="{ry-40}" text-anchor="middle" font-family="{MONO}" font-size="12" font-weight="700" fill="{T}" opacity=".75">cleaker</text>')
-    return ('<svg class="card-media" viewBox="-8 0 184 160" preserveAspectRatio="xMidYMax meet" role="img" aria-label="cleaker(me): the .me as the root of its namespace tree, with branches for keys, wallet and contacts" xmlns="http://www.w3.org/2000/svg">'
+    out.append(f'<text x="{rx}" y="{ry-39}" text-anchor="middle" font-family="{MONO}" font-size="12" font-weight="700" fill="{T}" opacity=".75">cleaker</text>')
+    return ('<svg class="card-media" viewBox="-8 -2 202 170" preserveAspectRatio="xMidYMax meet" role="img" aria-label="cleaker mounting a .me into its namespace: the .me as the root of a tree with keys, wallet and contacts branches, their children and leaves" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
 s = open(INDEX).read()
