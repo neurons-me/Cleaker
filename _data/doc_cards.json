@@ -16,8 +16,8 @@
  },
  "/Cleaker/docs/en/The-Algebra-of-Me.html": {
   "href": "https://neurons-me.github.io/Cleaker/docs/en/The-Algebra-of-Me.html",
-  "title": "The Algebra of Me",
-  "desc": "Namespaces as a set, and how they compose."
+  "title": "The Algebra of .me",
+  "desc": "One constant, a mounted .me, and its intersections."
  },
  "/Cleaker/docs/en/The-Flat-Universe.html": {
   "href": "https://neurons-me.github.io/Cleaker/docs/en/The-Flat-Universe.html",
@@ -40,5 +40,11 @@
   "title": ".me Syntax",
   "desc": "Dot builds the path, [] selects members, () writes, reads or applies an operator. Names in any language.",
   "img": "/.me/docs/assets/card-syntax-me.webp"
+ },
+ "/.me/docs/Audiences.html": {
+  "href": "https://neurons-me.github.io/.me/docs/Audiences.html",
+  "title": "∪ Audiences",
+  "desc": "Who can open a value: OR, AND (XOR shares), minus.",
+  "img": "/.me/docs/assets/card-audiences.webp"
  }
 }
