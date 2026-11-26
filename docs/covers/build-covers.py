@@ -45,20 +45,18 @@ def statuses():
             + "".join(out) + "</svg>")
 
 def model():
-    id_ = "ckq-mo"; T = "currentColor"; F = 70; qx, qy = 40, 74
-    out = [defs(id_), qr(id_, qx, qy, F, P)]
-    ay = qy
-    out.append(f'<path d="M82 {ay} H124" stroke="{T}" stroke-width="3.5" stroke-linecap="round" opacity=".5"/><path d="M117 {ay-7} L126 {ay} L117 {ay+7}" fill="none" stroke="{T}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>')
-    out.append(f'<text x="103" y="{ay-11}" text-anchor="middle" font-family="{MONO}" font-size="12" font-weight="700" fill="{T}" opacity=".8">cleaker</text>')
-    rx, ry = 142, ay; kids = [(180, ry - 38), (186, ry), (180, ry + 38)]
-    out += [f'<path d="M{rx} {ry} C {rx+18} {ry} {kx-20} {ky} {kx} {ky}" fill="none" stroke="{P}" stroke-width="3" opacity=".55"/>' for kx, ky in kids]
+    # Only the tree: the namespace me://cleaker.me. The root is the .me (the QR on the Statuses card), so it is not drawn again.
+    T = "currentColor"; rx, ry = 40, 80
+    kids = [(112, 28), (124, 80), (112, 132)]
+    out = [f'<path d="M{rx} {ry} C {rx+36} {ry} {kx-40} {ky} {kx} {ky}" fill="none" stroke="{P}" stroke-width="3.5" opacity=".6"/>' for kx, ky in kids]
     for kx, ky in kids:
-        for dy in (-10, 10):
-            out.append(f'<path d="M{kx} {ky} L{kx+24} {ky+dy}" stroke="{P}" stroke-width="2.5" opacity=".35"/><circle cx="{kx+24}" cy="{ky+dy}" r="4" fill="{P}" opacity=".5"/>')
-        out.append(f'<circle cx="{kx}" cy="{ky}" r="6.5" fill="{PAPER}" stroke="{P}" stroke-width="3.5"/>')
-    out.append(f'<circle cx="{rx}" cy="{ry}" r="10" fill="{P}"/>')
-    out.append(f'<text x="172" y="{ry+64}" text-anchor="middle" font-family="{MONO}" font-size="12" fill="{T}" opacity=".6">me://cleaker.me</text>')
-    return ('<svg class="card-media" viewBox="0 22 230 124" preserveAspectRatio="xMidYMax meet" role="img" aria-label="QR.me for .me (syntax), an arrow labelled cleaker (protocol), and the namespace tree me://cleaker.me" xmlns="http://www.w3.org/2000/svg">'
+        for dy in (-16, 0, 16):
+            gx, gy = kx + 44, ky + dy
+            out.append(f'<path d="M{kx} {ky} C {kx+20} {ky} {gx-20} {gy} {gx} {gy}" fill="none" stroke="{P}" stroke-width="2.5" opacity=".35"/><circle cx="{gx}" cy="{gy}" r="5" fill="{P}" opacity=".55"/>')
+        out.append(f'<circle cx="{kx}" cy="{ky}" r="8.5" fill="{PAPER}" stroke="{P}" stroke-width="4"/>')
+    out.append(f'<circle cx="{rx}" cy="{ry}" r="15" fill="{P}"/>')
+    out.append(f'<text x="{rx}" y="{ry+36}" text-anchor="middle" font-family="{MONO}" font-size="12" fill="{T}" opacity=".6">me://cleaker.me</text>')
+    return ('<svg class="card-media" viewBox="-14 -14 194 166" preserveAspectRatio="xMidYMax meet" role="img" aria-label="The namespace tree me://cleaker.me: a root with branches and leaves" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
 s = open(INDEX).read()
