@@ -122,8 +122,35 @@ def algebra():
     return (f'<svg class="card-media" viewBox="{fit(40, 16, 180, 150)}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Three .me as sets, me(a), me(b) and me(c), each in its own colour, with their intersections a∩b, a∩c, b∩c and a∩b∩c at the centre" xmlns="http://www.w3.org/2000/svg">'
             + "".join(out) + "</svg>")
 
+def flat():
+    # The Flat Universe: one plane of cells, each occupied or not (0 / 1). Read left to right it is the doc's chain,
+    # distinction -> information -> geometry -> landscape: scattered bits on the left, the same cells settling into hills
+    # on the right. Flat: no hierarchy is drawn, it emerges from which cells are occupied.
+    import math, random
+    rnd = random.Random(7)
+    cols, rows, cell, gap = 12, 9, 11, 4
+    step = cell + gap
+    out = []
+    for c in range(cols):
+        t = c / (cols - 1)
+        # the landscape: a cell is in it when it lies below the hill line
+        hill = rows * (0.4 + 0.24 * math.sin(c * 0.8) + 0.1 * math.sin(c * 2.1 + 1))
+        for r in range(rows):
+            in_land = (rows - r) <= hill
+            bit = rnd.random() < 0.5
+            # left: the bit decides; right: the landscape decides; in between, the bit gives way to the shape
+            occupied = (in_land if rnd.random() < t ** 1.3 else bit)
+            x, y = c * step, r * step
+            if occupied:
+                out.append(f'<rect x="{x}" y="{y}" width="{cell}" height="{cell}" rx="2.5" fill="{P}" opacity="{round(0.45 + 0.5 * t, 2)}"/>')
+            else:
+                out.append(f'<rect x="{x+0.75}" y="{y+0.75}" width="{cell-1.5}" height="{cell-1.5}" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".22"/>')
+    w, h = cols * step - gap, rows * step - gap
+    return (f'<svg class="card-media" viewBox="{fit(0, 0, w, h)}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="A flat plane of cells, each occupied or not: scattered on the left, settling into a landscape on the right" xmlns="http://www.w3.org/2000/svg">'
+            + "".join(out) + "</svg>")
+
 s = open(INDEX).read()
-for href, build in (("docs/en/Cleaker.html", cleaker), ("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses), ("docs/en/The-Algebra-of-Me.html", algebra)):
+for href, build in (("docs/en/Cleaker.html", cleaker), ("docs/en/The-Model.html", model), ("docs/en/Statuses.html", statuses), ("docs/en/The-Algebra-of-Me.html", algebra), ("docs/en/The-Flat-Universe.html", flat)):
     i = s.index(f'href="https://neurons-me.github.io/Cleaker/{href}"'); j = s.index('<svg class="card-media"', i); e = s.index("</svg>", j) + 6
     assert e < s.index('<div class="card-title">', i)
     s = s[:j] + build() + s[e:]
